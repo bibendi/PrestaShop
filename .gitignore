@@ -17,9 +17,6 @@ cache/tcpdf/*
 config/xml/*.xml
 config/settings.inc.php
 log/*.log
-img/*
-!img/index.php
-!img/*/index.php
 tools/smarty*/cache/*.php
 !tools/smarty*/cache/index.php
 tools/smarty*/compile/*.php
