@@ -13,8 +13,8 @@ files.each do |file_name|
   upload_file_name = file_name.sub('default', theme_name)
   url = "#{base_url}/themes/#{upload_file_name}"
   abc_upload_file_name = "#{upload_dir}/#{upload_file_name}"
-  `mkdir -p #{File.dirname(abc_upload_file_name)}`
   cmd = "wget -q --no-clobber --max-redirect=0 --output-document='#{abc_upload_file_name}' #{url}"
+  `mkdir -p #{File.dirname(abc_upload_file_name)}`
   `wget #{cmd}`
   `rm #{abc_upload_file_name}` if File.size(abc_upload_file_name).zero?
   #puts cmd
