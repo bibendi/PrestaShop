@@ -24,12 +24,20 @@
 *  International Registered Trademark & Property of PrestaShop SA
 */
 
-header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");
-header("Last-Modified: ".gmdate("D, d M Y H:i:s")." GMT");
-
-header("Cache-Control: no-store, no-cache, must-revalidate");
-header("Cache-Control: post-check=0, pre-check=0", false);
-header("Pragma: no-cache");
-
-header("Location: ../");
-exit;
+class GamificationTools
+{
+	public static function parseMetaData($content)
+	{
+		$meta_data = array(
+			'PREFIX_' => _DB_PREFIX_,
+			);
+		//replace define
+		$content = str_replace(array_keys($meta_data), array_values($meta_data), $content);
+		
+		//replace meta data
+		$content = preg_replace_callback('#\{config\}([a-zA-Z0-9_-]*)\{/config\}#', create_function('$matches','return Configuration::get($matches[1]);'), $content);
+		$content = preg_replace_callback('#\{link\}(.*)\{/link\}#', create_function('$matches','return Context::getContext()->link->getAdminLink($matches[1]);'), $content);
+		
+		return $content;
+	}
+}

@@ -30,3 +30,4 @@ themes/default/cache/*.css
 modules/*/translations/*.php
 !modules/*/translations/index.php
 
+logs
