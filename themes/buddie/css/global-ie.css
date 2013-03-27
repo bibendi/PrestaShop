@@ -1,0 +1,23 @@
+#productsSortForm select,form.pagination select {margin-top:6px;}
+.sf-contener {clear:none;margin-top:0;}
+.sortPagiBar{float:none;}
+form.compare{float:right}
+#new-products  .sortPagiBar,#best-sales   .sortPagiBar,#prices-drop    .sortPagiBar,#search    .sortPagiBar{float:right}
+#new-products form.compare,#best-sales  form.compare,#prices-drop  form.compare,#search form.compare{float:left}
+#search form.compare span.out_button,#manufacturer form.compare  span.out_button,#new-products form.compare  span.out_button,
+#best-sales  form.compare  span.out_button,#prices-drop  form.compare  span.out_button{float:left}
+.ajax_add_to_cart_button,span.addtocard{white-space:nowrap}
+.main_footer{padding-bottom:5px;}
+p.cart_navigation.submit .exclusive{float:left}
+#authentication p.cart_navigation span.out_button{margin-left:0}
+#order-opc div.opc-main-block  #opc_account_form   p.radio label.top{vertical-align:-4px;}
+p.select label{line-height:18px;}
+#my-account #center_column ul{padding-bottom:30px}
+#identity .std .radio input{vertical-align:0;}
+#order form#voucher p,#order-opc form#voucher p{padding-bottom:3px;}
+#order h1, #module-cheque-payment h2, #module-bankwire-payment h2, #order-confirmation h1{width:35%}
+#languages_block_top p.label, #currencies_block_top .label{line-height:18px;}
+#manufacturer .sortPagiBar{float:right}
+#manufacturer form.compare{float:left}
+div.addresses p select{margin-top:3px;}
+#module-cheque-payment .cart_navigation .exclusive_large,#module-bankwire-payment  .cart_navigation .exclusive_large{float:left}

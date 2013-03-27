@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<options>
+<effect>random</effect>
+<animSpeed>500</animSpeed>
+<pauseTime>3000</pauseTime>
+<directionNav>false</directionNav>
+<directionNavHide>true</directionNavHide>
+<controlNav>true</controlNav>
+<controlNavThumbs>false</controlNavThumbs>
+<pauseOnHover>true</pauseOnHover>
+<manualAdvance>false</manualAdvance>
+</options>

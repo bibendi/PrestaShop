@@ -1,0 +1,1 @@
+{if $product->id_manufacturer && isset($product->id_manufacturer)}	<div id="idTab_manu" class="rte">		{$manu_des}	</div>{/if}
