@@ -124,15 +124,15 @@ ul.idTabs li {
 	text-decoration: none;
 	text-transform: uppercase;
 	font-weight: 400;
-	color: #ffffff;padding:0 15px;font-size:22px;  font-family: 'Ubuntu Condensed';
+	color: #F6E076;padding:0 15px;font-size:22px;  font-family: 'Ubuntu Condensed';
 }
-.idTabs .selected ,.idTabs a:hover{color:#545453;text-decoration:none}
+.idTabs .selected ,.idTabs a:hover{color:#ffffff;text-decoration:none}
 
 /* IdTabs Short*/
 .idTabsShort a {
 	width: auto
 }
-.idTabsShort .selected {color:#545453;cursor:text}
+.idTabsShort .selected {color:#ffffff;cursor:text}
 div.sheets {
 	clear: both;
 	padding: 1em 0
@@ -259,7 +259,8 @@ img.logo {
 .rte,
  .mceContentBody {
 	text-align: left;
-	color: #503501;font-size:11px;
+	color: #503501;
+	font-size:14px;
 }
 body.mceContentBody {
 	margin: 9px 6px;

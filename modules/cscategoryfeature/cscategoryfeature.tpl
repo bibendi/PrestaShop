@@ -14,7 +14,7 @@
 			<!--logo manufacture-->
 				<p class="manufacture">{if $product.id_manufacturer && file_exists($ps_manu_img_dir|cat:$product.id_manufacturer|cat:'.jpg')}<a href="{$link->getmanufacturerLink($product.id_manufacturer, $product.link_rewrite)}" title="{$product.manufacturer_name}"><img src="{$img_manu_dir}{$product.id_manufacturer|escape:'htmlall':'UTF-8'}.jpg" alt="{$product.name|escape:'htmlall':'UTF-8'}" /></a>{/if}</p>
 			<!--shop now-->
-			<a href="{$product.link}" title="{$product.name|escape:html:'UTF-8'}" class="button"><span>{l s='SHOP NOW' mod='cscategoryfeature'}</span></a>
+			<a href="{$product.link}" title="{$product.name|escape:html:'UTF-8'}" class="button"><span>Купить</span></a>
 			
 				
 			</li>
