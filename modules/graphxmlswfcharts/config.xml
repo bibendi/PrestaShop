@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
         <module>
             <name>graphxmlswfcharts</name>
-            <displayName><![CDATA[XML/SWF Charts]]></displayName>
+            <displayName><![CDATA[XML/SWF Графики]]></displayName>
             <version><![CDATA[1]]></version>
-            <description><![CDATA[XML/SWF Charts are simple, yet powerful tools using Adobe Flash to create attractive web charts and graphs from dynamic data.]]></description>
+            <description><![CDATA[XML/SWF Charts - простое, но мощное средство, использующее Adobe Flash для создания привлекательных веб графиков на основе динамических данных.]]></description>
             <author><![CDATA[PrestaShop]]></author>
             <tab><![CDATA[administration]]></tab>
             <is_configurable>0</is_configurable>

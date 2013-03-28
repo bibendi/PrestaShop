@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
         <module>
             <name>statsorigin</name>
-            <displayName><![CDATA[Visitors origin]]></displayName>
+            <displayName><![CDATA[Рефер посетителя]]></displayName>
             <version><![CDATA[1]]></version>
-            <description><![CDATA[Display the website(s) your visitors came from.]]></description>
+            <description><![CDATA[Показывает, с каких сайтов приходят посетители.]]></description>
             <author><![CDATA[PrestaShop]]></author>
             <tab><![CDATA[analytics_stats]]></tab>
             <is_configurable>0</is_configurable>

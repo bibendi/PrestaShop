@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
         <module>
             <name>statspersonalinfos</name>
-            <displayName><![CDATA[Registered customer information]]></displayName>
+            <displayName><![CDATA[Информация о клиентах]]></displayName>
             <version><![CDATA[1]]></version>
-            <description><![CDATA[Display characteristics such as gender and age.]]></description>
+            <description><![CDATA[Показать такие характеристики, как пол и возраст.]]></description>
             <author><![CDATA[PrestaShop]]></author>
             <tab><![CDATA[analytics_stats]]></tab>
             <is_configurable>0</is_configurable>

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
         <module>
             <name>producttooltip</name>
-            <displayName><![CDATA[Product tooltips]]></displayName>
+            <displayName><![CDATA[Подсказки на страницах товаров]]></displayName>
             <version><![CDATA[1.0]]></version>
-            <description><![CDATA[Show how many people are watching a product page, last sale and last cart added.]]></description>
+            <description><![CDATA[Показывает количество покупателей на странице товара, продажи и тд.]]></description>
             <author><![CDATA[PrestaShop]]></author>
             <tab><![CDATA[front_office_features]]></tab>
             <is_configurable>1</is_configurable>

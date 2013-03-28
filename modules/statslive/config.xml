@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
         <module>
             <name>statslive</name>
-            <displayName><![CDATA[Visitors online]]></displayName>
+            <displayName><![CDATA[Сейчас на сайте]]></displayName>
             <version><![CDATA[1]]></version>
-            <description><![CDATA[Display the list of customers and visitors currently online.]]></description>
+            <description><![CDATA[Показать список клиентов и посетителей в сети в настоящее время.]]></description>
             <author><![CDATA[PrestaShop]]></author>
             <tab><![CDATA[analytics_stats]]></tab>
             <is_configurable>0</is_configurable>
