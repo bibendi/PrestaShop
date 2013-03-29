@@ -1,0 +1,289 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"upload_",
+				"upload_file_name"
+			],
+			[
+				"core",
+				"core_companies"
+			],
+			[
+				"searc",
+				"search_index_products"
+			],
+			[
+				"d",
+				"delivery_time"
+			],
+			[
+				"pri",
+				"price_max"
+			]
+		]
+	},
+	"buffers":
+	[
+	],
+	"build_system": "",
+	"command_palette":
+	{
+		"height": 0.0,
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"console":
+	{
+		"height": 0.0
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"file_history":
+	[
+		"/home/merkushin/work/www/zoo-cafe.dev/themes/rip.rb",
+		"/home/merkushin/work/www/zoo-cafe.dev/themes/buddie/config.xml",
+		"/home/merkushin/.config/sublime-text-2/Packages/Default/Preferences.sublime-settings",
+		"/home/merkushin/work/www/prestashop.dev/index.php",
+		"/home/merkushin/Загрузки/CreateTCUDataBase.sql",
+		"/home/merkushin/Загрузки/main_shot.yml",
+		"/home/merkushin/work/www/pcrb3/pulscen/solr/conf/data-config-template.xml",
+		"/home/merkushin/work/nginx/conf/nginx.conf",
+		"/home/merkushin/work/www/pcrb/plugins.dot",
+		"/home/merkushin/search_index.csv",
+		"/home/merkushin/work/www/pcrb/.gittrees",
+		"/home/merkushin/Загрузки/025.xml",
+		"/home/merkushin/work/www/pcrb/public/system/company_yml_export/000/000/001.xml",
+		"/home/merkushin/downloads/SG-1208.patch",
+		"/home/merkushin/downloads/SG-1208",
+		"/home/merkushin/work/www/pcrb/.gitignore",
+		"/home/merkushin/.config/sublime-text-2/Packages/Default/Global.sublime-settings",
+		"/home/merkushin/work/www/pcrb/.git/config",
+		"/home/merkushin/Загрузки/natcmp.rb",
+		"/home/merkushin/work/www/pcrb3/pulscen/vendor/plugins/core/lib/core/extensions/active_record/after_commit_changes.rb",
+		"/home/merkushin/work/www/pcrb/solr/conf/solrconfig.xml",
+		"/home/merkushin/work/www/pcrb3/pulscen/app/controllers/admin/showcases_controller.rb",
+		"/home/merkushin/work/github-projects/sunspot/sunspot_solr/solr/solr/conf/solrconfig.xml",
+		"/home/merkushin/Загрузки/apache-solr-ra-4.0/example/solr/conf/solrconfig.xml",
+		"/home/merkushin/work/www/pcrb3/pulscen/vendor/plugins/core_company_template/app/controllers/core_company_template/company_settings_controller.rb",
+		"/home/merkushin/work/www/pcrb/db/search/process_queue_products.sql",
+		"/home/merkushin/work/www/pcrb/solr/conf/data-config-template.xml",
+		"/home/merkushin/work/www/pcrb/app/controllers/admin/showcases_controller.rb",
+		"/home/merkushin/.ssh/config",
+		"/home/merkushin/.bashrc",
+		"/home/merkushin/.pgpass",
+		"/home/merkushin/work/www/pcrb3/pulscen/vendor/plugins/core/db/migrate/20120203122207_fill_product_url_names.rb",
+		"/home/merkushin/work/www/pcrb3/pulscen/vendor/plugins/core/db/migrate/20120124085149_create_product_url_names.rb",
+		"/home/merkushin/work/www/pcrb3/pulscen/vendor/plugins/core_company_template/db/migrate/vendor/plugins/core_company_template/app/controllers/core_company_template/company_settings_controller.rb",
+		"/home/merkushin/work/plugins/core_company_yml_export/app/controllers/core_company_yml_export/company_yml_export_controller.rb",
+		"/home/merkushin/work/plugins/core_company_yml_export/lib/yml_generator.rb",
+		"/home/merkushin/work/www/pcrb/.git/info/exclude",
+		"/home/merkushin/work/plugins/core_company_yml_export/app/views/company_yml_export/index.html.haml",
+		"/home/merkushin/work/plugins/core_company_yml_export/app/models/core_company_yml_export/company_yml_export.rb",
+		"/home/merkushin/work/plugins/core_company_yml_export/app/models/core_company_yml_export/company_extension.rb",
+		"/home/merkushin/work/tank/pulscen_tank.rb",
+		"/home/merkushin/work/www/pcrb/db/search/process_queue_companies.sql",
+		"/home/merkushin/work/www/pcrb/db/search/process_queue_rubrics.sql",
+		"/home/merkushin/work/www/pcrb/vendor/plugins/core_oferta_import/db/oferta/pulscen/import.sql",
+		"/home/merkushin/work/www/pcrb/db/demands_sphinx_prepared.sql",
+		"/home/merkushin/work/www/pcrb/db/products_sphinx_prepared.sql",
+		"/home/merkushin/work/www/pcrb/solr/conf/schema.xml",
+		"/home/merkushin/work/www/pcrb/Gemfile",
+		"/opt/nginx/conf/nginx.conf",
+		"/home/merkushin/work/www/pcrb/solr/conf/data-config.xml",
+		"/home/merkushin/.rvm/gems/ruby-1.9.2-p290/bundler/gems/sunspot-0a2699536ee1/sunspot_solr/solr/solr/conf/solrconfig.xml",
+		"/home/merkushin/.rvm/gems/ruby-1.9.2-p290/gems/sunspot_solr-2.0.0.pre.111215/solr/solr/conf/solrconfig.xml",
+		"/home/merkushin/Загрузки/apache-solr-4.0-2012-01-09_09-48-13/example/example-DIH/solr/db/conf/solrconfig.xml",
+		"/home/merkushin/Загрузки/apache-solr-4.0-2012-01-09_09-48-13/example/example-DIH/solr/db/conf/db-data-config.xml",
+		"/home/merkushin/.rvm/gems/ruby-1.9.2-p290/gems/sunspot_solr-2.0.0.pre.111215/solr/_solr3.5/solr/conf/solrconfig.xml",
+		"/home/merkushin/.rvm/gems/ruby-1.9.2-p290/gems/sunspot_solr-2.0.0.pre.111215/solr/solr/conf/schema.xml",
+		"/home/merkushin/Загрузки/apache-solr-4.0-2012-01-09_09-48-13/example/example-DIH/solr/tika/conf/solrconfig.xml",
+		"/home/merkushin/Загрузки/apache-solr-4.0-2012-01-09_09-48-13/example/example-DIH/solr/rss/conf/solrconfig.xml",
+		"/home/merkushin/Загрузки/apache-solr-4.0-2012-01-09_09-48-13/example/example-DIH/solr/mail/conf/solrconfig.xml",
+		"/home/merkushin/Загрузки/apache-solr-4.0-2012-01-09_09-48-13/example/example-DIH/solr/solr.xml",
+		"/home/merkushin/work/www/pcrb/solr/conf/elevate.xml",
+		"/home/merkushin/.rvm/gems/ruby-1.9.2-p290/gems/sunspot_solr-2.0.0.pre.111215/solr/solr/solr.xml",
+		"/home/merkushin/.rvm/gems/ruby-1.9.2-p290/gems/sunspot_solr-2.0.0.pre.111215/solr/multicore/core0/conf/solrconfig.xml",
+		"/home/merkushin/.rvm/gems/ruby-1.9.2-p290/gems/sunspot_solr-2.0.0.pre.111215/solr/multicore/core0/conf/schema.xml",
+		"/home/merkushin/Загрузки/apache-solr-3.5.0/client/ruby/solr-ruby/examples/tang/tang_importer.rb"
+	],
+	"find":
+	{
+		"height": 33.0
+	},
+	"find_in_files":
+	{
+		"height": 0.0,
+		"where_history":
+		[
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": false,
+		"find_history":
+		[
+			"#(",
+			"HTTP_X",
+			"HTTP_X_REQUESTED_WITH",
+			"195832",
+			"10379",
+			"core_company_prod",
+			"core_de",
+			"core_company_pro",
+			"doc",
+			"{:doc",
+			"\\n",
+			"**/",
+			"http://stpulscen.ru/",
+			"sttest-",
+			"all_updates_locked?",
+			"set_company_and_context",
+			"current_region",
+			"compute",
+			"add_hit.js",
+			"\\)$",
+			")$",
+			")\\n",
+			"cursor.bind_param(",
+			"', ",
+			"=[0-9,]+;",
+			"HashDocSet",
+			"AVAILABLE_CURRENCIES",
+			"categories",
+			"pre_categories_by_products",
+			"pre_company_name",
+			"pre_categories_by_products",
+			"yml_by_products",
+			"sellout",
+			"search_in",
+			"packet_sort",
+			"&rt;",
+			">",
+			"<",
+			"7501000",
+			"7500000",
+			"\"",
+			"is_published",
+			"tag",
+			"#",
+			"import",
+			"soft",
+			"/spel",
+			"requestHandler",
+			"core",
+			"QueryResponseWriter",
+			"dismax",
+			"31646"
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": true,
+		"replace_history":
+		[
+			"doc\\n\\n",
+			"doc\\n",
+			"{:doc\\n",
+			",",
+			"', '",
+			"http://vagonka-bel.pulscen.by/",
+			"st",
+			",",
+			"",
+			"' => ",
+			",",
+			"\\n",
+			"&gt;",
+			"&rt;",
+			"&lt;",
+			"${dataimporter.request.id_end}",
+			"${dataimporter.request.id_start}",
+			"&quot;",
+			"\\|",
+			"|"
+		],
+		"reverse": false,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"sheets":
+			[
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 0.0
+	},
+	"input":
+	{
+		"height": 0.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"replace":
+	{
+		"height": 62.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 0.0,
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"show_minimap": false,
+	"show_open_files": false,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 397.0,
+	"status_bar_visible": true
+}
