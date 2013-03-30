@@ -176,12 +176,10 @@ var fieldRequired = '{l s='Please fill in all required fields, then save the cus
 		{if $have_image}
 			<span id="view_full_size">
 				<img src="{$link->getImageLink($product->link_rewrite, $cover.id_image, 'large_default')}" {if $jqZoomEnabled}class="jqzoom" alt="{$link->getImageLink($product->link_rewrite, $cover.id_image, 'thickbox_default')}"{else} title="{$product->name|escape:'htmlall':'UTF-8'}" alt="{$product->name|escape:'htmlall':'UTF-8'}" {/if} id="bigpic"/>
-				<span class="span_link">{l s='View full size'}</span>
 			</span>
 		{else}
 			<span id="view_full_size">
 				<img src="{$img_prod_dir}{$lang_iso}-default-large_default.jpg" id="bigpic" alt="" title="{$product->name|escape:'htmlall':'UTF-8'}"/>
-				<span class="span_link">{l s='View full size'}</span>
 			</span>
 		{/if}
 		</div>
@@ -207,19 +205,12 @@ var fieldRequired = '{l s='Please fill in all required fields, then save the cus
 		</div>
 		{/if}
 		{if isset($images) && count($images) > 1}<p class="resetimg clear"><span id="wrapResetImages" style="display: none;"><img src="{$img_dir}icon/cancel_11x13.gif" alt="{l s='Cancel'}" width="11" height="13"/> <a id="resetImages" href="{$link->getProductLink($product)}" onclick="$('span#wrapResetImages').hide('slow');return (false);">{l s='Display all pictures'}</a></span></p>{/if}
-		<!-- usefull links-->
-		<ul id="usefull_link_block">
-			{if $HOOK_EXTRA_LEFT}{$HOOK_EXTRA_LEFT}{/if}
-			<li class="print"><a href="javascript:print();">{l s='Print'}</a></li>
-			{if $have_image && !$jqZoomEnabled}
-			{/if}
-		</ul>
 	</div>
 
 	<!-- left infos-->
 	<div id="pb-left-column">
 		<h1>{$product->name|escape:'htmlall':'UTF-8'}</h1>
-		{if $product->quantity <= 0}<span class="outofstock">{l s='Out of stock'}</span>{else}<span class="availability">{l s='Available'}</span>{/if}
+		{if $product->quantity <= 0}<span class="outofstock">Под заказ</span>{/if}
 		
 		{if $product->description_short OR $packItems|@count > 0}
 		<div id="short_description_block">
@@ -338,11 +329,13 @@ var fieldRequired = '{l s='Please fill in all required fields, then save the cus
 
 			<div class="clear"></div>
 		</div>
+        {*
 		<div class="share">
 		<a class="addthis_button" href="http://www.addthis.com/bookmark.php?v=250&amp;pubid=ra-4d9545df0e46a4cf"><img src="http://s7.addthis.com/static/btn/v2/lg-share-en.gif" width="125" height="16" alt="Bookmark and Share" style="border:0"/></a>
 
 		<script type="text/javascript" src="http://s7.addthis.com/js/250/addthis_widget.js#pubid=ra-4d9545df0e46a4cf"></script>
 		</div>
+        *}
 
 			<div class="product_attributes">
 				{if isset($groups)}

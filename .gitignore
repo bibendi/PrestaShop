@@ -1,11 +1,9 @@
 .buildpath
-.htaccess
 .project
 .settings
 .idea
 .svn
 .DS_Store
-robots.txt
 sitemap.xml
 cache/smarty/cache/*
 !cache/smarty/cache/index.php

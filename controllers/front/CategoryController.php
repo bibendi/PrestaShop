@@ -112,6 +112,9 @@ class CategoryControllerCore extends FrontController
 		if ($this->category->id != 1)
 			$this->assignProductList();
 
+        $this->assignProductsAttributesGroups();
+        $this->assignProductsAttributesCombinations();
+
 		$this->context->smarty->assign(array(
 			'category' => $this->category,
 			'products' => (isset($this->cat_products) && $this->cat_products) ? $this->cat_products : null,
@@ -205,5 +208,129 @@ class CategoryControllerCore extends FrontController
 
 		$this->context->smarty->assign('nb_products', $this->nbProducts);
 	}
+
+    protected function assignProductsAttributesGroups(){
+        $products_groups = array();
+        $products_combinations = array();
+        $products_colors = array();
+        $products_combination_images = array();
+
+        foreach ($this->cat_products as $cat_product)
+        {
+            $product = new Product (intval($cat_product['id_product']), true , $this->context->language->id);
+            $colors = array();
+            $groups = array();
+            $combinations = array();
+            $attributes_groups = $product->getAttributesGroups($this->context->language->id);
+
+            if (is_array($attributes_groups) && $attributes_groups)
+            {
+                $combination_images = $product->getCombinationImages($this->context->language->id);
+                $combination_prices_set = array();
+
+                foreach ($attributes_groups as $k => $row)
+                {
+                    // Color management
+                    if ((isset($row['attribute_color']) && $row['attribute_color']) || (file_exists(_PS_COL_IMG_DIR_.$row['id_attribute'].'.jpg')))
+                    {
+                        $colors[$row['id_attribute']]['value'] = $row['attribute_color'];
+                        $colors[$row['id_attribute']]['name'] = $row['attribute_name'];
+                        if (!isset($colors[$row['id_attribute']]['attributes_quantity']))
+                            $colors[$row['id_attribute']]['attributes_quantity'] = 0;
+                        $colors[$row['id_attribute']]['attributes_quantity'] += (int)$row['quantity'];
+                    }
+                    if (!isset($groups[$row['id_attribute_group']]))
+                        $groups[$row['id_attribute_group']] = array(
+                            'name' => $row['public_group_name'],
+                            'group_type' => $row['group_type'],
+                            'default' => -1,
+                        );
+
+                    $groups[$row['id_attribute_group']]['attributes'][$row['id_attribute']] = $row['attribute_name'];
+                    if ($row['default_on'] && $groups[$row['id_attribute_group']]['default'] == -1)
+                        $groups[$row['id_attribute_group']]['default'] = (int)$row['id_attribute'];
+                    if (!isset($groups[$row['id_attribute_group']]['attributes_quantity'][$row['id_attribute']]))
+                        $groups[$row['id_attribute_group']]['attributes_quantity'][$row['id_attribute']] = 0;
+                    $groups[$row['id_attribute_group']]['attributes_quantity'][$row['id_attribute']] += (int)$row['quantity'];
+
+                    $combinations[$row['id_product_attribute']]['attributes_values'][$row['id_attribute_group']] = $row['attribute_name'];
+                    $combinations[$row['id_product_attribute']]['attributes'][] = (int)$row['id_attribute'];
+                    $combinations[$row['id_product_attribute']]['price'] = (float)$row['price'];
+
+                    // Call getPriceStatic in order to set $combination_specific_price
+                    if (!isset($combination_prices_set[(int)$row['id_product_attribute']]))
+                    {
+                        Product::getPriceStatic((int)$product->id, false, $row['id_product_attribute'], 6, null, false, true, 1, false, null, null, null, $combination_specific_price);
+                        $combination_prices_set[(int)$row['id_product_attribute']] = true;
+                        $combinations[$row['id_product_attribute']]['specific_price'] = $combination_specific_price;
+                    }
+                    $combinations[$row['id_product_attribute']]['ecotax'] = (float)$row['ecotax'];
+                    $combinations[$row['id_product_attribute']]['weight'] = (float)$row['weight'];
+                    $combinations[$row['id_product_attribute']]['quantity'] = (int)$row['quantity'];
+                    $combinations[$row['id_product_attribute']]['reference'] = $row['reference'];
+                    $combinations[$row['id_product_attribute']]['unit_impact'] = $row['unit_price_impact'];
+                    $combinations[$row['id_product_attribute']]['minimal_quantity'] = $row['minimal_quantity'];
+                    if ($row['available_date'] != '0000-00-00')
+                        $combinations[$row['id_product_attribute']]['available_date'] = $row['available_date'];
+                    else
+                        $combinations[$row['id_product_attribute']]['available_date'] = '';
+
+                    if (isset($combination_images[$row['id_product_attribute']][0]['id_image']))
+                        $combinations[$row['id_product_attribute']]['id_image'] = $combination_images[$row['id_product_attribute']][0]['id_image'];
+                    else
+                        $combinations[$row['id_product_attribute']]['id_image'] = -1;
+                }
+                // wash attributes list (if some attributes are unavailables and if allowed to wash it)
+                if (!Product::isAvailableWhenOutOfStock($product->out_of_stock) && Configuration::get('PS_DISP_UNAVAILABLE_ATTR') == 0)
+                {
+                    foreach ($groups as &$group)
+                        foreach ($group['attributes_quantity'] as $key => &$quantity)
+                            if (!$quantity)
+                                unset($group['attributes'][$key]);
+
+                    foreach ($colors as $key => $color)
+                        if (!$color['attributes_quantity'])
+                            unset($colors[$key]);
+                }
+                foreach ($combinations as $id_product_attribute => $comb)
+                {
+                    $attribute_list = '';
+                    foreach ($comb['attributes'] as $id_attribute)
+                        $attribute_list .= '\''.(int)$id_attribute.'\',';
+                    $attribute_list = rtrim($attribute_list, ',');
+                    $combinations[$id_product_attribute]['list'] = $attribute_list;
+                }
+
+                $products_groups[$product->id] = $groups;
+                $products_combinations[$product->id] = $combinations;
+                $products_colors[$product->id] = (count($colors)) ? $colors : false;
+                $products_combination_images[$product->id] = $combination_images;
+            }
+        }
+
+        $this->context->smarty->assign(array(
+            'productsGroups' => $products_groups,
+            'productsCombinations' => $products_combinations,
+            'productsColors' => $products_colors,
+            'productsCombinationImages' => $products_combination_images));
+        //die(var_dump(array($products_groups, $products_combinations)));
+    }
+
+    protected function assignProductsAttributesCombinations()
+    {
+        $products_attributes_combinations = array();
+
+        foreach ($this->cat_products as $cat_product)
+        {
+            $product_id = intval($cat_product['id_product']);
+            $attributes_combinations = Product::getAttributesInformationsByProduct($product_id);
+            foreach ($attributes_combinations as &$ac)
+                foreach ($ac as &$val)
+                    $val = str_replace('-', '_', Tools::link_rewrite(str_replace(array(',', '.'), '-', $val)));
+            $products_attributes_combinations[$product_id] = $attributes_combinations;
+        }
+        $this->context->smarty->assign('productsAttributesCombinations', $products_attributes_combinations);
+        //die(var_dump($products_attributes_combinations));
+    }
 }
 
