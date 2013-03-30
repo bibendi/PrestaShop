@@ -18,6 +18,7 @@
 				</li>
 			{/if}
 		</ul>
+        <h3 style="padding-top: 86px; padding-left: 130px; font-size: 26px; font-family: Ubuntu Condensed;">+7 (343) 2-717-300</h3>
 		<div class="sf-right">&nbsp;</div>
 </div>
 	<!--/ Menu -->

@@ -173,17 +173,17 @@
 			</tr>
 			{/if}
 			<tr class="cart_total_price">
-				
+
 				{if $use_taxes}
 				<td colspan="5">{l s='Total:'}</td>
 				<td colspan="2" class="price total_price_container" id="total_price_container">
-					
+
 					<span id="total_price">{displayPrice price=$total_price}</span>
 				</td>
 				{else}
 				<td colspan="5">{l s='Total:'}</td>
 				<td colspan="2" class="price total_price_container" id="total_price_container">
-					
+
 					<span id="total_price">{displayPrice price=$total_price_without_tax}</span>
 				</td>
 				{/if}
@@ -225,7 +225,7 @@
 												{l s=':'} {$textField.value}
 											</li>
 										{/foreach}
-										
+
 									</ul>
 								{/if}
 

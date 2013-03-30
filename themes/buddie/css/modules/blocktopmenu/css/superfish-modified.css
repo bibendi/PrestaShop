@@ -1,7 +1,7 @@
 
 /*** ESSENTIAL STYLES ***/
 .sf-contener {
-	clear: right;margin-top:15px;float:right;width:auto;background: url(../img/bkg_categories_block_top_left.png) no-repeat top left;padding-left:24px;
+	clear: right;margin-top:3px;float:right;width:auto;background: url(../img/bkg_categories_block_top_left.png) no-repeat top left;padding-left:24px;
 }
 .sf-right {display:none}
 .sf-menu, .sf-menu * {
