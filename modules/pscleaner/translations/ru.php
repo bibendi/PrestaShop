@@ -2,7 +2,6 @@
 
 global $_MODULE;
 $_MODULE = array();
-
 $_MODULE['<{pscleaner}prestashop>pscleaner_e5a8af934462c05509c7de5f2f2c18a3'] = 'PrestaShop Cleaner';
 $_MODULE['<{pscleaner}prestashop>pscleaner_4bcb9cc248b7f6c8dc7f5c323bde76de'] = 'Проверьте и установите ограничения функционала  и уберите настройки по умолчанию';
 $_MODULE['<{pscleaner}prestashop>pscleaner_752369f18aebeed9ae8384d8f1b5dc5e'] = 'Будьте осторожны с данным инструментом - восстановление невозможно. ';

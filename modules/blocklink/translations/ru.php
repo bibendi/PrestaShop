@@ -2,7 +2,6 @@
 
 global $_MODULE;
 $_MODULE = array();
-
 $_MODULE['<{blocklink}prestashop>blocklink_fc738410141e4ec0c0319a81255a1431'] = 'Блок ссылок';
 $_MODULE['<{blocklink}prestashop>blocklink_baa2ae9622a47c3217d725d1537e5187'] = 'Добавляет блок с дополнительными ссылками.';
 $_MODULE['<{blocklink}prestashop>blocklink_d98d5daaf408b77b05a2eeb6ae88d6df'] = 'Вы уверены, что хотите удалить все эти ссылки?';
@@ -11,13 +10,13 @@ $_MODULE['<{blocklink}prestashop>blocklink_9394bb34611399534ffac4f0ece96b7f'] = 
 $_MODULE['<{blocklink}prestashop>blocklink_3da9d5745155a430aac6d7de3b6de0c8'] = 'Ссылка была добавлена.';
 $_MODULE['<{blocklink}prestashop>blocklink_898536ebd630aa3a9844e9cd9d1ebb9b'] = 'Ошибка при создании ссылки.';
 $_MODULE['<{blocklink}prestashop>blocklink_b18032737875f7947443c98824103a1f'] = 'Поле \"Название\" не может быть пустым.';
-$_MODULE['<{blocklink}prestashop>blocklink_43b38b9a2fe65059bed320bd284047e3'] = 'Поле \"заглавие\" неверное';
+$_MODULE['<{blocklink}prestashop>blocklink_43b38b9a2fe65059bed320bd284047e3'] = 'Поле \\\"Название\\\" неверное';
 $_MODULE['<{blocklink}prestashop>blocklink_eb74914f2759760be5c0a48f699f8541'] = 'Ошибка при обновлении названия.';
 $_MODULE['<{blocklink}prestashop>blocklink_5c0f7e2db8843204f422a369f2030b37'] = 'Блок заголовка был обновлен.';
 $_MODULE['<{blocklink}prestashop>blocklink_5d73d4c0bcb035a1405e066eb0cdf832'] = 'Произошла ошибка во время удаления ссылки.';
 $_MODULE['<{blocklink}prestashop>blocklink_9bbcafcc85be214aaff76dffb8b72ce9'] = 'Ссылка была удалена.';
-$_MODULE['<{blocklink}prestashop>blocklink_7e5748d8c44f33c9cde08ac2805e5621'] = 'Обновление порядок сортировки ';
-$_MODULE['<{blocklink}prestashop>blocklink_46cff2568b00bc09d66844849d0b1309'] = 'Произошла ошибка во время настройки сортировки .';
+$_MODULE['<{blocklink}prestashop>blocklink_7e5748d8c44f33c9cde08ac2805e5621'] = 'Порядок сортировки обновлен';
+$_MODULE['<{blocklink}prestashop>blocklink_46cff2568b00bc09d66844849d0b1309'] = 'Произошла ошибка во время настройки сортировки.';
 $_MODULE['<{blocklink}prestashop>blocklink_58e9b25bb2e2699986a3abe2c92fc82e'] = 'Добавить новую ссылку';
 $_MODULE['<{blocklink}prestashop>blocklink_ed2fc2838f7edb7607dd1cd19f3a82e0'] = 'Текст:';
 $_MODULE['<{blocklink}prestashop>blocklink_3b3d06023f6353f8fd05f859b298573e'] = 'URL:';

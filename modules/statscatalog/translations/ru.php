@@ -2,10 +2,9 @@
 
 global $_MODULE;
 $_MODULE = array();
-
 $_MODULE['<{statscatalog}prestashop>statscatalog_cf3aa21c6a2147ddbd86f34091daeccd'] = 'Статистика каталога';
 $_MODULE['<{statscatalog}prestashop>statscatalog_226ed1224c5b2db3d3e0716bb4f74da5'] = 'Общая статистика о каталоге.';
-$_MODULE['<{statscatalog}prestashop>statscatalog_74cda5a02df704cc5c3e8fee7fc0f7bc'] = '(1 покупка / %d визитов)';
+$_MODULE['<{statscatalog}prestashop>statscatalog_74cda5a02df704cc5c3e8fee7fc0f7bc'] = '(1 покупок / %d посещений)';
 $_MODULE['<{statscatalog}prestashop>statscatalog_0173374ac20f5843d58b553d5b226ef6'] = 'Выберите категорию';
 $_MODULE['<{statscatalog}prestashop>statscatalog_b1c94ca2fbc3e78fc30069c8d0f01680'] = 'Все';
 $_MODULE['<{statscatalog}prestashop>statscatalog_a7b623414d4b6a3225b4e935babec6d2'] = 'Доступны товары:';
@@ -17,7 +16,7 @@ $_MODULE['<{statscatalog}prestashop>statscatalog_05ff4bfc3baf0acd31a72f1ac754de0
 $_MODULE['<{statscatalog}prestashop>statscatalog_c09d09e371989d89847049c9574b6b8e'] = 'Доступны картинки:';
 $_MODULE['<{statscatalog}prestashop>statscatalog_65275d1b04037d8c8e42425002110363'] = 'Среднее количество картинок:';
 $_MODULE['<{statscatalog}prestashop>statscatalog_51b8891d531ad91128ba58c8928322ab'] = 'Товары, которые никогда не просматривались:';
-$_MODULE['<{statscatalog}prestashop>statscatalog_8725647ef741e5d48c1e6f652ce80b50'] = 'Товары, которые ни разу не продавались:';
+$_MODULE['<{statscatalog}prestashop>statscatalog_8725647ef741e5d48c1e6f652ce80b50'] = 'Никогда не купил:';
 $_MODULE['<{statscatalog}prestashop>statscatalog_b86770bc713186bcf43dbb1164c5fd28'] = 'Курс обмена:';
 $_MODULE['<{statscatalog}prestashop>statscatalog_0468e0edbf9f5807c25c106248bd7401'] = 'Средний курс обмена для страницы товаров. Есть возможность купить товар не просматривая страницу товаров, поэтому этот курс может быть больше, чем 1.';
 $_MODULE['<{statscatalog}prestashop>statscatalog_58a714d3e9bb2902a5b688c99bd4d8e6'] = 'Никогда не покупал';

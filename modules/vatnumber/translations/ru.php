@@ -2,7 +2,6 @@
 
 global $_MODULE;
 $_MODULE = array();
-
 $_MODULE['<{vatnumber}prestashop>vatnumber_b0b9a606a1c251323825ca45d40964dc'] = 'Страна по умолчанию не установлена.';
 $_MODULE['<{vatnumber}prestashop>vatnumber_cee549912e318726d2c4989bb507665f'] = 'ИНН';
 $_MODULE['<{vatnumber}prestashop>vatnumber_daa44329eceb03dc085a668376af07f5'] = 'Включение ввода ИНН будет доступно после создания адреса (Вы должны заполнить поле организация для ввода ИНН)';

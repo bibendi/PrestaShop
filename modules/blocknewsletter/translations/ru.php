@@ -2,9 +2,8 @@
 
 global $_MODULE;
 $_MODULE = array();
-
 $_MODULE['<{blocknewsletter}prestashop>blocknewsletter_9e31b08a00c1ed653bcaa517dee84714'] = 'Блок новостей';
-$_MODULE['<{blocknewsletter}prestashop>blocknewsletter_ba457fab18d697d978befb95e827eb91'] = 'Добавляет блок для Подписка на рассылку.';
+$_MODULE['<{blocknewsletter}prestashop>blocknewsletter_ba457fab18d697d978befb95e827eb91'] = 'Добавляет блок для Подписки на рассылку.';
 $_MODULE['<{blocknewsletter}prestashop>blocknewsletter_396c88991101b5ca362932952293d291'] = 'Вы уверены, что хотите удалить все ваши контакты?';
 $_MODULE['<{blocknewsletter}prestashop>blocknewsletter_524ec52bffb5d76b943ff1ae20c27f0a'] = 'Неверный код купона';
 $_MODULE['<{blocknewsletter}prestashop>blocknewsletter_ff0a3b7f3daef040faf89a88fdac01b7'] = 'Обновлено';
@@ -14,7 +13,7 @@ $_MODULE['<{blocknewsletter}prestashop>blocknewsletter_93cba07454f06a4a960172bbd
 $_MODULE['<{blocknewsletter}prestashop>blocknewsletter_bafd7322c6e97d25b6299b5d6fe8920b'] = 'Нет';
 $_MODULE['<{blocknewsletter}prestashop>blocknewsletter_54d2f1bab16b550e32395a7e6edb8de5'] = 'Послать проверочный e-mail после подписки?';
 $_MODULE['<{blocknewsletter}prestashop>blocknewsletter_b37f32d509cf5aabe806b16791588aa3'] = 'Отправить подтверждение по электронной почте после подписки?';
-$_MODULE['<{blocknewsletter}prestashop>blocknewsletter_506e58042922bff5bd753dc612e84f5b'] = 'Код ваучера - Добро пожаловать';
+$_MODULE['<{blocknewsletter}prestashop>blocknewsletter_506e58042922bff5bd753dc612e84f5b'] = 'Код купона - Добро пожаловать';
 $_MODULE['<{blocknewsletter}prestashop>blocknewsletter_1d612b943b8f4792bff603384a46e5f1'] = 'Оставьте пустым для отмены';
 $_MODULE['<{blocknewsletter}prestashop>blocknewsletter_06933067aafd48425d67bcb01bba5cb6'] = 'Обновить';
 $_MODULE['<{blocknewsletter}prestashop>blocknewsletter_59e4904d4366fab35a8282f418e699de'] = 'Неверный адресс e-mail';

@@ -2,7 +2,6 @@
 
 global $_MODULE;
 $_MODULE = array();
-
 $_MODULE['<{blockmanufacturer}prestashop>blockmanufacturer_bc3e73cfa718a3237fb1d7e1da491395'] = 'Блок производителей';
 $_MODULE['<{blockmanufacturer}prestashop>blockmanufacturer_71087c7035e626bd33c72ae9a7f042af'] = 'Отображает блок производителей/брендов';
 $_MODULE['<{blockmanufacturer}prestashop>blockmanufacturer_067931ed6c365d76c9f32285a6b49839'] = 'Неверное количество элементов';

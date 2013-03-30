@@ -2,7 +2,6 @@
 
 global $_MODULE;
 $_MODULE = array();
-
 $_MODULE['<{statsgeolocation}prestashop>statsgeolocation_323d4eb70b252acb4a04eaf9e0882597'] = 'Геолокация';
 $_MODULE['<{statsgeolocation}prestashop>statsgeolocation_621bd20bc26d0f67bacffc7785616372'] = 'Отображает местонахождение покупателя';
 $_MODULE['<{statsgeolocation}prestashop>statsgeolocation_60503475047260bb2e6b815e3dcad910'] = 'Этот модуль показывает распределение стран ваших клиентов, отображая разного размера точки на Worldmap ниже. См. славу вашего сайта по всему миру и на каком континенте вы еще не победить.';

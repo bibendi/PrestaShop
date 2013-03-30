@@ -28,10 +28,9 @@
 	<ul id="header_nav">
 		{if !$PS_CATALOG_MODE}
 		<li id="shopping_cart">
-			<a href="{$link->getPageLink($order_process, true)}" title="{l s='Shopping Cart' mod='blockuserinfo'}">{l s='Shopping Cart:' mod='blockuserinfo'}	</a>
+			<a href="{$link->getPageLink($order_process, true)}">Корзина покупок</a>
 			<span class="ajax_cart_quantity{if $cart_qties == 0} hidden{/if}">{$cart_qties}</span>
-			<span class="ajax_cart_product_txt{if $cart_qties != 1} hidden{/if}">{l s='product' mod='blockuserinfo'}</span>
-			<span class="ajax_cart_product_txt_s{if $cart_qties < 2} hidden{/if}">{l s='products' mod='blockuserinfo'}</span>
+			<span class="ajax_cart_product_txt{if $cart_qties > 0} hidden{/if}">товар(ов)</span>
 			<span class="ajax_cart_total{if $cart_qties == 0} hidden{/if}">
 				{if $cart_qties > 0}
 					{if $priceDisplay == 1}
@@ -46,15 +45,14 @@
 			<span class="ajax_cart_no_product{if $cart_qties > 0} hidden{/if}">{l s='0 items' mod='blockuserinfo'}</span>
 		</li>
 		{/if}
-		<li id="your_account"><a href="{$link->getPageLink('my-account', true)}" title="{l s='My Account' mod='blockuserinfo'}">{l s='My Account' mod='blockuserinfo'}</a></li>
+		{* <li id="your_account"><a href="{$link->getPageLink('my-account', true)}" title="Кабинет">Кабинет</a></li> *}
 	</ul>
 	<p id="header_user_info">
-		{l s='Welcome' mod='blockuserinfo'}
 		{if $logged}
 			<a href="{$link->getPageLink('my-account', true)}" class="account"><span>{$cookie->customer_firstname} {$cookie->customer_lastname}</span></a>
-			<a href="{$link->getPageLink('index', true, NULL, "mylogout")}" title="{l s='Log me out' mod='blockuserinfo'}" class="logout">{l s='Log out' mod='blockuserinfo'}</a>
+			<a href="{$link->getPageLink('index', true, NULL, "mylogout")}" title="{l s='Log me out' mod='blockuserinfo'}" class="logout">Выйти</a>
 		{else}
-			<a href="{$link->getPageLink('my-account', true)}" class="login">{l s='(Log in)' mod='blockuserinfo'}</a>
+			<a href="{$link->getPageLink('my-account', true)}" class="login">Войти</a>
 		{/if}
 	</p>
 </div>

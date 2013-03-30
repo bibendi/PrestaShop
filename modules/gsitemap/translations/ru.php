@@ -2,7 +2,6 @@
 
 global $_MODULE;
 $_MODULE = array();
-
 $_MODULE['<{gsitemap}prestashop>gsitemap_3aaaafde6f9b2701f9e6eb9292e95521'] = 'Карта сайта Google sitemap';
 $_MODULE['<{gsitemap}prestashop>gsitemap_ea5d9ad08653eae5509e2fc70171a0d6'] = 'Сгенерировать файл Google sitemap';
 $_MODULE['<{gsitemap}prestashop>gsitemap_ecf80a15b9595df825e451eb4def853b'] = 'Не могу создать файл %ssitemap.xml .';

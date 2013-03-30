@@ -2,7 +2,6 @@
 
 global $_MODULE;
 $_MODULE = array();
-
 $_MODULE['<{statspersonalinfos}prestashop>statspersonalinfos_1b94af23fd8ea879910a6307460ebba4'] = 'Информация о клиентах';
 $_MODULE['<{statspersonalinfos}prestashop>statspersonalinfos_ff9c34d2829b95a0936b22b409640143'] = 'Показать такие характеристики, как пол и возраст.';
 $_MODULE['<{statspersonalinfos}prestashop>statspersonalinfos_62a9b5081b2dab89113e94a0b4cb4be0'] = 'Распределение пола позволит вам, определить процент мужчин и женщин среди ваших клиентов.';
@@ -22,8 +21,8 @@ $_MODULE['<{statspersonalinfos}prestashop>statspersonalinfos_1b97d8091d4b383e831
 $_MODULE['<{statspersonalinfos}prestashop>statspersonalinfos_aaf4306af7449d0b6b99e8df15f422a2'] = 'запуск рекламных кампаний, адресованных определенным клиентам, которые могли бы интересоваться особым предложением в определенные даты и времена.';
 $_MODULE['<{statspersonalinfos}prestashop>statspersonalinfos_416e130b744a7becbe84de8e251135bb'] = 'Общение с группой клиентов по почте / письмо с новостями.';
 $_MODULE['<{statspersonalinfos}prestashop>statspersonalinfos_8dc514f6da8c696c4a522efc145ad28a'] = 'Определение пола';
-$_MODULE['<{statspersonalinfos}prestashop>statspersonalinfos_63889cfb9d3cbe05d1bd2be5cc9953fd'] = 'Мужчина';
-$_MODULE['<{statspersonalinfos}prestashop>statspersonalinfos_b719ce180ec7bd9641fece2f920f4817'] = 'Женщины';
+$_MODULE['<{statspersonalinfos}prestashop>statspersonalinfos_63889cfb9d3cbe05d1bd2be5cc9953fd'] = 'Мужской';
+$_MODULE['<{statspersonalinfos}prestashop>statspersonalinfos_b719ce180ec7bd9641fece2f920f4817'] = 'Женский';
 $_MODULE['<{statspersonalinfos}prestashop>statspersonalinfos_88183b946cc5f0e8c96b2e66e1c74a7e'] = 'Неизвестно';
 $_MODULE['<{statspersonalinfos}prestashop>statspersonalinfos_2d0f27acbb474dff9aba76851970618a'] = 'Возраст в пределах';
 $_MODULE['<{statspersonalinfos}prestashop>statspersonalinfos_6e69fbf88d84db874f365542b0284a95'] = '0-18 лет';

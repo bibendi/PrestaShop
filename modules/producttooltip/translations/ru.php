@@ -2,7 +2,6 @@
 
 global $_MODULE;
 $_MODULE = array();
-
 $_MODULE['<{producttooltip}prestashop>producttooltip_4776f7eb5998034f7bbc63b6457d1ff4'] = 'Подсказки на страницах товаров';
 $_MODULE['<{producttooltip}prestashop>producttooltip_3e29935c25a10ae452308dc52381f353'] = 'Показывает количество покупателей на странице товара, продажи и тд.';
 $_MODULE['<{producttooltip}prestashop>producttooltip_c888438d14855d7d96a2724ee9c306bd'] = 'Настройки обновлены';
@@ -18,7 +17,7 @@ $_MODULE['<{producttooltip}prestashop>producttooltip_a536f110cc080569666e95e8f49
 $_MODULE['<{producttooltip}prestashop>producttooltip_44fdec47036f482b68b748f9d786801b'] = 'дней';
 $_MODULE['<{producttooltip}prestashop>producttooltip_b17f3f4dcf653a5776792498a9b44d6a'] = 'Обновить настройки';
 $_MODULE['<{producttooltip}prestashop>producttooltip_f0f5fac9602d88bc27f0edf960dda8b8'] = 'Например:';
-$_MODULE['<{producttooltip}prestashop>producttooltip_a49dc1bf9fb1e2ba1c9735f91dfece9a'] = 'В данный момент этот товар просматривает %d человек.';
-$_MODULE['<{producttooltip}prestashop>producttooltip_d33e6930ab863734cef083b815ff7356'] = 'В данный момент этот товар просматривает %d человек.';
+$_MODULE['<{producttooltip}prestashop>producttooltip_a49dc1bf9fb1e2ba1c9735f91dfece9a'] = '%d человек в настоящее время просматривает этот товар';
+$_MODULE['<{producttooltip}prestashop>producttooltip_d33e6930ab863734cef083b815ff7356'] = '%d человек в настоящее время просматривает этот товар';
 $_MODULE['<{producttooltip}prestashop>producttooltip_71736c614b237f4368128077411f1699'] = 'Послений раз был куплен';
 $_MODULE['<{producttooltip}prestashop>producttooltip_4dda321f0231c2d50fcee5c20075dbbd'] = 'Послений раз был добавлен в корзину';

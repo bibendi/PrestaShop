@@ -2,7 +2,6 @@
 
 global $_MODULE;
 $_MODULE = array();
-
 $_MODULE['<{blockstore}prestashop>blockstore_68e9ecb0ab69b1121fe06177868b8ade'] = 'Блок пунктов выдачи';
 $_MODULE['<{blockstore}prestashop>blockstore_2d7884c3777bd04028c4a55a820880a8'] = 'Добавляет блок с ссылкой на магазины.';
 $_MODULE['<{blockstore}prestashop>blockstore_126b21ce46c39d12c24058791a236777'] = 'Недопустимый формат изображения';

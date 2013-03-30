@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<module>
+	<name>localizator</name>
+	<displayName><![CDATA[Локализатор]]></displayName>
+	<version><![CDATA[1.0]]></version>
+	<description><![CDATA[Добавляет перевод вкладок и локальные настройки]]></description>
+	<author><![CDATA[ORS]]></author>
+	<tab><![CDATA[others]]></tab>
+	<is_configurable>1</is_configurable>
+	<need_instance>0</need_instance>
+	<limited_countries></limited_countries>
+</module>

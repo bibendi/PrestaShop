@@ -2,7 +2,6 @@
 
 global $_MODULE;
 $_MODULE = array();
-
 $_MODULE['<{homefeatured}prestashop>homefeatured_dcf3f48ad88dabefc99b82013c4443de'] = 'Популярные товары на главной';
 $_MODULE['<{homefeatured}prestashop>homefeatured_33d0c6fa8dcda0ea168f8ef69556acfe'] = 'Отображает Рекомендуемые товары в средней части главной страницы.';
 $_MODULE['<{homefeatured}prestashop>homefeatured_8f31eb2413dea86c661532d4cf973d2f'] = 'Неверное количество товаров';

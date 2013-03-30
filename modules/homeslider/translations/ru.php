@@ -2,14 +2,13 @@
 
 global $_MODULE;
 $_MODULE = array();
-
 $_MODULE['<{homeslider}prestashop>homeslider_9582801267616d564272ae7a4f622c93'] = 'Слайдшоу для Вашей домашней страницы';
 $_MODULE['<{homeslider}prestashop>homeslider_c17aed434289cedd02618451e12c8da6'] = 'Добавляет слайдшоу к Вашей домашней странице.';
 $_MODULE['<{homeslider}prestashop>homeslider_17167898123700e4b4f9bc17c1e0608d'] = 'Конфигурация слайдшоу';
 $_MODULE['<{homeslider}prestashop>homeslider_e933dc24fb245d863a43b4fefe9b45f5'] = 'Высота:';
 $_MODULE['<{homeslider}prestashop>homeslider_48ccf48dcf2218a413ce473262f21a0c'] = 'Ширина:';
 $_MODULE['<{homeslider}prestashop>homeslider_2c526c645bca9542ba1598835d46b753'] = 'Скорость:';
-$_MODULE['<{homeslider}prestashop>homeslider_154e6bcf4e3b49a424323cb9021ef851'] = 'Пауза';
+$_MODULE['<{homeslider}prestashop>homeslider_154e6bcf4e3b49a424323cb9021ef851'] = 'Пауза:';
 $_MODULE['<{homeslider}prestashop>homeslider_9ce04a5715756f9c0fece348db9b7da1'] = 'Петля:';
 $_MODULE['<{homeslider}prestashop>homeslider_93cba07454f06a4a960172bbd6e2a435'] = 'Да';
 $_MODULE['<{homeslider}prestashop>homeslider_bafd7322c6e97d25b6299b5d6fe8920b'] = 'Нет';
@@ -28,8 +27,8 @@ $_MODULE['<{homeslider}prestashop>homeslider_51ec9bf4aaeab1b25bb57f9f8d4de557'] 
 $_MODULE['<{homeslider}prestashop>homeslider_3b3d06023f6353f8fd05f859b298573e'] = 'URL:';
 $_MODULE['<{homeslider}prestashop>homeslider_8046c95f98fc714db47978092bb24264'] = 'Легенда:';
 $_MODULE['<{homeslider}prestashop>homeslider_d0042a700e9bdf79689d63ee6846dc0e'] = 'Описание:';
-$_MODULE['<{homeslider}prestashop>homeslider_3d091e856cb7615d1ccb96bc759b5a92'] = 'активна';
-$_MODULE['<{homeslider}prestashop>homeslider_ea4788705e6873b424c65e91c2846b19'] = 'Возврат';
+$_MODULE['<{homeslider}prestashop>homeslider_3d091e856cb7615d1ccb96bc759b5a92'] = 'Активный:';
+$_MODULE['<{homeslider}prestashop>homeslider_ea4788705e6873b424c65e91c2846b19'] = 'Отмена';
 $_MODULE['<{homeslider}prestashop>homeslider_70397c4b252a5168c5ec003931cea215'] = 'Обязательные поля';
 $_MODULE['<{homeslider}prestashop>homeslider_3f80dc2cdd06939d4f5514362067cd86'] = 'Недопустимое значение';
 $_MODULE['<{homeslider}prestashop>homeslider_a6abafe564d3940cc36ee43e2f09400b'] = 'Недопустимый слайд';
@@ -54,5 +53,5 @@ $_MODULE['<{homeslider}prestashop>homeslider_eb28485b92fbf9201918698245ec6430'] 
 $_MODULE['<{homeslider}prestashop>homeslider_5da12d1bb63af9cd5be306102b23e82e'] = 'Слайд удален';
 $_MODULE['<{homeslider}prestashop>homeslider_080b5727c047ef6658591f7d4507e681'] = 'Слайд обновлен';
 $_MODULE['<{homeslider}prestashop>homeslider_bb6abf21a6c70c5740d93093b5518954'] = 'Слайд добавлен';
-$_MODULE['<{homeslider}prestashop>homeslider_b9f5c797ebbf55adccdd8539a65a0241'] = 'Запрещено';
-$_MODULE['<{homeslider}prestashop>homeslider_00d23a76e43b46dae9ec7aa9dcbebb32'] = 'Разрешено';
+$_MODULE['<{homeslider}prestashop>homeslider_b9f5c797ebbf55adccdd8539a65a0241'] = 'Отключен';
+$_MODULE['<{homeslider}prestashop>homeslider_00d23a76e43b46dae9ec7aa9dcbebb32'] = 'Включен';

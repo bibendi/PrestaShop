@@ -2,8 +2,7 @@
 
 global $_MODULE;
 $_MODULE = array();
-
-$_MODULE['<{blocksupplier}prestashop>blocksupplier_9ae42413e3cb9596efe3857f75bad3df'] = 'Блок поставщиков';
+$_MODULE['<{blocksupplier}prestashop>blocksupplier_9ae42413e3cb9596efe3857f75bad3df'] = 'Блок поставщики';
 $_MODULE['<{blocksupplier}prestashop>blocksupplier_7518289633b3d69dfa42cfe8d64940a5'] = 'Добавляет блок отображения поставщиков.';
 $_MODULE['<{blocksupplier}prestashop>blocksupplier_cf64d2d0bc5de5ce3d309d0e899d36fb'] = 'Неверное количество элементов';
 $_MODULE['<{blocksupplier}prestashop>blocksupplier_5b2e13ff6fa0da895d14bd56f2cb2d2d'] = 'Пожалуйста, включите хотя бы один способ отображения.';
@@ -18,7 +17,7 @@ $_MODULE['<{blocksupplier}prestashop>blocksupplier_abafe33995bb3ad9f51fbbe2dd309
 $_MODULE['<{blocksupplier}prestashop>blocksupplier_ac88955a067710291274d21dec443904'] = 'Использовать выпадающий список';
 $_MODULE['<{blocksupplier}prestashop>blocksupplier_d02aed94c0fd8800800f9ca6920acc4b'] = 'Для отображения поставщиков в выпадающем списке';
 $_MODULE['<{blocksupplier}prestashop>blocksupplier_c9cc8cce247e49bae79f15173ce97354'] = 'Сохранить';
-$_MODULE['<{blocksupplier}prestashop>blocksupplier_1814d65a76028fdfbadab64a5a8076df'] = 'Поставщики:';
-$_MODULE['<{blocksupplier}prestashop>blocksupplier_49fa2426b7903b3d4c89e2c1874d9346'] = 'Подробнее о нас';
+$_MODULE['<{blocksupplier}prestashop>blocksupplier_1814d65a76028fdfbadab64a5a8076df'] = 'Поставщики';
+$_MODULE['<{blocksupplier}prestashop>blocksupplier_49fa2426b7903b3d4c89e2c1874d9346'] = 'Подробнее';
 $_MODULE['<{blocksupplier}prestashop>blocksupplier_ecf253735ac0cba84a9d2eeff1f1b87c'] = 'Все поставщики';
-$_MODULE['<{blocksupplier}prestashop>blocksupplier_496689fbd342f80d30f1f266d060415a'] = 'Нет поставщика(ов)';
+$_MODULE['<{blocksupplier}prestashop>blocksupplier_496689fbd342f80d30f1f266d060415a'] = 'Поствщиков нет';

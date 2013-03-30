@@ -2,9 +2,8 @@
 
 global $_MODULE;
 $_MODULE = array();
-
 $_MODULE['<{productscategory}prestashop>productscategory_db33983df8ef521000b0ab60dcb5a83f'] = 'Дополнительные товары';
-$_MODULE['<{productscategory}prestashop>productscategory_0157084bddd8b408e1cdaba00f54a009'] = 'Показать продукты той же категории на странице продукта.';
+$_MODULE['<{productscategory}prestashop>productscategory_0157084bddd8b408e1cdaba00f54a009'] = 'Показать товары той же категории на странице товара.';
 $_MODULE['<{productscategory}prestashop>productscategory_462390017ab0938911d2d4e964c0cab7'] = 'Настройки успешно обновлены';
 $_MODULE['<{productscategory}prestashop>productscategory_f4f70727dc34561dfde1a3c529b6205c'] = 'Настройки';
 $_MODULE['<{productscategory}prestashop>productscategory_b6bf131edd323320bac67303a3f4de8a'] = 'Отображать цену товаров';

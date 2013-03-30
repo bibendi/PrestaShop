@@ -2,9 +2,8 @@
 
 global $_MODULE;
 $_MODULE = array();
-
 $_MODULE['<{statsproduct}prestashop>statsproduct_78e454064a7d3a7755a011a3b79f31a7'] = 'Детали товара';
-$_MODULE['<{statsproduct}prestashop>statsproduct_285201dab507840d082d58dc13602b00'] = 'Получить подробную статистику по каждому продукту.';
+$_MODULE['<{statsproduct}prestashop>statsproduct_285201dab507840d082d58dc13602b00'] = 'Получить подробную статистику по каждому товару.';
 $_MODULE['<{statsproduct}prestashop>statsproduct_3ec365dd533ddb7ef3d1c111186ce872'] = 'Детали';
 $_MODULE['<{statsproduct}prestashop>statsproduct_981a6013008c8f4b75836b0f415b05b8'] = 'Всего куплено:';
 $_MODULE['<{statsproduct}prestashop>statsproduct_af7cba0f47dac2ad181cc0471979a746'] = 'Продажи (-Tx):';
@@ -15,7 +14,7 @@ $_MODULE['<{statsproduct}prestashop>statsproduct_c90b9dca2d3f5bb6e0d0bdceac8a631
 $_MODULE['<{statsproduct}prestashop>statsproduct_11ff9f68afb6b8b5b8eda218d7c83a65'] = 'Продажи';
 $_MODULE['<{statsproduct}prestashop>statsproduct_44749712dbec183e983dcd78a7736c41'] = 'Дата';
 $_MODULE['<{statsproduct}prestashop>statsproduct_a240fa27925a635b08dc28c9e4f9216d'] = 'Заказ';
-$_MODULE['<{statsproduct}prestashop>statsproduct_ce26601dac0dea138b7295f02b7620a7'] = 'Покупатель';
+$_MODULE['<{statsproduct}prestashop>statsproduct_ce26601dac0dea138b7295f02b7620a7'] = 'Клиент';
 $_MODULE['<{statsproduct}prestashop>statsproduct_f2bbdf9f72c085adc4d0404e370f0f4c'] = 'Атрибут';
 $_MODULE['<{statsproduct}prestashop>statsproduct_694e8d1f2ee056f98ee488bdc4982d73'] = 'Кол-во';
 $_MODULE['<{statsproduct}prestashop>statsproduct_3601146c4e948c32b6424d2c0a7f0118'] = 'Цена';
@@ -26,11 +25,11 @@ $_MODULE['<{statsproduct}prestashop>statsproduct_844c29394eea07066bb2efefc35784e
 $_MODULE['<{statsproduct}prestashop>statsproduct_0173374ac20f5843d58b553d5b226ef6'] = 'Выбор категории';
 $_MODULE['<{statsproduct}prestashop>statsproduct_b1c94ca2fbc3e78fc30069c8d0f01680'] = 'Все';
 $_MODULE['<{statsproduct}prestashop>statsproduct_818f7defe18dbc97da82d054831df2ad'] = 'Сделайте щелчек на товаре, чтобы получить по нему статистику.';
-$_MODULE['<{statsproduct}prestashop>statsproduct_6ccf03bc05e4b749b74b5d577c7e7d3a'] = 'Товары в наличии';
+$_MODULE['<{statsproduct}prestashop>statsproduct_6ccf03bc05e4b749b74b5d577c7e7d3a'] = 'Доступны товары';
 $_MODULE['<{statsproduct}prestashop>statsproduct_12d3c7a4296542c62474856ec452c045'] = 'Ссылка';
 $_MODULE['<{statsproduct}prestashop>statsproduct_49ee3087348e8d44e1feda1917443987'] = 'Название';
 $_MODULE['<{statsproduct}prestashop>statsproduct_7bd5825a187064017975513b95d7f7de'] = 'Доступное количество для продажи';
-$_MODULE['<{statsproduct}prestashop>statsproduct_6602bbeb2956c035fb4cb5e844a4861b'] = 'Руководство пользователя';
+$_MODULE['<{statsproduct}prestashop>statsproduct_6602bbeb2956c035fb4cb5e844a4861b'] = 'Руководство';
 $_MODULE['<{statsproduct}prestashop>statsproduct_af6de9b8b390e324cd90cc17779783ba'] = 'Количество покупок по сравнению с числом просмотров';
 $_MODULE['<{statsproduct}prestashop>statsproduct_6e13e61b8535a66feb27d285f5c42855'] = 'После выбора категории и отбора продукта, появятся информационные графы. Тогда, Вы будете в состоянии проанализировать их.';
 $_MODULE['<{statsproduct}prestashop>statsproduct_ff7008d8daed8cf92213ca8955a42d92'] = 'Если Вы замечаете, что продукт успешен и часто покупаемый, но просматривается нечасто, Вы должны поместить его более заметно в Ваше фронт-офисе.';

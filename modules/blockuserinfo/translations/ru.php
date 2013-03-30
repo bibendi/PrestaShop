@@ -2,7 +2,6 @@
 
 global $_MODULE;
 $_MODULE = array();
-
 $_MODULE['<{blockuserinfo}prestashop>blockuserinfo_a2e9cd952cda8ba167e62b25a496c6c1'] = 'Блок информации о пользователе';
 $_MODULE['<{blockuserinfo}prestashop>blockuserinfo_970a31aa19d205f92ccfd1913ca04dc0'] = 'Добавляет блок, который отображает информацию о клиенте.';
 $_MODULE['<{blockuserinfo}prestashop>blockuserinfo_0c3bf3014aafb90201805e45b5e62881'] = 'Просмотреть мою корзину';
