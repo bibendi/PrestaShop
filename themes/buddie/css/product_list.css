@@ -35,7 +35,7 @@ ul#product_list li.last_item_of_line{margin-right:0}
 ul#product_list li a{text-decoration:none}
 ul#product_list a.product_img_link{display:block;text-align:center}
 ul#product_list a.product_img_link img{vertical-align:bottom}
-ul#product_list li h3{float:left;margin:0px!important;width:100%;padding:0 0 5px;}
+ul#product_list li h3{float:left;margin:0px!important;width:100%;padding:0 0 5px;min-height: 32px}
 ul#product_list li h3 span.new{display:none}
 ul#product_list li h3 a{  color: #503501;
     font-size: 14px;
