@@ -24,3 +24,4 @@ themes/default/cache/*.js
 themes/default/cache/*.css
 
 logs
+.htaccess
