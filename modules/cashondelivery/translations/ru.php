@@ -2,7 +2,7 @@
 
 global $_MODULE;
 $_MODULE = array();
-$_MODULE['<{cashondelivery}prestashop>cashondelivery_1f9497d3e8bac9b50151416f04119cec'] = 'Оплата при получении (COD)';
+$_MODULE['<{cashondelivery}prestashop>cashondelivery_1f9497d3e8bac9b50151416f04119cec'] = 'Оплата при получении';
 $_MODULE['<{cashondelivery}prestashop>cashondelivery_7a3ef27eb0b1895ebf263ad7dd949fb6'] = 'Прием наличных платежей при доставке';
 $_MODULE['<{cashondelivery}prestashop>validation_ea9cf7e47ff33b2be14e6dd07cbcefc6'] = 'Доставка';
 $_MODULE['<{cashondelivery}prestashop>validation_0c25b529b4d690c39b0831840d0ed01c'] = 'Описание заказа';
@@ -19,5 +19,5 @@ $_MODULE['<{cashondelivery}prestashop>confirmation_8861c5d3fa54b330d1f60ba50fcc4
 $_MODULE['<{cashondelivery}prestashop>confirmation_e6dc7945b557a1cd949bea92dd58963e'] = 'Ваш заказ будет отправлен в ближайшее время.';
 $_MODULE['<{cashondelivery}prestashop>confirmation_0db71da7150c27142eef9d22b843b4a9'] = 'Для любых вопросов или дополнительной информации, пожалуйста, свяжитесь со';
 $_MODULE['<{cashondelivery}prestashop>confirmation_64430ad2835be8ad60c59e7d44e4b0b1'] = 'службой поддержки';
-$_MODULE['<{cashondelivery}prestashop>payment_b7ada96a0da7ee7fb5371cca0b036d5c'] = 'Оплата наличными при получении (COD)';
+$_MODULE['<{cashondelivery}prestashop>payment_b7ada96a0da7ee7fb5371cca0b036d5c'] = 'Оплата наличными при получении';
 $_MODULE['<{cashondelivery}prestashop>payment_536dc7424180872c8c2488ae0286fb53'] = 'Вы платите за товар при доставке';

@@ -22,10 +22,9 @@
 *  @license    http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
 *  International Registered Trademark & Property of PrestaShop SA
 *}
-
+{*
 {if isset($orderby) AND isset($orderway)}
 
-{* On 1.5 the var request is setted on the front controller. The next lines assure the retrocompatibility with some modules *}
 {if !isset($request)}
 	<!-- Sort products -->
 	{if isset($smarty.get.id_category) && $smarty.get.id_category}
@@ -72,3 +71,4 @@ $(document).ready(function()
 </form>
 <!-- /Sort products -->
 {/if}
+*}

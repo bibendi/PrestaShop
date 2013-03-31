@@ -29,7 +29,7 @@ ul#product_list .line{}
 ul#product_list li{  margin:20px 0 0;
     padding: 0 14px;
     position: relative;
-    width: 170px;text-align:left;float:left;min-height:400px;}
+    width: 170px;text-align:left;float:left;min-height:360px;}
 ul#product_list li.last_item_of_line{margin-right:0}
 * html ul#product_list li{height:auto!important}
 ul#product_list li a{text-decoration:none}
@@ -43,7 +43,7 @@ ul#product_list li h3 a{  color: #503501;
 ul#product_list li h3 a:hover{text-decoration:none}
 ul#product_list li p.product_desc{float:left;font-size:11px;margin:5px 0;padding:0;width:100%}
 ul#product_list li p.product_desc a{color:#503501;display:block;width:100%}
-ul#product_list li div.center_block{float:left;width:100%;margin:0!important; min-height: 400px}
+ul#product_list li div.center_block{float:left;width:100%;margin:0!important; min-height: 360px}
 ul#product_list li div.footer_block{position: absolute; bottom: 0}
 ul#product_list li div.center_block div{float:left;margin:0 0 5px!important;width:auto}
 ul#product_list li div.center_block .compare{color:#bbbbbb;float:left;font-size:11px;margin:8px 0 0;padding:0;width:100%;font-weight:400;line-height:12px;#line-height:17px;}

@@ -33,8 +33,6 @@ $_MODULE['<{cheque}prestashop>payment_execution_7135ff14c7931e1c8e9d33aff3dfc7f7
 $_MODULE['<{cheque}prestashop>payment_execution_0881a11f7af33bc1b43e437391129d66'] = 'Пожалуйста, подтвердите ваш заказ, нажав на \"Я подтверждаю свой заказ\"';
 $_MODULE['<{cheque}prestashop>payment_execution_46b9e3665f187c739c55983f757ccda0'] = 'Я подтверждаю свой заказ';
 $_MODULE['<{cheque}prestashop>payment_execution_569fd05bdafa1712c4f6be5b153b8418'] = 'Другие способы оплаты';
-$_MODULE['<{cheque}prestashop>payment_f05fd8637f8a6281466a507fcb56baec'] = 'Оплата чеком';
-$_MODULE['<{cheque}prestashop>payment_841728ede901f5134574c4656aba5464'] = 'Оплата чеком (процесс заказа будет дольше)';
 $_MODULE['<{cheque}prestashop>payment_return_88526efe38fd18179a127024aba8c1d7'] = 'Ваш заказ на %s завершен.';
 $_MODULE['<{cheque}prestashop>payment_return_61da27a5dd1f8ced46c77b0feaa9e159'] = 'Пожалуйста, пришлите нам чек на:';
 $_MODULE['<{cheque}prestashop>payment_return_543baa3e0ca83589be12aff8036b5fe6'] = 'стоимость';
@@ -47,3 +45,5 @@ $_MODULE['<{cheque}prestashop>payment_return_ffd2478830ca2f519f7fe7ee259d4b96'] 
 $_MODULE['<{cheque}prestashop>payment_return_0db71da7150c27142eef9d22b843b4a9'] = 'За дальнейшей информацией, пожалуйста, обращайтесь к нашей';
 $_MODULE['<{cheque}prestashop>payment_return_decce112a9e64363c997b04aa71b7cb8'] = 'службе по работе с клиентами';
 $_MODULE['<{cheque}prestashop>payment_return_9bdf695c5a30784327137011da6ef568'] = 'С вашим заказом возникла проблема. Если вы полагаете, что это ошибка, вы можете связаться с нашей';
+$_MODULE['<{cheque}prestashop>payment_f05fd8637f8a6281466a507fcb56baec'] = 'Оплата чеком';
+$_MODULE['<{cheque}prestashop>payment_841728ede901f5134574c4656aba5464'] = 'Оплата чеком (процесс заказа будет дольше)';

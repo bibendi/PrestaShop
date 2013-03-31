@@ -3,6 +3,7 @@
 global $_MODULE;
 $_MODULE = array();
 $_MODULE['<{sendtoafriend}prestashop>product_page_2107f6398c37b4b9ee1e1b5afb5d3b2a'] = 'Отправить другу';
+$_MODULE['<{sendtoafriend}prestashop>sendtoafriend_ajax_22c4733a9ceb239bf825a0cecd1cfaec'] = 'Друг';
 $_MODULE['<{sendtoafriend}prestashop>sendtoafriend-extra_d1f092e79827eaffce4a33fa011fde24'] = 'Вы не заполнили все обязательные поля';
 $_MODULE['<{sendtoafriend}prestashop>sendtoafriend-extra_2107f6398c37b4b9ee1e1b5afb5d3b2a'] = 'Пошлите другу';
 $_MODULE['<{sendtoafriend}prestashop>sendtoafriend-extra_5d6103b662f41b07e10687f03aca8fdc'] = 'Получатель';
@@ -21,4 +22,3 @@ $_MODULE['<{sendtoafriend}prestashop>sendtoafriend_e55de03786f359e2b133f2a74612e
 $_MODULE['<{sendtoafriend}prestashop>sendtoafriend_19f41c3d6db934fb2db1840ddefd2c51'] = 'E-mail друга:';
 $_MODULE['<{sendtoafriend}prestashop>sendtoafriend_2541d938b0a58946090d7abdde0d3890'] = 'Отправить';
 $_MODULE['<{sendtoafriend}prestashop>sendtoafriend_68728c1897e5936032fe21ffb6b10c2e'] = 'Назад к странице товара';
-$_MODULE['<{sendtoafriend}prestashop>sendtoafriend_ajax_22c4733a9ceb239bf825a0cecd1cfaec'] = 'Друг';

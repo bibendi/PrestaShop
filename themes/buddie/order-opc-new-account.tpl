@@ -4,7 +4,7 @@
 	<form action="{$link->getPageLink('authentication', true, NULL, "back=order-opc")}" method="post" id="login_form" class="std">
 		<fieldset>
 			<h3>{l s='Already registered?'}</h3>
-			<p><a href="#" id="openLoginFormBlock">&raquo; {l s='Click here'}</a></p>
+			<p><a href="#" id="openLoginFormBlock"><strong>&raquo; {l s='Click here'}</strong></a></p>
 			<div id="login_form_content" style="display:none;">
 				<!-- Error return block -->
 				<div id="opc_login_errors" class="error" style="display:none;"></div>
@@ -130,10 +130,10 @@
 				{$stateExist = false}
 				{foreach from=$dlv_all_fields item=field_name}
 				{if $field_name eq "company"}
-				<p class="text">
+				{*<p class="text">
 					<label for="company">{l s='Company'}</label>
 					<input type="text" class="text" id="company" name="company" value="{if isset($guestInformations) && $guestInformations.company}{$guestInformations.company}{/if}" />
-				</p>
+				</p>*}
 				{elseif $field_name eq "firstname"}
 				<p class="required text">
 					<label for="firstname">{l s='First name'} <sup>*</sup></label>
@@ -150,19 +150,19 @@
 					<input type="text" class="text" name="address1" id="address1" value="{if isset($guestInformations) && $guestInformations.address1}{$guestInformations.address1}{/if}" />
 				</p>
 				{elseif $field_name eq "address2"}
-				<p class="text is_customer_param">
+				{*<p class="text is_customer_param">
 					<label for="address2">{l s='Address (Line 2)'}</label>
 					<input type="text" class="text" name="address2" id="address2" value="" />
-				</p>
+				</p>*}
 				{elseif $field_name eq "postcode"}
 				<p class="required postcode text">
 					<label for="postcode">{l s='Zip / Postal code'} <sup>*</sup></label>
-					<input type="text" class="text" name="postcode" id="postcode" value="{if isset($guestInformations) && $guestInformations.postcode}{$guestInformations.postcode}{/if}" onkeyup="$('#postcode').val($('#postcode').val().toUpperCase());" />
+					<input type="text" class="text" name="postcode" id="postcode" value="{if isset($guestInformations) && $guestInformations.postcode}{$guestInformations.postcode}{else}620000{/if}" onkeyup="$('#postcode').val($('#postcode').val().toUpperCase());" />
 				</p>
 				{elseif $field_name eq "city"}
 				<p class="required text">
 					<label for="city">{l s='City'} <sup>*</sup></label>
-					<input type="text" class="text" name="city" id="city" value="{if isset($guestInformations) && $guestInformations.city}{$guestInformations.city}{/if}" />
+					<input type="text" class="text" name="city" id="city" value="{if isset($guestInformations) && $guestInformations.city}{$guestInformations.city}{else}Екатеринбург{/if}" />
 					
 				</p>
 				{elseif $field_name eq "country" || $field_name eq "Country:name"}
@@ -220,10 +220,12 @@
 				</p>
 				<input type="hidden" name="alias" id="alias" value="{l s='My address'}" />
 
+                {*
 				<p class="checkbox is_customer_param">
 					<input type="checkbox" name="invoice_address" id="invoice_address" />
 					<label for="invoice_address"><b>{l s='Please use another address for invoice'}</b></label>
 				</p>
+                *}
 
 				<div id="opc_invoice_address" class="is_customer_param">
 					{assign var=stateExist value=false}
