@@ -10,7 +10,7 @@
 .comparison_infos div.item h5 a{color:#547d16!important;font-size:14px!important}
 .comparison_infos a.product_image{text-align:center;height:auto;}
 #product_comparison{border-collapse:collapse;width:100%}
-tr.comparison_header td{font-size:22px;font-weight:400;padding:40px 3px 10px 0;text-transform:uppercase;border:1px solid #d3ccbf;border-left:none;border-right:none;  font-family: 'Ubuntu Condensed';}
+tr.comparison_header td{font-size:22px;font-weight:400;padding:40px 3px 10px 0;text-transform:uppercase;border:1px solid #d3ccbf;border-left:none;border-right:none;  font-family: 'Ubuntu Condensed',Tahoma,sans-serif;}
 .product_desc a{font-size:11px;text-decoration:none}
 .product_desc{margin:0px 0 5px!important}
 .comparison_comment{background-color:#FFF}

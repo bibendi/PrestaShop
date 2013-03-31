@@ -170,7 +170,7 @@ var delete_txt = '{l s='Delete' mod='blockcart' js=1}';
 			{/if}
 		{/if}
 		<p id="cart-buttons">
-			<a href="{$link->getPageLink("$order_process", true)}" id="button_order_cart" class="exclusive{if $order_process == 'order-opc'}_large{/if}" title="{l s='Check out' mod='blockcart'}"><span class="in_button">{l s='Check out' mod='blockcart'}</span></a>
+			<a href="{$link->getPageLink("$order_process", true)}" id="button_order_cart" class="exclusive{if $order_process == 'order-opc'}_large{/if}" title="{l s='Checkout' mod='blockcart'}"><span class="in_button">{l s='Checkout' mod='blockcart'}</span></a>
 			{if $order_process == 'order'}<a href="{$link->getPageLink("$order_process", true)}" class="button_small" title="{l s='Cart' mod='blockcart'}"><span class="in_button">{l s='My Cart' mod='blockcart'}</span></a>{/if}
 			
 		</p>

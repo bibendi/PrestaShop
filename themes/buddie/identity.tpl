@@ -40,13 +40,6 @@
 	<p class="required"><sup>*</sup>{l s='Required field'}</p>
 	<form action="{$link->getPageLink('identity', true)}" method="post" class="std">
 		<fieldset>
-			<p class="radio">
-				<span>{l s='Title'}</span>
-				{foreach from=$genders key=k item=gender}
-					<input type="radio" name="id_gender" id="id_gender{$gender->id}" value="{$gender->id|intval}" {if isset($smarty.post.id_gender) && $smarty.post.id_gender == $gender->id}checked="checked"{/if} />
-					<label for="id_gender{$gender->id}" class="top">{$gender->name}</label>
-				{/foreach}
-			</p>
 			<p class="required text">
 				<label for="firstname">{l s='First name'} <sup>*</sup></label>
 				<input type="text" id="firstname" name="firstname" value="{$smarty.post.firstname}" />
@@ -118,9 +111,6 @@
 			{/if}
 			<p class="submit">
 				<input type="submit" class="button" name="submitIdentity" value="{l s='Save'}" />
-			</p>
-			<p id="security_informations">
-				{l s='[Insert customer data privacy clause or law here, if applicable]'}
 			</p>
 		</fieldset>
 	</form>

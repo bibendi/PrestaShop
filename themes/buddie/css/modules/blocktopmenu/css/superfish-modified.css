@@ -57,7 +57,7 @@ ul.sf-menu li li li.sfHover ul {
 .sf-menu {
 	float:			left;
 }
-.sf-menu a {color:#f6e076;font-size:22px;font-weight:400;text-transform:uppercase;padding:10px 0;font-family:"Ubuntu Condensed";}
+.sf-menu a {color:#f6e076;font-size:22px;font-weight:400;text-transform:uppercase;padding:10px 0;font-family:'Ubuntu Condensed',Tahoma,sans-serif;}
 .sf-menu a{ /* visited pseudo selector so IE6 applies text colour*/
 	color:			#f6e076;
 	white-space:nowrap;

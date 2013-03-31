@@ -101,9 +101,6 @@
 		</fieldset>
 		{/if}
 		<input type="submit" data-theme="a" class="button" name="submitIdentity" value="{l s='Save'}" />
-		<p id="security_informations">
-			{l s='[Insert customer data privacy clause or law here, if applicable]'}
-		</p>
 	</form>
 {/if}
 </div><!-- /content -->

@@ -124,7 +124,7 @@ ul.idTabs li {
 	text-decoration: none;
 	text-transform: uppercase;
 	font-weight: 400;
-	color: #F6E076;padding:0 15px;font-size:22px;  font-family: 'Ubuntu Condensed';
+	color: #F6E076;padding:0 15px;font-size:22px;  font-family: 'Ubuntu Condensed',Tahoma,sans-serif;
 }
 .idTabs .selected ,.idTabs a:hover{color:#ffffff;text-decoration:none}
 
@@ -1280,7 +1280,7 @@ div#categories_block_top .block_content ul{position:relative;padding-top:34px;}
 div#categories_block_top ul li{float:left;height:47px;line-height:44px;padding:0;position:relative;z-index:100;}
 div#categories_block_top ul li a{color:#f6e076;float:left;font-weight:400;text-transform:uppercase;text-decoration:none;padding:0 10px;}
 div#categories_block_top ul li.first a.menu{padding-left:0}
-div#categories_block_top ul li a.menu{font-size:22px;font-family: 'Ubuntu Condensed';}
+div#categories_block_top ul li a.menu{font-size:22px;font-family: 'Ubuntu Condensed',Tahoma,sans-serif;}
 div#categories_block_top ul li a.menu.selected{background:none}
 div#categories_block_top ul li a.menu{padding:0 10px;}
 div#categories_block_top ul li a.menu:hover{background:none}
