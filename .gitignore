@@ -25,3 +25,5 @@ themes/default/cache/*.css
 
 logs
 .htaccess
+img/import
+img/p
