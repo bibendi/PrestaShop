@@ -72,24 +72,17 @@
 		{if isset($HOOK_CATEGORY_FEATURE) && $HOOK_CATEGORY_FEATURE}{$HOOK_CATEGORY_FEATURE}{/if}
 
 		{if $products}
+			{include file="./product-list.tpl" products=$products}
+			
 			<div class="content_sortPagiBar">
-				{include file="$tpl_dir./pagination.tpl"}
+				{include file="./pagination.tpl"}
+                {*
 				<div class="sortPagiBar clearfix">
 					{include file="./product-sort.tpl"}
 					{include file="./product-compare.tpl"}
 					{include file="./nbr-product-page.tpl"}
 				</div>
-			</div>
-			
-			{include file="./product-list.tpl" products=$products}
-			
-			<div class="content_sortPagiBar">
-				{include file="./pagination.tpl"}
-				<div class="sortPagiBar clearfix">
-					{include file="./product-sort.tpl"}
-					{include file="./product-compare.tpl"}
-					{include file="./nbr-product-page.tpl"}
-				</div>				
+                *}
 			</div>
 		{/if}
 	{elseif $category->id}

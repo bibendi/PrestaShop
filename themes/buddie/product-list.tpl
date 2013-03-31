@@ -123,7 +123,7 @@
 						{/if *}
 
 					{else}
-						<span class="exclusive"><span class="addtocard">{l s='Out of stock'}</span></span>
+						<span class="button"><span class="addtocard">{l s='Out of stock'}</span></span>
 					{/if}
 				{/if}
 				{if isset($comparator_max_item) && $comparator_max_item}

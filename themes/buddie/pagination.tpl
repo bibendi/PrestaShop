@@ -52,12 +52,12 @@
 	<div id="pagination" class="pagination">
 	{if $start!=$stop}
 		<ul class="pagination">
-		{if $p != 1}
+		{*if $p != 1}
 			{assign var='p_previous' value=$p-1}
 			<li id="pagination_previous"><a {$no_follow_text} href="{$link->goPage($requestPage, $p_previous)}">&laquo;&nbsp;{l s='Previous'}</a></li>
 		{else}
 			<li id="pagination_previous" class="disabled"><span>&laquo;&nbsp;{l s='Previous'}</span></li>
-		{/if}
+		{/if*}
 		{if $start==3}
 			<li><a {$no_follow_text}  href="{$link->goPage($requestPage, 1)}">1</a></li>
 			<li><a {$no_follow_text}  href="{$link->goPage($requestPage, 2)}">2</a></li>
@@ -87,15 +87,15 @@
 			<li><a href="{$link->goPage($requestPage, $pages_nb-1)}">{$pages_nb-1|intval}</a></li>
 			<li><a href="{$link->goPage($requestPage, $pages_nb)}">{$pages_nb|intval}</a></li>
 		{/if}
-		{if $pages_nb > 1 AND $p != $pages_nb}
+		{*if $pages_nb > 1 AND $p != $pages_nb}
 			{assign var='p_next' value=$p+1}
 			<li id="pagination_next"><a {$no_follow_text} href="{$link->goPage($requestPage, $p_next)}">{l s='Next'}&nbsp;&raquo;</a></li>
 		{else}
 			<li id="pagination_next" class="disabled"><span>{l s='Next'}&nbsp;&raquo;</span></li>
-		{/if}
+		{/if*}
 		</ul>
 	{/if}
-	{if $nb_products > $products_per_page}
+	{*if $nb_products > $products_per_page}
 		<form action="{if !is_array($requestNb)}{$requestNb}{else}{$requestNb.requestUrl}{/if}" method="get" class="pagination">
 			<p>
 				{if isset($search_query) AND $search_query}<input type="hidden" name="search_query" value="{$search_query|escape:'htmlall':'UTF-8'}" />{/if}
@@ -120,7 +120,7 @@
 				<input type="submit" class="button_mini" value="{l s='OK'}" />
 			</p>
 		</form>
-	{/if}
+	{/if*}
 	</div>
 	
 	<!-- /Pagination -->

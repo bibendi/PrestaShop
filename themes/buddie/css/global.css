@@ -559,7 +559,7 @@ div.pagination{width:auto;overflow:hidden;border-bottom:1px solid #e8e8e8;paddin
 div.pagination  ul.pagination{padding:5px 0 0;width:auto;float:left}
 ul.pagination li{display:inline;float:left;margin-right:.3em}
 ul.pagination li a{color:#503501}
-ul.pagination a,ul.pagination span{display:block;line-height:17px;padding:0 .4em 0 0;font-size:12px;}
+ul.pagination a,ul.pagination span{display:block;line-height:17px;padding:0 .4em 0 0;font-size:22px;}
 ul.pagination .current span{}
 ul.pagination li.truncate{background:none;padding:.3em}
 #pagination_previous a,#pagination_previous span{border-left:none;background: url('../img/icon_pre.png') no-repeat left center;padding-left:15px;}
