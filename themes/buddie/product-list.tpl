@@ -61,7 +61,9 @@
                 {/if}
 
                 <div class="footer_block">
-				{if ($product.id_product_attribute == 0 || (isset($add_prod_display) && ($add_prod_display == 1))) && $product.available_for_order && !isset($restricted_country_mode) && $product.minimal_quantity <= 1 && $product.customizable != 2 && !$PS_CATALOG_MODE}
+                {if ($product.on_sale)}
+                    <a class="button exclusive"><span>Смотреть скидку</span></a>
+				{elseif ($product.id_product_attribute == 0 || (isset($add_prod_display) && ($add_prod_display == 1))) && $product.available_for_order && !isset($restricted_country_mode) && $product.minimal_quantity <= 1 && $product.customizable != 2 && !$PS_CATALOG_MODE}
 					{*if ($product.allow_oosp || $product.quantity > 0)*}
 					{if (1 == 1)}
 

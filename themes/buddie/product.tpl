@@ -118,7 +118,7 @@ combinationImages[0] = new Array();
 // Translations
 var doesntExist = '{l s='This combination does not exist for this product. Please choose another.' js=1}';
 var doesntExistNoMore = '{l s='This product is no longer in stock' js=1}';
-var doesntExistNoMoreBut = '{l s='with those attributes but is available with others' js=1}';
+var doesntExistNoMoreBut = 'с такой фасовкой, но он есть в наличии с другой';
 var uploading_in_progress = '{l s='Uploading in progress, please wait...' js=1}';
 var fieldRequired = '{l s='Please fill in all required fields, then save the customization.' js=1}';
 {if isset($groups)}
@@ -273,7 +273,6 @@ var fieldRequired = '{l s='Please fill in all required fields, then save the cus
 					{assign var='productPriceWithoutRedution' value=$product->getPriceWithoutReduct(true, $smarty.const.NULL)}
 				{/if}
 				{if $product->on_sale}
-					<img src="{$img_dir}onsale_{$lang_iso}.gif" alt="{l s='On sale'}" class="on_sale_img"/>
 					<span class="on_sale">{l s='On sale!'}</span>
 				{elseif $product->specificPrice AND $product->specificPrice.reduction AND $productPriceWithoutRedution > $productPrice}
 					<span class="discount">{l s='Reduced price!'}</span>
