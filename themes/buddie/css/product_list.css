@@ -29,7 +29,7 @@ ul#product_list .line{}
 ul#product_list li{  margin:20px 0 0;
     padding: 0 10px;
     position: relative;
-    width: 155px;text-align:left;float:left;min-height:360px;}
+    width: 155px;text-align:left;float:left;min-height:380px;}
 ul#product_list li.last_item_of_line{margin-right:0}
 * html ul#product_list li{height:auto!important}
 ul#product_list li a{text-decoration:none}
