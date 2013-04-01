@@ -1,0 +1,35 @@
+<?php
+
+global $_MODULE;
+$_MODULE = array();
+$_MODULE['<{salecategory}prestashop>salecategory_f613218cfb69cd9068d4b278f9d97525'] = 'Sale Category';
+$_MODULE['<{salecategory}prestashop>salecategory_3f441d9121ef09bd599e60e9213b3170'] = 'Mettre les produits d\'une catégorie en solde et appliquer une réduction';
+$_MODULE['<{salecategory}prestashop>salecategory_70b73459fdcb74997023516adfeafa43'] = 'Etes vous sur de vouloir désinstaller le module';
+$_MODULE['<{salecategory}prestashop>adminsalecategorycontroller_738eb8b430e5e3c4c62a8204604e877a'] = 'Catégories et';
+$_MODULE['<{salecategory}prestashop>adminsalecategorycontroller_fd4f7e4876a7878309cd983bced2e13a'] = 'Produits mis à jour.';
+$_MODULE['<{salecategory}prestashop>content_4077141eb7e2d5027f1ccd418313a107'] = 'Appliquer une réduction/statut en solde aux produits d\'une catégorie';
+$_MODULE['<{salecategory}prestashop>content_e62f31871be3babe12f0afffc6335dd5'] = 'A la catégorie:';
+$_MODULE['<{salecategory}prestashop>content_ef573462cfe6aa5c26a9195e7e5a379c'] = 'Appliquer au sous catégories';
+$_MODULE['<{salecategory}prestashop>content_9e834f13e35e4edf64863ab414a6217a'] = 'Réduction';
+$_MODULE['<{salecategory}prestashop>content_db6bc7a11c65ebf6c44da616cc8e50cc'] = 'Appliquer une réduction aux produits';
+$_MODULE['<{salecategory}prestashop>content_1e6d57e813355689e9c77e947d73ad8f'] = 'De:';
+$_MODULE['<{salecategory}prestashop>content_6086aeb66c21000470ff7b710b827076'] = 'Date/heure de début de validité de la réduction';
+$_MODULE['<{salecategory}prestashop>content_33caa076f23f453dd4061726f3706325'] = 'A:';
+$_MODULE['<{salecategory}prestashop>content_c42411f12a4c79d1fa88166903204ae2'] = 'Date/heure de fin de validité de la réduction';
+$_MODULE['<{salecategory}prestashop>content_b2f40690858b404ed10e62bdf422c704'] = 'Montant';
+$_MODULE['<{salecategory}prestashop>content_37be07209f53a5d636d5c904ca9ae64c'] = 'Pourcentage';
+$_MODULE['<{salecategory}prestashop>content_61946eb3e50f01d7ea339f202a2942f8'] = '(si \"montant\" est sélectionné la taxe est incluse)';
+$_MODULE['<{salecategory}prestashop>content_3d0d1f906e27800531e054a3b6787b7c'] = 'Quantité:';
+$_MODULE['<{salecategory}prestashop>content_ed1c34d845cc8bd2d11c5175f99bb0cc'] = '(quantité minimum pour appliquer la réduction)';
+$_MODULE['<{salecategory}prestashop>content_f2cd171bd42220283b7a595c3ff2aaaf'] = 'Solde';
+$_MODULE['<{salecategory}prestashop>content_dae1c70415da04b489635b176c21f67f'] = 'Appliquer statut \"en solde\" aux produits';
+$_MODULE['<{salecategory}prestashop>content_79b426da03ad64f71c6a1b00e70ec3e2'] = 'Enlever une réduction/statut en solde aux produits d\'une catégorie';
+$_MODULE['<{salecategory}prestashop>content_2dc14363dbedb8d77205e9f2093cb040'] = 'Enlever une réduction aux produits';
+$_MODULE['<{salecategory}prestashop>content_55eb6cda9f680ba484c7477a1627d067'] = 'Enlever statut \"en solde\" aux produits';
+$_MODULE['<{salecategory}prestashop>content_9639e32cab248434a17ab32237cb3b71'] = 'Appliquer';
+$_MODULE['<{salecategory}prestashop>content_1e1cc9bdeb2f29f5480106aec7e9bc48'] = 'Maintenant';
+$_MODULE['<{salecategory}prestashop>content_f92965e2c8a7afb3c1b9a5c09a263636'] = 'Fait';
+$_MODULE['<{salecategory}prestashop>content_3964fd83339fec5014c831822005653a'] = 'Choisir l\'heure';
+$_MODULE['<{salecategory}prestashop>content_a76d4ef5f3f6a672bbfab2865563e530'] = 'Temps';
+$_MODULE['<{salecategory}prestashop>content_b55e509c697e4cca0e1d160a7806698f'] = 'Heure';
+$_MODULE['<{salecategory}prestashop>content_62902641c38f3a4a8eb3212454360e24'] = 'Minute';

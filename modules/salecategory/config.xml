@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+        <module>
+            <name>salecategory</name>
+            <displayName><![CDATA[Sale Category]]></displayName>
+            <version><![CDATA[1.5]]></version>
+            <description><![CDATA[Mettre les produits d&#039;une cat&eacute;gorie en solde et appliquer une r&eacute;duction]]></description>
+            <author><![CDATA[]]></author>
+            <tab><![CDATA[pricing_promotion]]></tab>
+	<confirmUninstall>Etes vous sur de vouloir désinstaller le modulesalecategory</confirmUninstall>
+            <is_configurable>0</is_configurable>
+            <need_instance>1</need_instance>
+	<limited_countries></limited_countries>
+        </module>
