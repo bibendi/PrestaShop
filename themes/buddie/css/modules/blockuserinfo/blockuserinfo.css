@@ -1,6 +1,6 @@
 /* block top user information */
 #header_right #header_user {
-	float: right;
+	/*float: right;*/
 	width: auto;#width: 65%;
 	text-align: right;clear:right;padding-right:10px;position:relative;z-index:1000
 }
