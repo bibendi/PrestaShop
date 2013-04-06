@@ -1412,3 +1412,6 @@ input[type=radio]
 #authentication form#new_account_form #opc_account_form p.checkbox{padding-left:209px;}
 #authentication form#new_account_form p.cart_navigation.required{padding-left:0px !important;width:50%;}
 #authentication form#new_account_form p.cart_navigation.required span{float:none;}
+
+
+#categories_block_left .tree li.level-0 a { font-weight: bold !important; }
