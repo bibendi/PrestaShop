@@ -206,6 +206,8 @@
 					<select name="id_state" id="id_state">
 						<option value="">-</option>
 					</select>
+                    <br/>
+                    Для выбора района Екатеринбурга <a href="/content/1-delivery" target="_blank"><strong>воспользуйтесь картой</strong></a>
 				</p>
 				{/if}
 				<p class="textarea is_customer_param">
