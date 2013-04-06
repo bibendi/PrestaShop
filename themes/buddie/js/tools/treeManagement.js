@@ -35,15 +35,15 @@ $(document).ready(function () {
 		$('ul.tree.dhtml ul li:last-child, ul.tree.dhtml li:last-child').addClass('last');
 		
 		//collapse every expanded branch
-		$('ul.tree.dhtml span.grower.OPEN').addClass('CLOSE').removeClass('OPEN').parent().find('ul:first').hide();
+		//$('ul.tree.dhtml span.grower.OPEN').addClass('CLOSE').removeClass('OPEN').parent().find('ul:first').hide();
 		$('ul.tree.dhtml').show();
 		
 		//open the tree for the selected branch
-			$('ul.tree.dhtml .selected').parents().each( function() {
-				if ($(this).is('ul'))
-					toggleBranch($(this).prev().prev(), true);
-			});
-			toggleBranch( $('ul.tree.dhtml .selected').prev(), true);
+			//$('ul.tree.dhtml .selected').parents().each( function() {
+			//	if ($(this).is('ul'))
+			//		toggleBranch($(this).prev().prev(), true);
+			//});
+			//toggleBranch( $('ul.tree.dhtml .selected').prev(), true);
 		
 		//add a fonction on clicks on growers
 		$('ul.tree.dhtml span.grower').click(function(){
