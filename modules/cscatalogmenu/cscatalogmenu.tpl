@@ -5,11 +5,12 @@
 	<h4>{$title}</h4>
 	<div class="block_content">
 		<ul class="tree {if $isDhtml}dhtml{/if}">
+        {assign var='level' value=0}
 		{foreach from=$blockCategTree.children item=child name=blockCategTree}
 			{if $smarty.foreach.blockCategTree.last}
-				{include file=$branche_tpl_path node=$child last='true'}
+				{include file=$branche_tpl_path node=$child last='true' level=$level}
 			{else}
-				{include file=$branche_tpl_path node=$child}
+				{include file=$branche_tpl_path node=$child level=$level}
 			{/if}
 		{/foreach}
 		</ul>
