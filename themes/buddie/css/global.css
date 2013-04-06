@@ -1415,4 +1415,4 @@ input[type=radio]
 
 
 #categories_block_left .tree li.level-0 > a { font-weight: bold !important; font-size: 14px }
-#categories_block_left .tree li.level-0 > a { font-size: 13px }
+#categories_block_left .tree li.level-1 > a { font-size: 13px }
