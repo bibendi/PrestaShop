@@ -40,7 +40,7 @@
 		<script type="text/javascript">
 		// <![CDATA[
 			// we hide the tree only if JavaScript is activated
-			$('div#categories_block_left ul.dhtml').hide();
+			//$('div#categories_block_left ul.dhtml').hide();
 		// ]]>
 		</script>
 	</div>
