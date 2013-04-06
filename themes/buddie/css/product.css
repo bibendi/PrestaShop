@@ -65,7 +65,7 @@
 #primary_block #buy_block .our_price_display span{color:#92a517;float:left;font-size:26px;font-weight:700;margin-right:3px;}
 #primary_block #buy_block .our_price_display span.tax{color:#949494;font-size:13px;margin-left:5px;padding-top:5px;line-height:25px}
 #availability_statut #availability_label{margin-top:4px}
-#primary_block #buy_block label{display:block;float:left;text-align:left}
+#primary_block #buy_block label{display:block;text-align:left}
 #primary_block #buy_block select{color:#503501;display:block;float:left;height:26px;line-height:20px;padding:4px;width:245px}
 #primary_block div#attributes p,#quantity_wanted_p{clear:left;height:auto}
 #primary_block div#attributes p,#minimal_quantity_wanted_p{clear:left;text-align:center;margin:5px 0;overflow:hidden}
