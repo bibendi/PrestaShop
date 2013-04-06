@@ -1414,4 +1414,5 @@ input[type=radio]
 #authentication form#new_account_form p.cart_navigation.required span{float:none;}
 
 
-#categories_block_left .tree li.level-0 a { font-weight: bold !important; }
+#categories_block_left .tree li.level-0 > a { font-weight: bold !important; font-size: 14px }
+#categories_block_left .tree li.level-0 > a { font-size: 13px }
