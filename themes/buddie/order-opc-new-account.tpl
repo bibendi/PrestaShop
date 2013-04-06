@@ -185,7 +185,7 @@
 				{elseif $field_name eq "state" || $field_name eq 'State:name'}
 				{$stateExist = true}
 				<p class="required id_state select" style="display:none;">
-					<label for="id_state">{l s='State'}</label>
+					<label for="id_state">Район/Регион</label>
 					<select name="id_state" id="id_state">
 						<option value="">-</option>
 					</select>
@@ -202,7 +202,7 @@
 				</p>
 				{if !$stateExist}
 				<p class="required id_state select">
-					<label for="id_state">{l s='State'} <sup>*</sup></label>
+					<label for="id_state">Район/Регион <sup>*</sup></label>
 					<select name="id_state" id="id_state">
 						<option value="">-</option>
 					</select>
