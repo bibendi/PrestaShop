@@ -190,6 +190,8 @@
 						<option value="">-</option>
 					</select>
 					<sup>*</sup>
+                    <br/>
+                    Для выбора района Екатеринбурга <a href="/content/1-delivery" target="_blank"><strong>воспользуйтесь картой</strong></a>
 				</p>
 				{/if}
 				{/foreach}
@@ -323,7 +325,7 @@
 				</div>
 				{$HOOK_CREATE_ACCOUNT_FORM}
 				<p class="submit">
-					<input type="submit" class="exclusive button" name="submitAccount" id="submitAccount" value="{l s='Save'}" />
+					<input type="submit" class="exclusive button" name="submitAccount" id="submitAccount" value="Записать адрес" />
 				</p>
 				<p style="display: none;" id="opc_account_saved">
 					{l s='Account informations saved successfully'}
