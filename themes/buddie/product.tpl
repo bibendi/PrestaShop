@@ -434,7 +434,7 @@ var fieldRequired = '{l s='Please fill in all required fields, then save the cus
 				</span>
 			{else}
 				<p id="add_to_cart" class="buttons_bottom_block">
-					<input type="submit" name="Submit" value="{l s='Add to cart'}" class="exclusive" />
+					<input type="submit" name="Submit" value="Купить" class="exclusive" />
 				</p>
 			{/if}
 		
