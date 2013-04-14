@@ -33,6 +33,6 @@
 	*}
 	{*<li><a href="#" title="{l s='Help' mod='blockpermanentlinks'}"  {if $page_name=='Help'}class="active"{/if}>{l s='Help' mod='blockpermanentlinks'}</a></li>*}
 	<li id="header_link_sitemap"><a href="{$link->getPageLink('sitemap')}" title="{l s='sitemap' mod='blockpermanentlinks'}" {if $page_name=='sitemap'}class="active"{/if}>{l s='sitemap' mod='blockpermanentlinks'}</a></li>
-	<li id="header_link_contact"><a href="{$link->getPageLink('contact', true)}" title="{l s='contact' mod='blockpermanentlinks'}" {if $page_name=='contact'}class="active"{/if}>{l s='contact' mod='blockpermanentlinks'}</a></li>
+	<li id="header_link_contact"><a href="{$link->getPageLink('contact', true)}" title="Написать нам" {if $page_name=='contact'}class="active"{/if}>Написать нам</a></li>
 </ul>
 <!-- /Block permanent links module HEADER -->
