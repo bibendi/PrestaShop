@@ -21,6 +21,7 @@ h2.productscategory_h2 {
 	float:left;
 	margin: 0 9px;
     padding: 0 5px;
+    width: 80px;
 }
 
 @media screen and (-webkit-min-device-pixel-ratio:0) {
