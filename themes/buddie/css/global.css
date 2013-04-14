@@ -1055,9 +1055,12 @@ ul.shop_info li {
 }
 .payment_module a {
 	display: block;
-	border: 1px solid #595a5e;
+	border: 2px solid #5bb7b7;
+    background-color: #d1f3f4;
 	padding: 0.6em;
-	text-decoration: none
+	text-decoration: none;
+    border-radius: 33px;
+    width: 314px;
 }
 .payment_module a:hover, .payment_module a:focus, .payment_module a:active {
 	border: 1px solid #488c40;
