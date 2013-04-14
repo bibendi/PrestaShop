@@ -482,7 +482,6 @@ var fieldRequired = '{l s='Please fill in all required fields, then save the cus
 	</table>
 </div>
 {/if}
-{if isset($HOOK_PRODUCT_FOOTER) && $HOOK_PRODUCT_FOOTER}{$HOOK_PRODUCT_FOOTER}{/if}
 
 <!-- description and features -->
 {if (isset($product) && $product->description) || (isset($features) && $features) || (isset($accessories) && $accessories) || (isset($HOOK_PRODUCT_TAB) && $HOOK_PRODUCT_TAB) || (isset($attachments) && $attachments) || isset($product) && $product->customizable}
@@ -628,6 +627,8 @@ var fieldRequired = '{l s='Please fill in all required fields, then save the cus
 		{include file="$tpl_dir./product-list.tpl" products=$packItems}
 	</div>
 {/if}
+
+{if isset($HOOK_PRODUCT_FOOTER) && $HOOK_PRODUCT_FOOTER}{$HOOK_PRODUCT_FOOTER}{/if}
 
 {/if}
 

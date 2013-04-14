@@ -25,7 +25,7 @@
 
 {if count($categoryProducts) > 0 && $categoryProducts !== false}
 <div class="clearfix blockproductscategory">
-	<h2 class="productscategory_h2">{$categoryProducts|@count} {l s='other products in the same category:' mod='productscategory'}</h2>
+	<h2 class="productscategory_h2">Похожие товары из этого раздела</h2>
 	<div id="{if count($categoryProducts) > 5}productscategory{else}productscategory_noscroll{/if}">
 	{if count($categoryProducts) > 5}<a id="productscategory_scroll_left" title="{l s='Previous' mod='productscategory'}" href="javascript:{ldelim}{rdelim}">{l s='Previous' mod='productscategory'}</a>{/if}
 	<div id="productscategory_list">
@@ -34,7 +34,7 @@
 			<li {if count($categoryProducts) < 6}style="width:60px"{/if}>
 				<a href="{$link->getProductLink($categoryProduct.id_product, $categoryProduct.link_rewrite, $categoryProduct.category, $categoryProduct.ean13)}" class="lnk_img" title="{$categoryProduct.name|htmlspecialchars}"><img src="{$link->getImageLink($categoryProduct.link_rewrite, $categoryProduct.id_image, 'medium_default')}" alt="{$categoryProduct.name|htmlspecialchars}" /></a>
 				<p class="product_name">
-					<a href="{$link->getProductLink($categoryProduct.id_product, $categoryProduct.link_rewrite, $categoryProduct.category, $categoryProduct.ean13)}" title="{$categoryProduct.name|htmlspecialchars}">{$categoryProduct.name|truncate:14:'...'|escape:'htmlall':'UTF-8'}</a>
+					<a href="{$link->getProductLink($categoryProduct.id_product, $categoryProduct.link_rewrite, $categoryProduct.category, $categoryProduct.ean13)}" title="{$categoryProduct.name|htmlspecialchars}">{$categoryProduct.name|escape:'htmlall':'UTF-8'}</a>
 				</p>
 				{if $ProdDisplayPrice AND $categoryProduct.show_price == 1 AND !isset($restricted_country_mode) AND !$PS_CATALOG_MODE}
 				<p class="price_display">
