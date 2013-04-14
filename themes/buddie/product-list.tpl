@@ -39,11 +39,11 @@
                 <input type="hidden" name="qty" value="1" />
             </p>
 			<div class="center_block">
-				<h3><a href="{$product.link|escape:'htmlall':'UTF-8'}" title="{$product.name|escape:'htmlall':'UTF-8'}">{$product.name|escape:'htmlall':'UTF-8'|truncate:35:'...'}</a></h3>
+				<h3><a href="{$product.link|escape:'htmlall':'UTF-8'}" title="{$product.name|escape:'htmlall':'UTF-8'}">{$product.name|escape:'htmlall':'UTF-8'}</a></h3>
 				<a href="{$product.link|escape:'htmlall':'UTF-8'}" class="product_img_link" title="{$product.name|escape:'htmlall':'UTF-8'}">
 					<img src="{$link->getImageLink($product.link_rewrite, $product.id_image, 'home_default')}" alt="{$product.legend|escape:'htmlall':'UTF-8'}"/>
 				</a>
-				<p class="product_desc">{$product.description_short|strip_tags:'UTF-8'|truncate:90:'...'}</p>
+				<p class="product_desc">{$product.description_short|strip_tags:'UTF-8'}</p>
 
                 {if $groups_count == 0}
                 <div>
