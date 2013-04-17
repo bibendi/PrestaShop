@@ -267,7 +267,7 @@
 
 <div style="line-height: 1pt">&nbsp;</div>
 
-{$tax_tab}
+{*$tax_tab*}
 
 {if isset($order_invoice->note) && $order_invoice->note}
 <div style="line-height: 1pt">&nbsp;</div>

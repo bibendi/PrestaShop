@@ -104,20 +104,16 @@
 					{/if}
 					<td style="background-color: #4D4D4D; color: #FFF; text-align: right; font-weight: bold; width: 10%">
 						{l s='Unit Price' pdf='true'}
-						{if $tax_excluded_display}
-							 {l s='(Tax Excl.)' pdf='true'}
-						{else}
-							 {l s='(Tax Incl.)' pdf='true'}
+						{if !$tax_excluded_display}
+                            {l s='(Tax Incl.)' pdf='true'}
 						{/if}
 					</td>
 					<td style="background-color: #4D4D4D; color: #FFF; text-align: right; font-weight: bold; width: 10%">{l s='Discount' pdf='true'}</td>
 					<td style="background-color: #4D4D4D; color: #FFF; text-align: center; font-weight: bold; width: 10%">{l s='Qty' pdf='true'}</td>
 					<td style="background-color: #4D4D4D; color: #FFF; text-align: right; font-weight: bold; width: {if !$tax_excluded_display}15%{else}25%{/if}">
 						{l s='Total' pdf='true'}
-						{if $tax_excluded_display}
-							{l s='(Tax Excl.)' pdf='true'}
-						{else}
-							{l s='(Tax Incl.)' pdf='true'}
+						{if !$tax_excluded_display}
+                            {l s='(Tax Incl.)' pdf='true'}
 						{/if}
 					</td>
 				</tr>
@@ -277,7 +273,7 @@
 
 <div style="line-height: 1pt">&nbsp;</div>
 
-{$tax_tab}
+{*$tax_tab*}
 
 {if isset($order_invoice->note) && $order_invoice->note}
 <div style="line-height: 1pt">&nbsp;</div>

@@ -198,7 +198,7 @@ h4 { font-size: 1em }
 #page {
 	width: 960px;
 	margin: 0 auto;
-	text-align: left;overflow:hidden;padding:0 15px;
+	text-align: left;padding:0 15px;
 }
 #index #page{background:#fff;}
 #header{clear:both;width:960px;margin-left:-15px;padding:25px 15px 0;position:relative;min-height:160px;z-index:100}
