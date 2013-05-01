@@ -45,15 +45,15 @@
 				</a>
 				<p class="product_desc">{$product.description_short|strip_tags:'UTF-8'}</p>
 
+                {if $product.specific_prices}
+                    {assign var='specific_prices' value=$product.specific_prices}
+                    {if $specific_prices.reduction_type == 'percentage' && ($specific_prices.from == $specific_prices.to OR ($smarty.now|date_format:'%Y-%m-%d %H:%M:%S' <= $specific_prices.to && $smarty.now|date_format:'%Y-%m-%d %H:%M:%S' >= $specific_prices.from))}
+                        <span class="reduction">-{$specific_prices.reduction*100|floatval}%</span>
+                    {/if}
+                {/if}
+
                 {if $groups_count == 0}
                 <div>
-                    {if $product.specific_prices}
-                        {assign var='specific_prices' value=$product.specific_prices}
-                        {if $specific_prices.reduction_type == 'percentage' && ($specific_prices.from == $specific_prices.to OR ($smarty.now|date_format:'%Y-%m-%d %H:%M:%S' <= $specific_prices.to && $smarty.now|date_format:'%Y-%m-%d %H:%M:%S' >= $specific_prices.from))}
-                            <span class="reduction">-{$specific_prices.reduction*100|floatval}%</span>
-                        {/if}
-                    {/if}
-
                     {if (!$PS_CATALOG_MODE AND ((isset($product.show_price) && $product.show_price) || (isset($product.available_for_order) && $product.available_for_order)))}
                         {if isset($product.show_price) && $product.show_price && !isset($restricted_country_mode)}<span class="price" style="display: inline;">{if !$priceDisplay}{convertPrice price=$product.price}{else}{convertPrice price=$product.price_tax_exc}{/if}</span>{/if}
                     {/if}
