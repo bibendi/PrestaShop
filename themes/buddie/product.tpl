@@ -265,7 +265,7 @@ var fieldRequired = '{l s='Please fill in all required fields, then save the cus
 			<p class="online_only">{l s='Online only'}</p>
 			{/if}
 
-			<div class="price" itemprop="offers" itemtype="http://schema.org/Offer">
+			<div class="price" itemprop="offers" itemscope itemtype="http://schema.org/Offer">
 				{if !$priceDisplay || $priceDisplay == 2}
 					{assign var='productPrice' value=$product->getPrice(true, $smarty.const.NULL, $priceDisplayPrecision)}
 					{assign var='productPriceWithoutRedution' value=$product->getPriceWithoutReduct(false, $smarty.const.NULL)}
