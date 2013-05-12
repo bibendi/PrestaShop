@@ -149,7 +149,7 @@ var fieldRequired = '{l s='Please fill in all required fields, then save the cus
 </script>
 
 {include file="$tpl_dir./breadcrumb.tpl"}
-<div id="primary_block" class="clearfix">
+<div id="primary_block" class="clearfix" itemscope itemtype="http://schema.org/Product">
 
 	{if isset($adminActionDisplay) && $adminActionDisplay}
 	<div id="admin-action">
@@ -175,7 +175,7 @@ var fieldRequired = '{l s='Please fill in all required fields, then save the cus
 		<div id="image-block">
 		{if $have_image}
 			<span id="view_full_size">
-				<img src="{$link->getImageLink($product->link_rewrite, $cover.id_image, 'large_default')}" {if $jqZoomEnabled}class="jqzoom" alt="{$link->getImageLink($product->link_rewrite, $cover.id_image, 'thickbox_default')}"{else} title="{$product->name|escape:'htmlall':'UTF-8'}" alt="{$product->name|escape:'htmlall':'UTF-8'}" {/if} id="bigpic"/>
+				<img itemprop="image" src="{$link->getImageLink($product->link_rewrite, $cover.id_image, 'large_default')}" {if $jqZoomEnabled}class="jqzoom" alt="{$link->getImageLink($product->link_rewrite, $cover.id_image, 'thickbox_default')}"{else} title="{$product->name|escape:'htmlall':'UTF-8'}" alt="{$product->name|escape:'htmlall':'UTF-8'}" {/if} id="bigpic"/>
 			</span>
 		{else}
 			<span id="view_full_size">
@@ -209,14 +209,14 @@ var fieldRequired = '{l s='Please fill in all required fields, then save the cus
 
 	<!-- left infos-->
 	<div id="pb-left-column">
-		<h1>{$product->name|escape:'htmlall':'UTF-8'}</h1>
-		<h2>{$product->supplier_name|escape:'htmlall':'UTF-8'}</h2>
+		<h1 itemprop="name">{$product->name|escape:'htmlall':'UTF-8'}</h1>
+		<h2 itemprop="manufacturer">{$product->supplier_name|escape:'htmlall':'UTF-8'}</h2>
 		{if $product->quantity <= 0}<span class="outofstock">Под заказ</span>{/if}
 		
 		{if $product->description_short OR $packItems|@count > 0}
 		<div id="short_description_block">
 			{if $product->description_short}
-				<div id="short_description_content" class="rte align_justify">{$product->description_short}</div>
+				<div id="short_description_content" class="rte align_justify" itemprop="description">{$product->description_short}</div>
 			{/if}
 			{if $packItems|@count > 0}
 			<div class="short_description_pack">
@@ -265,7 +265,7 @@ var fieldRequired = '{l s='Please fill in all required fields, then save the cus
 			<p class="online_only">{l s='Online only'}</p>
 			{/if}
 
-			<div class="price">
+			<div class="price" itemprop="offers" itemscope itemtype="http://schema.org/Offer">
 				{if !$priceDisplay || $priceDisplay == 2}
 					{assign var='productPrice' value=$product->getPrice(true, $smarty.const.NULL, $priceDisplayPrecision)}
 					{assign var='productPriceWithoutRedution' value=$product->getPriceWithoutReduct(false, $smarty.const.NULL)}
@@ -280,7 +280,7 @@ var fieldRequired = '{l s='Please fill in all required fields, then save the cus
 				{/if}
 				<p class="our_price_display">
 				{if $priceDisplay >= 0 && $priceDisplay <= 2}
-					<span id="our_price_display">{convertPrice price=$productPrice}</span>
+					<span id="our_price_display" itemprop="price">{convertPrice price=$productPrice}</span>
 					<!--{if $tax_enabled  && ((isset($display_tax_label) && $display_tax_label == 1) OR !isset($display_tax_label))}
 						{if $priceDisplay == 1}{l s='tax excl.'}{else}{l s='tax incl.'}{/if}
 					{/if}-->
