@@ -22,7 +22,6 @@ ul li span.reduction{background:url('img/bkg_reduction.png') no-repeat 0 0;}
 #center_column div.block h4{background:url('img/bkg_dog_title.png') no-repeat 0 0;color:#5bb7b7 }
 #center_column .products_block  ul.product-list li h3 a:hover,div.tags_block p a:hover{color:#92a517 }
 #center_column .products_block span.price{color:#92a517}
-.top_block_footer  .right_sample_block{width:310px;float:left}
 .top_block_footer  .right_sample_block h4,.top_block_footer  .right_sample_block ul li h5 a,.top_block_footer  .right_sample_block p.viewall a{color:#56610f}
 .top_block_footer  .right_sample_block ul li p{color:#483001}
 #footer {background:url('img/bkg_top_footer.jpg') no-repeat top center;}
