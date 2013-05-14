@@ -2,7 +2,7 @@
 <options>
 <effect>random</effect>
 <animSpeed>500</animSpeed>
-<pauseTime>3000</pauseTime>
+<pauseTime>9000</pauseTime>
 <directionNav>false</directionNav>
 <directionNavHide>true</directionNavHide>
 <controlNav>true</controlNav>

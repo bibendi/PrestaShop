@@ -1,8 +1,8 @@
 <pre>Array
 (
-    [currentFolderPath] => ../uploaded/
-    [new_folder] => Test
+    [currentFolderPath] => ../../img/cms/
+    [new_folder] => discounts
 )
 </pre>
 
-22/Sep/2008 13:17:12
+05/May/2013 19:03:56
