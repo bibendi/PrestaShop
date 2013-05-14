@@ -29,3 +29,4 @@ logs
 img/import
 img/p
 img/tmp
+admin-dev/backups/*.bz2
