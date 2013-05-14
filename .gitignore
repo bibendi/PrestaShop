@@ -21,7 +21,8 @@ tools/smarty*/compile/*.php
 !tools/smarty*/compile/index.php
 themes/default/cache/*.js
 themes/default/cache/*.css
-
+themes/buddie/cache/*.js
+themes/buddie/cache/*.css
 logs
 .htaccess
 img/import
