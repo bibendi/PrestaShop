@@ -464,7 +464,7 @@
   'OrderSlipCore' => 'classes/order/OrderSlip.php',
   'OrderState' => '',
   'OrderStateCore' => 'classes/order/OrderState.php',
-  'PDF' => 'classes/pdf/PDF.php',
+  'PDF' => '',
   'PDFCore' => 'classes/pdf/PDF.php',
   'PDFGenerator' => '',
   'PDFGeneratorCore' => 'classes/pdf/PDFGenerator.php',
