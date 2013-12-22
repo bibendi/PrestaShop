@@ -150,10 +150,10 @@ function updateDisplay()
 	if (!selectedCombination['unavailable'] && quantityAvailable > 0 && productAvailableForOrder == 1)
 	{
 		//show the choice of quantities
-		$('#quantity_wanted_p:hidden').show('slow');
+		$('#quantity_wanted_p').show('slow');
 
 		//show the "add to cart" button ONLY if it was hidden
-		$('#add_to_cart:hidden').fadeIn(600);
+		$('#add_to_cart').fadeIn(600);
 
 		//hide the hook out of stock
 		$('#oosHook').hide();
@@ -169,12 +169,12 @@ function updateDisplay()
 			$('#availability_value').removeClass('warning_inline');
 			$('#availability_value').text(availableNowValue);
 			if(stock_management == 1)
-				$('#availability_statut:hidden').show();
+				$('#availability_statut').show();
 		}
 		else
 		{
 			//hide the availability value
-			$('#availability_statut:visible').hide();
+			$('#availability_statut').hide();
 		}
 
 		//'last quantities' message management
@@ -188,7 +188,7 @@ function updateDisplay()
 
 		if (quantitiesDisplayAllowed)
 		{
-			$('#pQuantityAvailable:hidden').show('slow');
+			$('#pQuantityAvailable').show('slow');
 			$('#quantityAvailable').text(quantityAvailable);
 
 			if (quantityAvailable < 2) // we have 1 or less product in stock and need to show "item" instead of "items"
@@ -214,14 +214,14 @@ function updateDisplay()
 		}
 
 		//hide 'last quantities' message if it was previously visible
-		$('#last_quantities:visible').hide('slow');
+		$('#last_quantities').hide('slow');
 
 		//hide the quantity of pieces if it was previously visible
-		$('#pQuantityAvailable:visible').hide('slow');
+		$('#pQuantityAvailable').hide('slow');
 
 		//hide the choice of quantities
 		if (!allowBuyWhenOutOfStock)
-			$('#quantity_wanted_p:visible').hide('slow');
+			$('#quantity_wanted_p').hide('slow');
 
 		//display that the product is unavailable with theses attributes
 		if (!selectedCombination['unavailable'])
@@ -232,7 +232,7 @@ function updateDisplay()
 			$('#oosHook').hide();
 		}
 		if(stock_management == 1)
-			$('#availability_statut:hidden').show();
+			$('#availability_statut').show();
 		
 		//display availability date
 		if (selectedCombination.length)
@@ -258,26 +258,26 @@ function updateDisplay()
 		//show the 'add to cart' button ONLY IF it's possible to buy when out of stock AND if it was previously invisible
 		if (allowBuyWhenOutOfStock && !selectedCombination['unavailable'] && productAvailableForOrder == 1)
 		{
-			$('#add_to_cart:hidden').fadeIn(600);
+			$('#add_to_cart').fadeIn(600);
 
 			if (availableLaterValue != '')
 			{
 				$('#availability_value').text(availableLaterValue);
 				if(stock_management == 1)
-					$('#availability_statut:hidden').show('slow');
+					$('#availability_statut').show('slow');
 			}
 			else
-				$('#availability_statut:visible').hide('slow');
+				$('#availability_statut').hide('slow');
 		}
 		else
 		{
-			$('#add_to_cart:visible').fadeOut(600);
+			$('#add_to_cart').fadeOut(600);
 			if(stock_management == 1)
-				$('#availability_statut:hidden').show('slow');
+				$('#availability_statut').show('slow');
 		}
 
 		if (productAvailableForOrder == 0)
-			$('#availability_statut:visible').hide();
+			$('#availability_statut').hide();
 	}
 
 	if (selectedCombination['reference'] || productReference)
@@ -286,10 +286,10 @@ function updateDisplay()
 			$('#product_reference span').text(selectedCombination['reference']);
 		else if (productReference)
 			$('#product_reference span').text(productReference);
-		$('#product_reference:hidden').show('slow');
+		$('#product_reference').show('slow');
 	}
 	else
-		$('#product_reference:visible').hide('slow');
+		$('#product_reference').hide('slow');
 
 	//update display of the the prices in relation to tax, discount, ecotax, and currency criteria
 	if (!selectedCombination['unavailable'] && productShowPrice == 1)

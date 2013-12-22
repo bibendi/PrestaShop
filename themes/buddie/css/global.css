@@ -198,10 +198,11 @@ h4 { font-size: 1em }
 #page {
 	width: 960px;
 	margin: 0 auto;
-	text-align: left;padding:0 15px;
+	text-align: left;
+	padding:0;
 }
 #index #page{background:#fff;}
-#header{clear:both;width:960px;margin-left:-15px;padding:25px 15px 0;position:relative;min-height:160px;z-index:100}
+#header{clear:both;width:960px;padding:25px 0 0;position:relative;min-height:160px;z-index:100}
 #index  #header{background:url('../img/bkg_header.png') repeat-x top left;}
 #header_logo {
 	float: left;
@@ -213,7 +214,7 @@ img.logo {
 	margin-top:60px;
 }
 #header_right {padding:15px 0 0;}
-.colorthemes{width:960px;position:absolute;top:0;left:15px;padding:4px 0;z-index:999}
+.colorthemes{width:960px;position:absolute;top:0;padding:4px 0;z-index:999}
 .colorthemes li{width:auto;float:left;padding:0 10px 0 0;margin-right:10px;}
 .colorthemes li.last{border:none}
 .colorthemes li a{color:#fff;font-weight:700}
@@ -332,7 +333,11 @@ body.mceContentBody {
 .rte ol, .mceContentBody ol {
 	list-style-type: decimal;
 	margin-left: 10px
-} 
+}
+
+#center_column .rte a {
+  text-decoration: underline;
+}
 
 /* /global RTE fields */
 

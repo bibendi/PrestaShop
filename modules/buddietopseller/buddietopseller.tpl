@@ -38,7 +38,7 @@
 <!-- MODULE Home Block best sellers -->
 <div id="bestsellerpro">
 <div id="best-sellers_block_center" class="block products_block">
-	<h4>{l s='Top sellers' mod='buddietopseller'}</h4>
+	<h4>Лидеры продаж</h4>
 	<div class="nav">
 		<a href="#" id="cprev" class="prev">prev</a>
 		<a href="#" id="cnext" class="next">next</a>
@@ -58,9 +58,9 @@
 					<div>
 					{if ($product.id_product_attribute == 0 OR (isset($add_prod_display) AND ($add_prod_display == 1))) AND $product.available_for_order AND !isset($restricted_country_mode) AND !$PS_CATALOG_MODE}
 						{if ($product.quantity > 0 OR $product.allow_oosp) AND $product.customizable != 2}
-						<a class="exclusive ajax_add_to_cart_button" rel="ajax_id_product_{$product.id_product}" href="{$link->getPageLink('cart.php')}?qty=1&amp;id_product={$product.id_product}&amp;token={$static_token}&amp;add" title="{l s='Add to cart' mod='buddietopseller'}"><span class="addtocard">{l s='Add to cart' mod='buddietopseller'}</span></a>
+						<a class="exclusive ajax_add_to_cart_button" rel="ajax_id_product_{$product.id_product}" href="{$link->getPageLink('cart.php')}?qty=1&amp;id_product={$product.id_product}&amp;token={$static_token}&amp;add" title="Купить"><span class="addtocard">Купить</span></a>
 						{else}
-						<span class="exclusive"><span class="addtocard">{l s='Out of stock' mod='buddietopseller'}</span></span>
+						<span class="exclusive"><span class="addtocard">Нет</span></span>
 						
 						{/if}
 					{else}

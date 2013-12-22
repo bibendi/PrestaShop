@@ -34,8 +34,8 @@ $smarty->setCompileDir(_PS_CACHE_DIR_.'smarty/compile');
 $smarty->setCacheDir(_PS_CACHE_DIR_.'smarty/cache');
 $smarty->setConfigDir(_PS_SMARTY_DIR_.'configs');
 $smarty->caching = false;
-$smarty->force_compile = (Configuration::get('PS_SMARTY_FORCE_COMPILE') == _PS_SMARTY_FORCE_COMPILE_) ? true : false;
-$smarty->compile_check = (Configuration::get('PS_SMARTY_FORCE_COMPILE') <= _PS_SMARTY_CHECK_COMPILE_) ? true : false;
+$smarty->force_compile = false;//(Configuration::get('PS_SMARTY_FORCE_COMPILE') == _PS_SMARTY_FORCE_COMPILE_) ? true : false;
+$smarty->compile_check = false;//(Configuration::get('PS_SMARTY_FORCE_COMPILE') <= _PS_SMARTY_CHECK_COMPILE_) ? true : false;
 
 // Production mode
 $smarty->debugging = false;

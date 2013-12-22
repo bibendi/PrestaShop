@@ -97,20 +97,20 @@
 		<td style="width: 85%; text-align: right">
 			<table style="width: 100%; font-size: 8pt;">
 				<tr style="line-height:4px;">
-					<td style="text-align: left; background-color: #4D4D4D; color: #FFF; padding-left: 10px; font-weight: bold; width: 45%">{l s='Product / Reference' pdf='true'}</td>
+					<td style="text-align: left; background-color: #96C59B; color: #000; padding-left: 10px; font-weight: bold; width: 45%">{l s='Product / Reference' pdf='true'}</td>
 					<!-- unit price tax excluded is mandatory -->
 					{if !$tax_excluded_display}
-						<td style="background-color: #4D4D4D; color: #FFF; text-align: right; font-weight: bold; width: 10%">{l s='Unit Price' pdf='true'} <br />{l s='(Tax Excl.)' pdf='true'}</td>
+						<td style="background-color: #96C59B; color: #000; text-align: right; font-weight: bold; width: 10%">{l s='Unit Price' pdf='true'} <br />{l s='(Tax Excl.)' pdf='true'}</td>
 					{/if}
-					<td style="background-color: #4D4D4D; color: #FFF; text-align: right; font-weight: bold; width: 10%">
+					<td style="background-color: #96C59B; color: #000; text-align: right; font-weight: bold; width: 10%">
 						{l s='Unit Price' pdf='true'}
 						{if !$tax_excluded_display}
                             {l s='(Tax Incl.)' pdf='true'}
 						{/if}
 					</td>
-					<td style="background-color: #4D4D4D; color: #FFF; text-align: right; font-weight: bold; width: 10%">{l s='Discount' pdf='true'}</td>
-					<td style="background-color: #4D4D4D; color: #FFF; text-align: center; font-weight: bold; width: 10%">{l s='Qty' pdf='true'}</td>
-					<td style="background-color: #4D4D4D; color: #FFF; text-align: right; font-weight: bold; width: {if !$tax_excluded_display}15%{else}25%{/if}">
+					<td style="background-color: #96C59B; color: #000; text-align: right; font-weight: bold; width: 10%">{l s='Discount' pdf='true'}</td>
+					<td style="background-color: #96C59B; color: #000; text-align: center; font-weight: bold; width: 10%">{l s='Qty' pdf='true'}</td>
+					<td style="background-color: #96C59B; color: #000; text-align: right; font-weight: bold; width: {if !$tax_excluded_display}15%{else}25%{/if}">
 						{l s='Total' pdf='true'}
 						{if !$tax_excluded_display}
                             {l s='(Tax Incl.)' pdf='true'}
@@ -296,3 +296,9 @@
 {/if}
 
 </div>
+
+<table>
+  <tr>
+    <td style="text-align: center"><img src="/img/flamp_sticker.jpg" width="140" height="140" /></td>
+  </tr>
+</table>

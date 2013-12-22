@@ -304,9 +304,10 @@ class MailAlerts extends Module
 				$customization_text = rtrim($customization_text, '---<br />');
 			}
 
+			$product_image = $product['image'];
 			$items_table .=
 				'<tr style="background-color:'.($key % 2 ? '#DDE2E6' : '#EBECEE').';">
-					<td style="padding:0.6em 0.4em;">'.$product['product_reference'].'</td>
+					<td style="padding:0.6em 0.4em;"><img src="'._PS_BASE_URL_._THEME_PROD_DIR_.$product_image->getExistingImgPath().'-small_default.'.$product_image->image_format.'" /></td>
 					<td style="padding:0.6em 0.4em;">
 						<strong>'
 							.$product['product_name'].(isset($product['attributes_small']) ? ' '.$product['attributes_small'] : '').(!empty($customization_text) ? '<br />'.$customization_text : '').

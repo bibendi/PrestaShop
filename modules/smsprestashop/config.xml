@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+        <module>
+            <name>smsprestashop</name>
+            <displayName><![CDATA[Presta SMS]]></displayName>
+            <version><![CDATA[2.32]]></version>
+            <description><![CDATA[presta-sms.com - отправляйте СМС сообщения из Вашего Prestashop!]]></description>
+            <author><![CDATA[TOPefekt s.r.o.]]></author>
+            <tab><![CDATA[other]]></tab>
+            <is_configurable>0</is_configurable>
+            <need_instance>0</need_instance>
+	<limited_countries></limited_countries>
+        </module>

@@ -1,0 +1,43 @@
+From eed7ceb37a2caf9c3b2431c7c59bcacfe9075fb1 Mon Sep 17 00:00:00 2001
+From: Damien Metzger <damien.metzger@prestashop.com>
+Date: Fri, 9 Aug 2013 10:21:37 +0200
+Subject: [PATCH] [-] MO : blocklayered also try to find the translations in
+ the translations directory
+
+---
+ modules/blocklayered/blocklayered.php | 15 +++++++++++----
+ 1 file changed, 11 insertions(+), 4 deletions(-)
+
+diff --git a/modules/blocklayered/blocklayered.php b/modules/blocklayered/blocklayered.php
+index 278ea60..bd6de5f 100644
+--- a/modules/blocklayered/blocklayered.php
++++ b/modules/blocklayered/blocklayered.php
+@@ -445,14 +445,21 @@ public function translateWord($string, $id_lang )
+ 		static $_MODULES = array();
+ 		global $_MODULE;
+ 
+-		$file = _PS_MODULE_DIR_.$this->name.'/'.Language::getIsoById($id_lang).'.php';
+ 
+ 		if (!array_key_exists($id_lang, $_MODULES))
+ 		{
+-			if (!file_exists($file))
++			if (file_exists($file1 = _PS_MODULE_DIR_.$this->name.'/translations/'.Language::getIsoById($id_lang).'.php'))
++			{
++				include($file1);
++				$_MODULES[$id_lang] = $_MODULE;
++			}
++			elseif (file_exists($file2 = _PS_MODULE_DIR_.$this->name.'/'.Language::getIsoById($id_lang).'.php'))
++			{
++				include($file2);
++				$_MODULES[$id_lang] = $_MODULE;
++			}
++			else
+ 				return $string;
+-			include($file);
+-			$_MODULES[$id_lang] = $_MODULE;
+ 		}
+ 
+ 		$string = str_replace('\'', '\\\'', $string);
+-- 
+1.8.4
+

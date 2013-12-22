@@ -724,7 +724,7 @@ class ValidateCore
 	 */
 	public static function isTrackingNumber($tracking_number)
 	{
-		return preg_match('/^[~:#,%&_=\(\)\.\? \+\-@\/a-zA-Z0-9]+$/', $tracking_number);
+		return preg_match('/^[~:#,%&_=\(\)\.\? \+\-@\/a-zA-ZА-Яа-яЁё0-9]+$/', $tracking_number);
 	}
 
 	/**
