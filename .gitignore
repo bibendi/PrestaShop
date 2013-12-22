@@ -4,6 +4,7 @@
 .idea
 .svn
 .DS_Store
+webstat
 sitemap.xml
 cache/smarty/cache/*
 !cache/smarty/cache/index.php
@@ -21,14 +22,14 @@ tools/smarty*/compile/*.php
 !tools/smarty*/compile/index.php
 themes/default/cache/*.js
 themes/default/cache/*.css
-
+themes/buddie/cache/*.js
+themes/buddie/cache/*.css
 logs
 .htaccess
 img/import
 img/p
 img/tmp
-admin-dev/backups
-themes/buddie/cache
 tmp
 upload/yml.xml
-webstat
+admin-dev/backups/*.bz2
+
