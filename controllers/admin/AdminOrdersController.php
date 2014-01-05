@@ -39,6 +39,11 @@ class AdminOrdersControllerCore extends AdminController
 		$this->deleted = false;
 		$this->context = Context::getContext();
 
+        // @merkushin
+        $this->addRowAction('salesReport');
+        $this->bulk_actions = array('salesReport' => array('text' => 'Отчёт о продажах'));
+        // end of @merkushin
+
 		$this->_select = '
 		a.id_currency,
 		a.id_order AS id_pdf,
@@ -2206,5 +2211,65 @@ class AdminOrdersControllerCore extends AdminController
 		$order_invoice->total_paid_tax_excl -= $value_tax_excl;
 		$order_invoice->update();
 	}
+
+    // @merkushin
+    protected function processBulkSalesReport()
+    {
+        $query = 'select
+                     pl.name,
+                     pa.reference,
+                     od.product_quantity,
+                     od.unit_price_tax_excl,
+                     od.total_price_tax_excl
+                   from '._DB_PREFIX_.'orders as o
+                   inner join '._DB_PREFIX_.'order_detail as od on od.id_order = o.id_order
+                   inner join '._DB_PREFIX_.'product as p on p.id_product = od.product_id
+                   inner join '._DB_PREFIX_.'product_lang as pl on pl.id_product = p.id_product and pl.id_lang = 1
+                   inner join '._DB_PREFIX_.'product_attribute as pa on pa.id_product_attribute = od.product_attribute_id
+                   where
+                     o.id_order in ('.implode(',', $this->boxes).')';
+
+        $result = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS($query);
+
+        $rows = array();
+        $row = array();
+        $row[] = 'Номенклатура';
+        $row[] = 'Артикул';
+        $row[] = 'Количество';
+        $row[] = 'Цена';
+        $row[] = 'Сумма';
+        $row[] = 'Ставка НДС';
+        $row[] = 'Сумма НДС';
+        $row[] = 'Собственные, счет учета';
+        $row[] = 'Счет учета НДС по реализации';
+        $row[] = 'Счет доходов';
+        $row[] = 'Субконто';
+        $row[] = 'Счет расходов';
+        $rows[] = implode("\t", $row);
+
+        foreach ($result as $raw_row) {
+            $row = array();
+            $row[] = $raw_row['name'];
+            $row[] = $raw_row['reference'];
+            $row[] = $raw_row['product_quantity'];
+            $row[] = $raw_row['unit_price_tax_excl'];
+            $row[] = $raw_row['total_price_tax_excl'];
+            $row[] = 'Без НДС';
+            $row[] = '';
+            $row[] = '41.01';
+            $row[] = '90.03';
+            $row[] = '90.01.1';
+            $row[] = '';
+            $row[] = '90.02.1';
+            $rows[] = implode("\t", $row);
+        }
+
+        header('Content-Description: File Transfer');
+        header('Content-Type: text/plain');
+        header('Content-Disposition: attachment; filename=sales-report.txt');
+        echo iconv('utf-8', 'windows-1251', implode("\n", $rows));
+        exit;
+    }
+    // end of @merkushin
 }
 

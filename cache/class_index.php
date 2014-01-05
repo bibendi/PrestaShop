@@ -77,6 +77,8 @@
   'AdminInformationControllerCore' => 'controllers/admin/AdminInformationController.php',
   'AdminInvoicesController' => '',
   'AdminInvoicesControllerCore' => 'controllers/admin/AdminInvoicesController.php',
+  'Admin1cRetailSalesReportController' => '',
+  'Admin1cRetailSalesReportControllerCore' => 'controllers/admin/Admin1cRetailSalesReportController.php',
   'AdminLanguagesController' => '',
   'AdminLanguagesControllerCore' => 'controllers/admin/AdminLanguagesController.php',
   'AdminLocalizationController' => '',
