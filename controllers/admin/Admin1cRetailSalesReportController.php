@@ -80,7 +80,7 @@ class Admin1cRetailSalesReportControllerCore extends AdminController
                 $result = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS('
                     select
                       pl.name,
-                      pa.reference,
+                      coalesce(pa.reference, p.reference) as reference,
                       od.product_quantity,
                       od.unit_price_tax_excl,
                       od.total_price_tax_excl
@@ -89,7 +89,7 @@ class Admin1cRetailSalesReportControllerCore extends AdminController
                     inner join '._DB_PREFIX_.'order_detail as od on od.id_order = o.id_order
                     inner join '._DB_PREFIX_.'product as p on p.id_product = od.product_id
                     inner join '._DB_PREFIX_.'product_lang as pl on pl.id_product = p.id_product and pl.id_lang = 1
-                    inner join '._DB_PREFIX_.'product_attribute as pa on pa.id_product_attribute = od.product_attribute_id
+                    left join '._DB_PREFIX_.'product_attribute as pa on pa.id_product_attribute = od.product_attribute_id
                     where
                       oh.date_add >= "'.Tools::getValue('date').' 00:00:00"
                       and oh.date_add <= "'.Tools::getValue('date').' 23:59:59"
