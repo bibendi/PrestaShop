@@ -82,8 +82,8 @@ class Admin1cRetailSalesReportControllerCore extends AdminController
                       pl.name,
                       coalesce(pa.reference, p.reference) as reference,
                       od.product_quantity,
-                      od.unit_price_tax_excl,
-                      od.total_price_tax_excl
+                      od.unit_price_tax_excl * (1 - (o.total_discounts / o.total_products)) as unit_price,
+                      od.total_price_tax_excl * (1 - (o.total_discounts / o.total_products)) as total_price
                     from '._DB_PREFIX_.'order_history as oh
                     inner join '._DB_PREFIX_.'orders as o on o.id_order = oh.id_order
                     inner join '._DB_PREFIX_.'order_detail as od on od.id_order = o.id_order
@@ -116,8 +116,8 @@ class Admin1cRetailSalesReportControllerCore extends AdminController
                     $row[] = $raw_row['name'];
                     $row[] = $raw_row['reference'];
                     $row[] = $raw_row['product_quantity'];
-                    $row[] = $raw_row['unit_price_tax_excl'];
-                    $row[] = $raw_row['total_price_tax_excl'];
+                    $row[] = $raw_row['unit_price'];
+                    $row[] = $raw_row['total_price'];
                     $row[] = 'Без НДС';
                     $row[] = '';
                     $row[] = '41.01';
