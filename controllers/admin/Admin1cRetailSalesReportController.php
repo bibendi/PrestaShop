@@ -79,11 +79,10 @@ class Admin1cRetailSalesReportControllerCore extends AdminController
             {
                 $result = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS('
                     select
-                      pl.name,
                       coalesce(pa.reference, p.reference) as reference,
                       od.product_quantity,
-                      od.unit_price_tax_excl * (1 - (o.total_discounts / o.total_products)) as unit_price,
-                      od.total_price_tax_excl * (1 - (o.total_discounts / o.total_products)) as total_price
+                      truncate(od.unit_price_tax_excl  * (1 + ((o.total_paid - o.total_products) / o.total_products)), 2) as unit_price,
+                      truncate(od.total_price_tax_excl * (1 + ((o.total_paid - o.total_products) / o.total_products)), 2) as total_price
                     from '._DB_PREFIX_.'order_history as oh
                     inner join '._DB_PREFIX_.'orders as o on o.id_order = oh.id_order
                     inner join '._DB_PREFIX_.'order_detail as od on od.id_order = o.id_order
@@ -97,7 +96,6 @@ class Admin1cRetailSalesReportControllerCore extends AdminController
 
                 $rows = array();
                 $row = array();
-                $row[] = 'Номенклатура';
                 $row[] = 'Артикул';
                 $row[] = 'Количество';
                 $row[] = 'Цена';
@@ -113,7 +111,6 @@ class Admin1cRetailSalesReportControllerCore extends AdminController
 
                 foreach ($result as $raw_row) {
                     $row = array();
-                    $row[] = $raw_row['name'];
                     $row[] = $raw_row['reference'];
                     $row[] = $raw_row['product_quantity'];
                     $row[] = $raw_row['unit_price'];
