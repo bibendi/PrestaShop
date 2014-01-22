@@ -2216,11 +2216,10 @@ class AdminOrdersControllerCore extends AdminController
     protected function processBulkSalesReport()
     {
         $query = 'select
-                     pl.name,
                      coalesce(pa.reference, p.reference) as reference,
                      od.product_quantity,
-                     od.unit_price_tax_excl * (1 - (o.total_discounts / o.total_products)) as unit_price,
-                     od.total_price_tax_excl * (1 - (o.total_discounts / o.total_products)) as total_price
+                     truncate(od.unit_price_tax_excl  * (1 + ((o.total_paid - o.total_products) / o.total_products)), 2) as unit_price,
+                     truncate(od.total_price_tax_excl * (1 + ((o.total_paid - o.total_products) / o.total_products)), 2) as total_price
                    from '._DB_PREFIX_.'orders as o
                    inner join '._DB_PREFIX_.'order_detail as od on od.id_order = o.id_order
                    inner join '._DB_PREFIX_.'product as p on p.id_product = od.product_id
@@ -2233,7 +2232,6 @@ class AdminOrdersControllerCore extends AdminController
 
         $rows = array();
         $row = array();
-        $row[] = 'Номенклатура';
         $row[] = 'Артикул';
         $row[] = 'Количество';
         $row[] = 'Цена';
@@ -2249,7 +2247,6 @@ class AdminOrdersControllerCore extends AdminController
 
         foreach ($result as $raw_row) {
             $row = array();
-            $row[] = $raw_row['name'];
             $row[] = $raw_row['reference'];
             $row[] = $raw_row['product_quantity'];
             $row[] = $raw_row['unit_price'];
