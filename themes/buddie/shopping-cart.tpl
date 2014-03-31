@@ -316,10 +316,11 @@
 				</p>
 				<p class="submit"><span class="out_button"><input type="hidden" name="submitDiscount" /><input type="submit" name="submitAddDiscount" value="{l s='OK'}" class="button" /></span></p>
 			{if $displayVouchers}
-				<h4 class="title_offers">{l s='Take advantage of our offers:'}</h4>
+                                <div class="clearfix"></div>
+				<h2>У вас есть купоны на скидку:</h4>
 				<div id="display_cart_vouchers">
 				{foreach $displayVouchers as $voucher}
-					<span onclick="$('#discount_name').val('{$voucher.name}');return false;" class="voucher_name">{$voucher.name}</span> - {$voucher.description} <br />
+					<span onclick="$('#discount_name').val('{$voucher.code}');return false;" class="voucher_name">{$voucher.name}</span>{if strlen($voucher.description)} - {$voucher.description}{/if} <br />
 				{/foreach}
 				</div>
 			{/if}
