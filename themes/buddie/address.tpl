@@ -100,11 +100,13 @@ $(function(){ldelim}
 	{assign var="stateExist" value="false"}
 	{foreach from=$ordered_adr_fields item=field_name}
 		{if $field_name eq 'company'}
+                <div style="display: none;">
 			<p class="text">
 			<input type="hidden" name="token" value="{$token}" />
 			<label for="company">{l s='Company'}</label>
 			<input type="text" id="company" name="company" value="{if isset($smarty.post.company)}{$smarty.post.company}{else}{if isset($address->company)}{$address->company}{/if}{/if}" />
 		</p>
+                </div>
 		{if $vat_display == 2}
 			<div id="vat_area">
 		{elseif $vat_display == 1}
@@ -140,15 +142,17 @@ $(function(){ldelim}
 		{/if}
 		{if $field_name eq 'address2'}
 		<p class="required text">
-			<label for="address2">{l s='Address (Line 2)'}</label>
+			<label for="address2">{l s='Address (Line 2)'} <sup>*</sup></label>
 			<input type="text" id="address2" name="address2" value="{if isset($smarty.post.address2)}{$smarty.post.address2}{else}{if isset($address->address2)}{$address->address2}{/if}{/if}" />
 		</p>
 		{/if}
 		{if $field_name eq 'postcode'}
-		<p class="required postcode text">
+                <div style="display: none;">
+		<p class="required postcode text" style="display: none;">
 			<label for="postcode">{l s='Zip / Postal Code'} <sup>*</sup></label>
-			<input type="text" id="postcode" name="postcode" value="{if isset($smarty.post.postcode)}{$smarty.post.postcode}{else}{if isset($address->postcode)}{$address->postcode}{/if}{/if}" onkeyup="$('#postcode').val($('#postcode').val().toUpperCase());" />
+			<input type="text" id="postcode" name="postcode" value="{if isset($smarty.post.postcode)}{$smarty.post.postcode}{else}{if isset($address->postcode)}{$address->postcode}{else}000000{/if}{/if}" onkeyup="$('#postcode').val($('#postcode').val().toUpperCase());" />
 		</p>
+                </div>
 		{/if}
 		{if $field_name eq 'city'}
 		<p class="required text">

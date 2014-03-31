@@ -32,4 +32,5 @@ img/tmp
 tmp
 upload/yml.xml
 admin-dev/backups/*.bz2
+ecommerceapp.log
 

@@ -1,24 +1,25 @@
 <?php
 /*-----------------------------------------------------------------------------+
 | eMagicOne                                                                    |
-| Copyright (c) 2012-2013 eMagicOne.com <contact@emagicone.com>                |
+| Copyright (c) 2012-2014 eMagicOne.com <contact@emagicone.com>                |
 | All rights reserved                                                          |
 +------------------------------------------------------------------------------+
 |                                                                              |
 | PHP MySQL Bridge for Store Assistant                                         |
 |                                                                              |
 | Developed by eMagicOne,                                                      |
-| Copyright (c) 2012-2013                                                      |
+| Copyright (c) 2012-2014                                                      |
 +-----------------------------------------------------------------------------*/
 
 
 // Please change immediately
 // it is security threat to leave these values as is!
 $username = 'admin';
-$password = '7332917';
+$password = '101101';
 
 
-$version = '$Revision: 33 $';
+$version = '$Revision: 63 $';
+
 
 /*
 	Please uncomments following database connection information if you need to connect to some
@@ -35,6 +36,10 @@ define('USER_DB_TABLE_PREFIX','');    // database prefix
 */
 
 
+/** MySQL/MySQLi/PDO database functionality version **/
+$database_extension = 'auto'; // 'auto', 'pdo', 'mysqli', 'mysql'
+
+
 #############################################################################################
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!#
 #!                                                                                         !#
@@ -43,6 +48,7 @@ define('USER_DB_TABLE_PREFIX','');    // database prefix
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!#
 #############################################################################################
 error_reporting(E_ERROR | E_WARNING | E_PARSE); //good (and pretty enough) for most hostings
+
 
 $MainSA = new MainSA();
 $CartClassName = $MainSA->CartClass;
@@ -54,21 +60,19 @@ if(!method_exists($CartClass, $call_func)) {
     $MainSA->generate_output('old_bridge');
 }
 
-$request = $CartClass->$call_func();
-$MainSA->close_db_connect();
-$CartClass->close_db_connect();
-$MainSA->generate_output($request);
+$result = $CartClass->$call_func();
+$MainSA->generate_output($result);
 
 class MainSA {
     public $CartClass = "";
     public $call_function;
+    public $rLink = 0;
     protected $sDBHost = '';
     protected $sDBUser = '';
     protected $sDBPwd  = '';
     protected $sDBName = '';
     protected $sDBPrefix = '';
     protected $site_url = '';
-    private $rLink = 0;
     private $CartType = -1;
     private $callback;
 
@@ -77,8 +81,8 @@ class MainSA {
             @date_default_timezone_set(@date_default_timezone_get());
         }
 
-        $this->callback = $this->validate_type($_GET['callback'], 'STR');
-        $this->call_function = $this->validate_type($_GET['call_function'], 'STR');
+        $this->callback = $this->validate_type($_REQUEST['callback'], 'STR');
+        $this->call_function = $this->validate_type($_REQUEST['call_function'], 'STR');
         $this->define_db_configs();
 
         if(empty($this->callback) && empty($this->call_function)) {
@@ -86,9 +90,9 @@ class MainSA {
         }
 
         if($this->call_function == 'phpinfo') {
-            //echo "<a href='" . $_SERVER['HTTP_REFERER'] . "'>back</a><br>";
-            //phpinfo();
-            //echo "<br><a href='" . $_SERVER['HTTP_REFERER'] . "'>back</a>";
+            echo "<a href='" . $_SERVER['HTTP_REFERER'] . "'>back</a><br>";
+            phpinfo();
+            echo "<br><a href='" . $_SERVER['HTTP_REFERER'] . "'>back</a>";
             die();
         }
 
@@ -100,10 +104,9 @@ class MainSA {
             $this->generate_output('connection_error');
         }
         if($this->call_function == 'test_config') {
-            $this->close_db_connect();
             $this->generate_output(array('test' => 1));
         }
-        $params = $this->validate_types($_GET, array(
+        $params = $this->validate_types($_REQUEST, array(
             'show' => 'INT',
             'page' => 'INT',
             'search_order_id' => 'STR',
@@ -115,6 +118,8 @@ class MainSA {
             'date_to' => 'STR',
             'graph_from' => 'STR',
             'graph_to' => 'STR',
+            'stats_from' => 'STR',
+            'stats_to' => 'STR',
             'products_to' => 'STR',
             'products_from' => 'STR',
             'order_id' => 'INT',
@@ -124,9 +129,11 @@ class MainSA {
             'search_val' => 'STR',
             'statuses' => 'STR',
             'last_order_id' => 'STR',
+            'sort_by' => 'STR',
             'product_id' => 'INT',
             'get_statuses' => 'INT',
-            'cust_with_orders' => 'INT'
+            'cust_with_orders' => 'INT',
+            'data_for_widget' => 'INT'
         ));
         foreach($params as $k => $value) {
             $this->{$k} = $value;
@@ -147,6 +154,11 @@ class MainSA {
             }
             $item = trim($item);
         }
+
+        if(!is_array($data)) {
+            $data = array($data);
+        }
+
         if(is_array($data)) {
             array_walk_recursive($data, 'reset_null');
         }
@@ -269,25 +281,44 @@ class MainSA {
     }
 
     private function connect_db() {
-        $this->rLink = mysql_connect($this->sDBHost, $this->sDBUser, $this->sDBPwd); // connecting to MySQL
-        if($this->rLink) {
-            mysql_select_db($this->sDBName, $this->rLink);
-            if($this->CartType == 0) {
-                mysql_query("SET NAMES 'latin1'");
-            } else {
-                mysql_query("SET NAMES 'utf8'");
-            }
-/*
-            $res = mysql_query('SELECT @@character_set_database AS charset');
-            $row = mysql_fetch_array($res);
-            mysql_query("SET CHARACTER SET '".$row['charset']."'");
-*/
-        }
-        return $this->rLink;
-    }
+//        $this->rLink = mysql_connect($this->sDBHost, $this->sDBUser, $this->sDBPwd); // connecting to MySQL
+//        if($this->rLink) {
+//            mysql_select_db($this->sDBName, $this->rLink);
+//            if($this->CartType == 0) {
+//                mysql_query("SET NAMES 'latin1'");
+//            } else {
+//                mysql_query("SET NAMES 'utf8'");
+//            }
+///*
+//            $res = mysql_query('SELECT @@character_set_database AS charset');
+//            $row = mysql_fetch_array($res);
+//            mysql_query("SET CHARACTER SET '".$row['charset']."'");
+//*/
+//        }
 
-    public function close_db_connect() {
-        mysql_close($this->rLink);
+        $settings = array('hostname' => $this->sDBHost,
+                          'username' => $this->sDBUser,
+                          'password' => $this->sDBPwd,
+                          'database' => $this->sDBName);
+
+        $this->rLink = dbconn::instance($settings);
+
+//        if($this->CartType == 0) {
+//            $this->rLink->query("SET NAMES 'latin1'");
+//        } else {
+            $this->rLink->query("SET NAMES 'utf8'");
+//        }
+
+//        $this->rLink = new PDO("mysql:host=$this->sDBHost;dbname=$this->sDBName", $this->sDBUser, $this->sDBPwd);
+//        $this->rLink->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+//        if($this->CartType == 0) {
+//            $stmt = $this->rLink->query("SET NAMES 'latin1'");
+//        } else {
+//            $stmt = $this->rLink->query("SET NAMES 'utf8'");
+//        }
+//        $stmt->execute();
+
+        return $this->rLink;
     }
 
     private function check_auth() {
@@ -365,22 +396,12 @@ class MainSA {
     }
 
     private function getCartType() {
-        if(is_dir("./includes") && is_file("./includes/configure.php") ) {
-            $this->CartClass = 'osCommSA';
-            return 0; // osCommerce cart type
-        } elseif( file_exists(dirname(__FILE__) . "/config.php") ) {
-            define('XCART_START', 1);
-            require('./config.php');
-            if(defined('DB_DRIVER') && defined('DB_HOSTNAME') && defined('DB_USERNAME') && defined('DB_DATABASE')) {
-                $this->CartClass = 'OpenCartSA';
-                return 7; // OpenCart
-            } elseif(isset($sql_host) && isset($sql_user) && isset($sql_db)) {
-                $this->CartClass = 'XCartSA';
-                return 1; // X-Cart
-            }
-        } elseif( file_exists(dirname(__FILE__) . "/app/Mage.php" ) ) {
+        if( file_exists(dirname(__FILE__) . "/app/Mage.php" ) ) {
             $this->CartClass = 'MagentoSA';
             return 3; // Magento
+        } elseif(is_dir("./includes") && is_file("./includes/configure.php") ) {
+            $this->CartClass = 'osCommSA';
+            return 0; // osCommerce cart type
         } elseif( file_exists(dirname(__FILE__) . '/config/settings.inc.php') ) {
             $this->CartClass = 'PrestaShopSA';
             return 5; // PrestaShop
@@ -401,6 +422,16 @@ class MainSA {
                 $this->CartClass = 'VirtueMartv2xSA';
             }
             return 6;
+        } elseif( file_exists(dirname(__FILE__) . "/config.php") ) {
+            define('XCART_START', 1);
+            require('./config.php');
+            if(defined('DB_DRIVER') && defined('DB_HOSTNAME') && defined('DB_USERNAME') && defined('DB_DATABASE')) {
+                $this->CartClass = 'OpenCartSA';
+                return 7; // OpenCart
+            } elseif(isset($sql_host) && isset($sql_user) && isset($sql_db)) {
+                $this->CartClass = 'XCartSA';
+                return 1; // X-Cart
+            }
         }
         return -1; // Unknown Cart Type
     }
@@ -440,18 +471,18 @@ class MainSA {
         }
 
         $html = '<h2>'.basename($_SERVER["SCRIPT_NAME"]).' Self Test Tool</h2>'
-              . '<div style="padding: 5px; margin: 10px 0;">This tool checks your website to make sure there are no issues in your hosting configuration.<br />Your hosting support can solve all issues found here.</div>'
-              . '<table cellpadding=2><tr><th>Test Title</th><th>Result</th></tr>'
-              . '<tr><td>Bridge Version</td><td>' . $GLOBALS['version'] . '</td><td></td></tr>'
-              . '<tr><td>Default Login and Password Changed</td><td>'
-              . (( $res = $this->test_default_password_is_changed() ) ? '<span style="color: #008000;">Yes</span>' : '<span style="color: #ff0000;">Fail</span>') . '</td>';
+            . '<div style="padding: 5px; margin: 10px 0;">This tool checks your website to make sure there are no issues in your hosting configuration.<br />Your hosting support can solve all issues found here.</div>'
+            . '<table cellpadding=2><tr><th>Test Title</th><th>Result</th></tr>'
+            . '<tr><td>Bridge Version</td><td>' . $GLOBALS['version'] . '</td><td></td></tr>'
+            . '<tr><td>Default Login and Password Changed</td><td>'
+            . (( $res = $this->test_default_password_is_changed() ) ? '<span style="color: #008000;">Yes</span>' : '<span style="color: #ff0000;">Fail</span>') . '</td>';
 
         if(!$res) {
             $html .= '<td>Change your login credentials in '.basename($_SERVER["SCRIPT_NAME"]).' to make your connection secure</td>';
         }
 
         $html .= '<tr><td>'.basename($_SERVER["SCRIPT_NAME"]).' with encoding as "UTF-8 without BOM"<br>(BOM="byte-order-mark")</td><td>'
-              . (( $utf_bom ) ? '<span style="color: #ff0000;">Fail</span>' : '<span style="color: #008000;">Yes</span>' ) . '</td>';
+            . (( $utf_bom ) ? '<span style="color: #ff0000;">Fail</span>' : '<span style="color: #008000;">Yes</span>' ) . '</td>';
 
         if($utf_bom) {
             $html .= '<td>
@@ -467,12 +498,16 @@ class MainSA {
 the correct value for your server.<br/>In order to prevent errors occurrence in mobile-bridge.php operating - <br/><b>"'.date_default_timezone_get().'"</b> time zone was set as default, with the help of "date_default_timezone_set()" function') . '</td>';
 
         $html .= '<tr><td>&nbsp;</td></tr>'
-              . '<tr><td><b>Database Connection Check</b></td><td>'
-              . (( $this->connect_db() ) ? '<span style="color: #008000;">OK</span>' : '<span style="color: #ff0000;">Fail</span>') . '</td>';
+            . '<tr><td><b>Database Connection Check</b></td><td>'
+            . ( $this->connect_db() ? '<span style="color: #008000;">OK</span>' : '<span style="color: #ff0000;">Fail</span>') . '</td>';
+
+        $html .= '<tr><td>&nbsp;</td></tr>'
+            . '<tr><td><b>Database extension object</b></td><td>'
+            . get_class($this->rLink->dbconn) . '</td>';
 
         $html .= '</table><br/><br/>'
-              //. '<a href="?call_function=phpinfo">More information about your PHP configuration</a><br /><br />'
-              . '<div style="margin-top: 15px; font-size: 13px;">PHP MySQL Bridge by <a href="http://emagicone.com" target="_blank" style="color: #15428B">eMagicOne</a></div>';
+            //. '<a href="?call_function=phpinfo">More information about your PHP configuration</a><br /><br />'
+            . '<div style="margin-top: 15px; font-size: 13px;">PHP MySQL Bridge by <a href="http://emagicone.com" target="_blank" style="color: #15428B">eMagicOne</a></div>';
 
         die($html);
     }
@@ -537,51 +572,87 @@ the correct value for your server.<br/>In order to prevent errors occurrence in 
 
     protected function bd_nice_number($n, $is_count = false) {
         // first strip any formatting;
-        $n = intval((0+str_replace(",","",$n)));
+
+        $n = floatval($n);
+        //$n = intval((0+str_replace(",","",$n)));
 
         // is this a number?
         if(!is_numeric($n)) return $n;
 
-        if($is_count) {
-            $n = intval($n);
-        } else {
-            $n = number_format($n, 1, '.', '');
+//        if($is_count) {
+//            $n = intval($n);
+//        } else {
+//            $n = number_format($n, 1, '.', '');
+//        }
+
+        $final_number = $n;
+        $number_suf = "";
+        // now filter it;
+        if($n > 1000000000000000) {
+            //return number_format(round(($n / 1000000000000000), 1), 1, '.', ' ') . 'P';
+            $final_number = round(($n / 1000000000000000), 2);
+            $number_suf = "P";
+
+        } else if($n > 1000000000000) {
+            //return number_format(round(($n / 1000000000000),1), 1, '.', ' ') . 'T';
+            $final_number = round(($n / 1000000000000), 2);
+            $number_suf = "T";
+
+        } else if($n > 1000000000) {
+            //return number_format(round(($n / 1000000000),1), 1, '.', ' ') . 'G';
+            $final_number = round(($n / 1000000000), 2);
+            $number_suf = "G";
+
+        } else if($n > 1000000) {
+            //return number_format(round(($n / 1000000),1), 1, '.', ' ') . 'M';
+            $final_number = round(($n / 1000000), 2);
+            $number_suf = "M";
+
+        } else if($n > 10000) {
+            return number_format($n, 0, '', ' ');
         }
 
-        // now filter it;
-        if($n>1000000000000000) return round(($n/1000000000000000), 1).'P';
-        else if($n>1000000000000) return round(($n/1000000000000),1).'T';
-        else if($n>1000000000) return round(($n/1000000000),1).'G';
-        else if($n>1000000) return round(($n/1000000),1).'M';
-        else if($n>1000) return round(($n/1000),1).'k';
+        if($is_count) {
+            $final_number = intval($final_number);
+        } else {
+            $final_number = number_format($final_number, 2, '.', ' ') . $number_suf;
+        }
 
-        return $n;
+        return $final_number;
     }
 }
+
 
 
 class osCommSA extends MainSA {
     public function get_store_title() {
         $query = "SELECT configuration_value FROM  ".$this->sDBPrefix."configuration WHERE configuration_key LIKE 'STORE_NAME'";
-        $result = mysql_query($query);
-        $row = mysql_fetch_assoc($result);
-        return array('test' => 1, 'title' => $row['configuration_value']);
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            $row = $this->rLink->results($result);
+            return array('test' => 1, 'title' => $row['configuration_value']);
+        }
+        return false;
     }
 
     public function get_store_stats() {
-        $store_stats = array('count_orders' => "0", 'total_sales' => "0", 'count_customers' => "0", "last_order_id" => "0", "new_orders" => "0");
+        $store_stats = array('count_orders' => "0", 'total_sales' => "0", 'count_customers' => "0", 'count_products' => "0", "last_order_id" => "0", "new_orders" => "0");
         $default_attrs = $this->_get_default_attrs();
-        /*
-        if(!empty($this->date_from)) {
-            $query_where_parts[] = " UNIX_TIMESTAMP(o.date_purchased) >= '".strtotime($this->date_from." 00:00:00")."'";
-        }
-        if(!empty($this->date_to)) {
-            $query_where_parts[] = " UNIX_TIMESTAMP(o.date_purchased) <= '".strtotime($this->date_to." 23:59:59")."'";
-        }
-        */
+
         $today = date("Y-m-d", time());
-        $query_where_parts[] = " UNIX_TIMESTAMP(o.date_purchased) >= '".strtotime($today . " 00:00:00")."'";
-        $query_where_parts[] = " UNIX_TIMESTAMP(o.date_purchased) <= '".strtotime($today . " 23:59:59")."'";
+        $date_from = $date_to = $today;
+
+        if(!empty($this->stats_from)) {
+            $date_from = $this->stats_from;
+        }
+
+        if(!empty($this->stats_to)) {
+            $date_to = $this->stats_to;
+        }
+
+        $query_where_parts[] = sprintf(" UNIX_TIMESTAMP(o.date_purchased) >= '%d'", strtotime($date_from . " 00:00:00"));
+        $query_where_parts[] = sprintf(" UNIX_TIMESTAMP(o.date_purchased) <= '%d'", strtotime($date_to . " 23:59:59"));
+
         if(!empty($this->statuses)) {
             $statuses = explode("|", $this->statuses);
             if(!empty($statuses)) {
@@ -592,7 +663,7 @@ class osCommSA extends MainSA {
                     }
                 }
                 $parse_statuses = implode("','", $stat);
-                $query_where_parts[] = " o.orders_status IN ('".$parse_statuses."')";
+                $query_where_parts[] = sprintf(" o.orders_status IN ('%s')", $parse_statuses);
             }
         }
 
@@ -610,26 +681,43 @@ class osCommSA extends MainSA {
             $query .= " AND " . implode(" AND ", $query_where_parts);
         }
 
-        $result = mysql_query($query);
-        if(mysql_num_rows($result) > 0) {
-            while($row = mysql_fetch_assoc($result)) {
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            while($row = $this->rLink->results($result)) {
                 $store_stats['count_orders']++;
                 $store_stats['total_sales'] += $row['value'];
             }
         }
         $store_stats['total_sales'] = $this->_price_format($default_attrs['DEFAULT_CURRENCY'], $store_stats['total_sales'], false, true);
 
+
+        $query_prods = "SELECT COUNT(op.products_id) AS count_products
+		 		  FROM ".$this->sDBPrefix."orders_total AS ot
+		 		    LEFT JOIN ".$this->sDBPrefix."orders AS o ON o.orders_id = ot.orders_id
+		 		    LEFT JOIN ".$this->sDBPrefix."orders_products AS op ON o.orders_id = op.orders_id
+				  WHERE ot.class = 'ot_total' ";
+        if(!empty($query_where_parts)) {
+            $query_prods .= " AND " . implode(" AND ", $query_where_parts);
+        }
+        $result_prods = $this->rLink->query($query_prods);
+        if($this->rLink->affected($result_prods)) {
+            $row_prods = $this->rLink->results($result_prods);
+            $store_stats['count_products'] = $this->bd_nice_number($row_prods['count_products'], true);
+        }
+
         if($this->last_order_id != "") {
             $query_max = "SELECT COUNT(orders_id) AS count_orders, MAX(orders_id) AS last_order_id
                           FROM ".$this->sDBPrefix."orders AS o
-                          WHERE orders_id > ".$this->last_order_id;
+                          WHERE orders_id > '%d'";
+            $query_max = sprintf($query_max, $this->last_order_id);
             if(!empty($query_where_parts)) {
                 $query_max .= " AND " . implode(" AND ", $query_where_parts);
             }
 
-            $result_max = mysql_query($query_max);
-            if(mysql_num_rows($result_max) > 0) {
-                $row_max = mysql_fetch_assoc($result_max);
+
+            $result_max = $this->rLink->query($query_max);
+            if($this->rLink->affected($result_max)) {
+                $row_max = $this->rLink->results($result_max);
                 $store_stats['last_order_id'] = intval($this->last_order_id);
                 if(intval($row_max['last_order_id']) > intval($this->last_order_id)) {
                     $store_stats['last_order_id'] = intval($row_max['last_order_id']);
@@ -639,17 +727,8 @@ class osCommSA extends MainSA {
         }
 
         unset($query_where_parts);
-        /*
-        if(!empty($this->date_from)) {
-            $query_where_parts[] = " UNIX_TIMESTAMP(ci.customers_info_date_account_created) >= '".strtotime($this->date_from." 00:00:00")."'";
-        }
-        if(!empty($this->date_to)) {
-            $query_where_parts[] = " UNIX_TIMESTAMP(ci.customers_info_date_account_created) <= '".strtotime($this->date_to." 23:59:59")."'";
-        }
-        */
-
-        $query_where_parts[] = " UNIX_TIMESTAMP(ci.customers_info_date_account_created) >= '".strtotime($today . " 00:00:00")."'";
-        $query_where_parts[] = " UNIX_TIMESTAMP(ci.customers_info_date_account_created) <= '".strtotime($today . " 23:59:59")."'";
+        $query_where_parts[] = sprintf(" UNIX_TIMESTAMP(ci.customers_info_date_account_created) >= '%d'", strtotime($date_from . " 00:00:00"));
+        $query_where_parts[] = sprintf(" UNIX_TIMESTAMP(ci.customers_info_date_account_created) <= '%d'", strtotime($date_to . " 23:59:59"));
         $query = "SELECT COUNT(c.customers_id) AS count_customers
                     FROM ".$this->sDBPrefix."customers AS c
                     LEFT JOIN ".$this->sDBPrefix."customers_info AS ci ON ci.customers_info_id = c.customers_id";
@@ -657,15 +736,24 @@ class osCommSA extends MainSA {
             $query .= " WHERE " . implode(" AND ", $query_where_parts);
         }
 
-        $result = mysql_query($query);
-        if(mysql_num_rows($result) > 0) {
-            $row = mysql_fetch_assoc($result);
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            $row = $this->rLink->results($result);
             $store_stats = array_merge($store_stats, $row);
         }
 
-        $this->graph_to = $today;
-        $this->graph_from = date("Y-m-d", mktime(0, 0, 0, date("m"), date("d")-7, date("Y")));
-        $data_graphs = $this->get_data_graphs();
+
+        if(empty($this->graph_from)) {
+            $this->graph_from = date("Y-m-d", mktime(0, 0, 0, date("m"), date("d")-7, date("Y")));
+        }
+
+        if(empty($this->graph_to)) {
+            $this->graph_to = $this->stats_to;
+        }
+
+        if(!isset($this->data_for_widget) || empty($this->data_for_widget) || $this->data_for_widget != 1) {
+            $data_graphs = $this->get_data_graphs();
+        }
 
         $store_stats['count_orders'] = $this->bd_nice_number($store_stats['count_orders'], true);
         $store_stats['count_customers'] = $this->bd_nice_number($store_stats['count_customers'], true);
@@ -686,8 +774,9 @@ class osCommSA extends MainSA {
             $query = "SELECT UNIX_TIMESTAMP(o.date_purchased) AS date_add, SUM(ot.value) AS value, COUNT(o.orders_id) AS tot_orders
                       FROM ".$this->sDBPrefix."orders AS o
                         LEFT JOIN ".$this->sDBPrefix."orders_total AS ot ON ot.orders_id = o.orders_id AND ot.class = 'ot_total'
-                      WHERE UNIX_TIMESTAMP(o.date_purchased) >= '".$date."'
-                        AND UNIX_TIMESTAMP(o.date_purchased) < '".strtotime('+1 day', $date)."'";
+                      WHERE UNIX_TIMESTAMP(o.date_purchased) >= '%d'
+                        AND UNIX_TIMESTAMP(o.date_purchased) < '%d'";
+            $query = sprintf($query, $date, strtotime('+1 day', $date));
 
             if(!empty($this->statuses)) {
                 $statuses = explode("|", $this->statuses);
@@ -699,54 +788,61 @@ class osCommSA extends MainSA {
                         }
                     }
                     $parse_statuses = implode("','", $stat);
-                    $query .= " AND o.orders_status IN ('".$parse_statuses."')";
+                    $query .= sprintf(" AND o.orders_status IN ('%s')", $parse_statuses);
                 }
             }
             $query .= " GROUP BY DATE(o.date_purchased) ORDER BY o.date_purchased";
 
-            $result = mysql_query($query);
-            if(mysql_num_rows($result) > 0) {
-                while($row = mysql_fetch_assoc($result)) {
-                    $row['value'] = number_format($row['value'], 2, '.', '');
-                    $orders[] = array($row['date_add']*1000, $row['value']);
+            $total_order_per_day = 0;
+            $result = $this->rLink->query($query);
+            if($this->rLink->affected($result)) {
+                while($row = $this->rLink->results($result)) {
+                    $total_order_per_day += $row['value'];
+
                     $average['tot_orders'] += $row['tot_orders'];
                     $average['sum_orders'] += $row['value'];
                 }
-            } else {
-                $orders[] = array($date*1000, 0);
+//            } else {
+//                $orders[] = array($date*1000, 0);
             }
+            $orders[] = array($date*1000, $total_order_per_day);
 
             $query = "SELECT COUNT(c.customers_id) AS tot_customers, UNIX_TIMESTAMP(ci.customers_info_date_account_created) AS date_add
                       FROM ".$this->sDBPrefix."customers AS c
                         LEFT JOIN ".$this->sDBPrefix."customers_info AS ci ON ci.customers_info_id = c.customers_id
-                      WHERE UNIX_TIMESTAMP(ci.customers_info_date_account_created) >= '".$date."'
-                        AND UNIX_TIMESTAMP(ci.customers_info_date_account_created) <= '".strtotime('+1 day', $date)."'
+                      WHERE UNIX_TIMESTAMP(ci.customers_info_date_account_created) >= '%d'
+                        AND UNIX_TIMESTAMP(ci.customers_info_date_account_created) <= '%d'
                       GROUP BY DATE(ci.customers_info_date_account_created)
                       ORDER BY ci.customers_info_date_account_created";
+            $query = sprintf($query, $date, strtotime('+1 day', $date));
 
-            $result = mysql_query($query);
-            if(mysql_num_rows($result) > 0) {
-                while($row = mysql_fetch_assoc($result)) {
-                    $customers[] = array($row['date_add']*1000, $row['tot_customers']);
+            $total_customer_per_day = 0;
+            $result = $this->rLink->query($query);
+            if($this->rLink->affected($result)) {
+                while($row = $this->rLink->results($result)) {
+                    $total_customer_per_day += $row['tot_customers'];
+
                     $average['tot_customers'] += $row['tot_customers'];
                 }
-            } else {
-                $customers[] = array($date*1000, 0);
+//            } else {
+//                $customers[] = array($date*1000, 0);
             }
+            $customers[] = array($date*1000, $total_customer_per_day);
 
             $date = strtotime('+1 day', $date);
         }
 
-        $average['avg_sum_orders'] = number_format($average['sum_orders']/$d, 2, '.', '');
-        $average['avg_orders'] = number_format($average['tot_orders']/$d, 1, '.', '');
-        $average['avg_customers'] = number_format($average['tot_customers']/$d, 1, '.', '');
+        if($d <= 0) $d = 1;
+        $average['avg_sum_orders'] = number_format($average['sum_orders']/$d, 2, '.', ' ');
+        $average['avg_orders'] = number_format($average['tot_orders']/$d, 1, '.', ' ');
+        $average['avg_customers'] = number_format($average['tot_customers']/$d, 1, '.', ' ');
 
         if($average['tot_customers'] > 0) {
-            $average['avg_cust_order'] = number_format($average['sum_orders']/$average['tot_customers'], 1, '.', '');
+            $average['avg_cust_order'] = number_format($average['sum_orders']/$average['tot_customers'], 1, '.', ' ');
         }
-        $average['sum_orders'] = number_format($average['sum_orders'], 2, '.', '');
-        $average['tot_customers'] = number_format($average['tot_customers'], 1, '.', '');
-        $average['tot_orders'] = number_format($average['tot_orders'], 1, '.', '');
+        $average['sum_orders'] = number_format($average['sum_orders'], 2, '.', ' ');
+        $average['tot_customers'] = number_format($average['tot_customers'], 1, '.', ' ');
+        $average['tot_orders'] = number_format($average['tot_orders'], 1, '.', ' ');
         return array('orders' => $orders, 'customers' => $customers, 'currency_sign_l' => $default_attrs['DEFAULT_CURRENCY_SIGN_LEFT'], 'currency_sign_r' => $default_attrs['DEFAULT_CURRENCY_SIGN_RIGHT'], 'average' => $average);
     }
 
@@ -754,13 +850,13 @@ class osCommSA extends MainSA {
         $orders = array();
         $query_where_parts = array();
         if(!empty($this->search_order_id)) {
-            $query_where_parts[] = " o.orders_id = '".$this->search_order_id."'";
+            $query_where_parts[] = sprintf(" o.orders_id = '%d'", $this->search_order_id);
         }
         if(!empty($this->orders_from)) {
-            $query_where_parts[] = " UNIX_TIMESTAMP(o.date_purchased) >= '".strtotime($this->orders_from." 00:00:00")."'";
+            $query_where_parts[] = sprintf(" UNIX_TIMESTAMP(o.date_purchased) >= '%d'", strtotime($this->orders_from." 00:00:00"));
         }
         if(!empty($this->orders_to)) {
-            $query_where_parts[] = " UNIX_TIMESTAMP(o.date_purchased) <= '".strtotime($this->orders_to." 23:59:59")."'";
+            $query_where_parts[] = sprintf(" UNIX_TIMESTAMP(o.date_purchased) <= '%d'", strtotime($this->orders_to." 23:59:59"));
         }
         if(!empty($this->statuses)) {
             $statuses = explode("|", $this->statuses);
@@ -772,7 +868,7 @@ class osCommSA extends MainSA {
                     }
                 }
                 $parse_statuses = implode("','", $stat);
-                $query_where_parts[] = " o.orders_status IN ('".$parse_statuses."')";
+                $query_where_parts[] = sprintf(" o.orders_status IN ('%s')", $parse_statuses);
             }
         }
 
@@ -788,6 +884,7 @@ class osCommSA extends MainSA {
 				  FROM ".$this->sDBPrefix."orders AS o
 				    LEFT JOIN ".$this->sDBPrefix."orders_total AS ot ON ot.orders_id = o.orders_id AND ot.class = 'ot_total'
 				    LEFT JOIN ".$this->sDBPrefix."orders_status AS os ON os.orders_status_id = o.orders_status AND os.language_id = '".$default_attrs['DEFAULT_LANGUAGE_ID']."'";
+
         $query_page = "SELECT COUNT(o.orders_id) AS count_ords, MAX(o.date_purchased) AS max_date, MIN(o.date_purchased) AS min_date, SUM(ot.value) AS orders_total
                        FROM ".$this->sDBPrefix."orders AS o
                          LEFT JOIN ".$this->sDBPrefix."orders_total AS ot ON o.orders_id = ot.orders_id AND ot.class = 'ot_total'";
@@ -796,20 +893,44 @@ class osCommSA extends MainSA {
             $query_page .= " WHERE " . implode(" AND ", $query_where_parts);
         }
 
-        $result_page = mysql_query($query_page);
-        $row_page = mysql_fetch_assoc($result_page);
-        $query .= " ORDER BY o.orders_id DESC LIMIT ".($this->page - 1)*$this->show." , ".$this->show;
-        $result = mysql_query($query);
-        while($row = mysql_fetch_assoc($result)) {
-            $row['total_paid'] = $this->_price_format($row['currency'], $row['value']);
-            $orders[] = $row;
+        if(empty($this->sort_by)) {
+            $this->sort_by = "id";
         }
 
-        $orders_total = $this->_price_format($default_attrs['DEFAULT_CURRENCY'], $row_page['orders_total']);
-        if($row_page['count_ords'] > 0) {
-            $max_date = date("n/j/Y", strtotime($row_page['max_date']));
-            $min_date = date("n/j/Y", strtotime($row_page['min_date']));
+        $query .= " ORDER BY ";
+        switch ($this->sort_by) {
+            case 'name':
+                $query .= "customer ASC";
+                break;
+            case 'date':
+                $query .= "date_add DESC";
+                break;
+            case 'id':
+                $query .= "o.orders_id DESC";
+                break;
         }
+
+        $query .= sprintf(" LIMIT %d, %d", (($this->page - 1)*$this->show), $this->show);
+
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            while($row = $this->rLink->results($result)) {
+                $row['total_paid'] = $this->_price_format($row['currency'], $row['value']);
+                $orders[] = $row;
+            }
+        }
+
+        $orders_total = 0;
+        $result_page = $this->rLink->query($query_page);
+        if($this->rLink->affected($result_page)) {
+            $row_page = $this->rLink->results($result_page);
+            $orders_total = $row_page['orders_total'];
+            if($row_page['count_ords'] > 0) {
+                $max_date = date("n/j/Y", strtotime($row_page['max_date']));
+                $min_date = date("n/j/Y", strtotime($row_page['min_date']));
+            }
+        }
+        $orders_total = $this->_price_format($default_attrs['DEFAULT_CURRENCY'], $orders_total);
 
         $orders_status = null;
         if(isset($this->get_statuses) && $this->get_statuses == 1) {
@@ -829,9 +950,11 @@ class osCommSA extends MainSA {
         $default_attrs = $this->_get_default_attrs();
         $orders_status = array();
         $query = "SELECT orders_status_id AS st_id, orders_status_name AS st_name FROM ".$this->sDBPrefix."orders_status WHERE language_id = '".$default_attrs['DEFAULT_LANGUAGE_ID']."' ORDER BY orders_status_name";
-        $result_status = mysql_query($query);
-        while($row = mysql_fetch_assoc($result_status)) {
-            $orders_status[] = $row;
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            while($row = $this->rLink->results($result)) {
+                $orders_status[] = $row;
+            }
         }
         return $orders_status;
     }
@@ -868,16 +991,24 @@ class osCommSA extends MainSA {
 				  FROM ".$this->sDBPrefix."orders AS o
 				    LEFT JOIN ".$this->sDBPrefix."orders_total AS ot_tot ON ot_tot.orders_id = o.orders_id AND ot_tot.class = 'ot_total'
 				    LEFT JOIN ".$this->sDBPrefix."orders_status AS os ON os.orders_status_id = o.orders_status AND os.language_id = '".$default_attrs['DEFAULT_LANGUAGE_ID']."'
-				  WHERE o.orders_id = '".$this->order_id."'";
-        $result = mysql_query($query);
-        $order_info = mysql_fetch_assoc($result);
+				  WHERE o.orders_id = '%d'";
+        $query = sprintf($query, $this->order_id);
+
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            $order_info = $this->rLink->results($result);
+        }
         $order_info['order_total'] = $this->_price_format($order_info['currency'], $order_info['order_total']);
 
         $order_total = array();
-        $query_total = "SELECT title, value FROM ".$this->sDBPrefix."orders_total WHERE orders_id = '".$this->order_id."' AND class <> 'ot_total' ORDER BY sort_order";
-        $result_total = mysql_query($query_total);
-        while($row_total = mysql_fetch_assoc($result_total)) {
-            $order_total[] = array('title' => $row_total['title'], 'value' => $this->_price_format($order_info['currency'], $row_total['value']));
+        $query_total = "SELECT title, value FROM ".$this->sDBPrefix."orders_total WHERE orders_id = '%d' AND class <> 'ot_total' ORDER BY sort_order";
+        $query_total = sprintf($query_total, $this->order_id);
+
+        $result = $this->rLink->query($query_total);
+        if($this->rLink->affected($result)) {
+            while($row_total = $this->rLink->results($result)) {
+                $order_total[] = array('title' => $row_total['title'], 'value' => $this->_price_format($order_info['currency'], $row_total['value']));
+            }
         }
 
         $query = "SELECT
@@ -889,20 +1020,30 @@ class osCommSA extends MainSA {
 					products_tax,
 					products_model AS sku
  				 FROM ".$this->sDBPrefix."orders_products
-				 WHERE orders_id = '".$this->order_id."' ";
-        $query_page = "SELECT COUNT(products_id) AS count_prods FROM ".$this->sDBPrefix."orders_products WHERE orders_id = '".$this->order_id."' GROUP BY products_id";
-        $result_page = mysql_query($query_page);
-        $row_page = mysql_fetch_assoc($result_page);
-        $query .= " ORDER BY orders_id DESC LIMIT ".($this->page - 1)*$this->show." , ".$this->show;
-        $result = mysql_query($query);
-        while($row = mysql_fetch_assoc($result)) {
-            $row['product_price'] = $this->_price_format($order_info['currency'], ($row['final_price']+$row['final_price']/100*$row['products_tax'])*$row['products_quantity']);
-            unset($row['products_tax']);
-            $row['product_quantity'] = intval($row['products_quantity']);
-            $row['product_name'] = $row['products_name'];
-            $order_products[] = $row;
+				 WHERE orders_id = '%d' ORDER BY orders_id DESC LIMIT %d, %d";
+        $query = sprintf($query, $this->order_id, ($this->page - 1)*$this->show, $this->show);
+
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            while($row = $this->rLink->results($result)) {
+                $row['product_price'] = $this->_price_format($order_info['currency'], ($row['final_price']+$row['final_price']/100*$row['products_tax'])*$row['products_quantity']);
+                unset($row['products_tax']);
+                $row['product_quantity'] = intval($row['products_quantity']);
+                $row['product_name'] = $row['products_name'];
+                $order_products[] = $row;
+            }
         }
-        $order_full_info = array("order_info" => $order_info, "order_products" => $order_products, "o_products_count" => $row_page['count_prods'], "order_total" => $order_total);
+
+        $query_page = "SELECT COUNT(products_id) AS count_prods FROM ".$this->sDBPrefix."orders_products WHERE orders_id = '%d'";
+        $query_page = sprintf($query_page, $this->order_id);
+        $result_page = $this->rLink->query($query_page);
+        $count_prods = 0;
+        if($this->rLink->affected($result_page)) {
+            $row_page = $this->rLink->results($result_page);
+            $count_prods = $row_page['count_prods'];
+        }
+
+        $order_full_info = array("order_info" => $order_info, "order_products" => $order_products, "o_products_count" => intval($count_prods), "order_total" => $order_total);
         return $order_full_info;
     }
 
@@ -910,13 +1051,13 @@ class osCommSA extends MainSA {
         $customers = array();
         $query_where_parts = array();
         if(!empty($this->customers_from)) {
-            $query_where_parts[] = " UNIX_TIMESTAMP(ci.customers_info_date_account_created) >= '".strtotime($this->customers_from." 00:00:00")."'";
+            $query_where_parts[] = sprintf(" UNIX_TIMESTAMP(ci.customers_info_date_account_created) >= '%d'", strtotime($this->customers_from." 00:00:00"));
         }
         if(!empty($this->customers_to)) {
-            $query_where_parts[] = " UNIX_TIMESTAMP(ci.customers_info_date_account_created) <= '".strtotime($this->customers_to." 23:59:59")."'";
+            $query_where_parts[] = sprintf(" UNIX_TIMESTAMP(ci.customers_info_date_account_created) <= '%d'", strtotime($this->customers_to." 23:59:59"));
         }
         if(!empty($this->search_val)) {
-            $query_where_parts[] = " (c.customers_email_address LIKE '%".$this->search_val."%' OR c.customers_firstname LIKE '%".$this->search_val."%' OR c.customers_lastname LIKE '%".$this->search_val."%')";
+            $query_where_parts[] = sprintf(" (c.customers_email_address LIKE '%%%s%%' OR c.customers_firstname LIKE '%%%s%%' OR c.customers_lastname LIKE '%%%s%%' OR CONCAT(c.customers_firstname, ' ', c.customers_lastname) LIKE '%%%s%%')", $this->search_val, $this->search_val, $this->search_val, $this->search_val);
         }
         if(!empty($this->cust_with_orders)) {
             $query_where_parts[] = " tot.total_orders > 0";
@@ -925,6 +1066,7 @@ class osCommSA extends MainSA {
 					c.customers_id AS id_customer,
 					c.customers_firstname AS firstname,
 					c.customers_lastname AS lastname,
+					CONCAT(c.customers_firstname, ' ', c.customers_lastname) AS full_name,
 					c.customers_email_address AS email,
 					ci.customers_info_date_account_created AS date_add,
                     IFNULL(tot.total_orders, 0) AS total_orders
@@ -932,9 +1074,8 @@ class osCommSA extends MainSA {
 				  	LEFT JOIN ".$this->sDBPrefix."customers_info AS ci ON ci.customers_info_id = c.customers_id
                     LEFT OUTER JOIN (SELECT COUNT(orders_id) AS total_orders, customers_id FROM ".$this->sDBPrefix."orders GROUP BY customers_id) AS tot ON tot.customers_id = c.customers_id";
 
-        $query_page = "SELECT ci.customers_info_date_account_created AS date_created,
-                              IFNULL(tot.total_orders, 0)
-					   FROM  ".$this->sDBPrefix."customers_info AS ci
+        $query_page = "SELECT ci.customers_info_date_account_created AS date_created, IFNULL(tot.total_orders, 0)
+					   FROM ".$this->sDBPrefix."customers_info AS ci
 					     LEFT JOIN ".$this->sDBPrefix."customers AS c ON c.customers_id = ci.customers_info_id
     				     LEFT OUTER JOIN (SELECT COUNT(orders_id) AS total_orders, customers_id FROM ".$this->sDBPrefix."orders GROUP BY customers_id) AS tot ON tot.customers_id = c.customers_id";
         if(!empty($query_where_parts)) {
@@ -942,35 +1083,60 @@ class osCommSA extends MainSA {
             $query_page .= " WHERE " . implode(" AND ", $query_where_parts);
         }
 
-        $query .= " ORDER BY c.customers_id DESC LIMIT ".($this->page - 1)*$this->show." , ".$this->show;
+        if(empty($this->sort_by)) {
+            $this->sort_by = "id";
+        }
 
-        $row_page = array('max_date' => 0, 'min_date' => 0, 'count_custs' => 0);
-        $result_page = mysql_query($query_page);
-        if(mysql_num_rows($result_page) > 0) {
-            while($row = mysql_fetch_assoc($result_page)) {
+        $query .= " ORDER BY ";
+        switch ($this->sort_by) {
+            case 'name':
+                $query .= "full_name ASC";
+                break;
+            case 'date':
+                $query .= "date_add DESC";
+                break;
+            case 'id':
+                $query .= "c.customers_id DESC";
+                break;
+        }
+
+        $query .= sprintf(" LIMIT %d, %d", (($this->page - 1)*$this->show), $this->show);
+
+        $result = $this->rLink->query($query_page);
+        if($this->rLink->affected($result)) {
+            $i = 0;
+            while($row = $this->rLink->results($result)) {
+                $i++;
+                if($i == 1) {
+                    $row_page['max_date'] = $row['date_created'];
+                    $row_page['min_date'] = $row['date_created'];
+                }
+
                 $row_page['count_custs']++;
                 if($row['date_created'] > $row_page['max_date']) {
                     $row_page['max_date'] = $row['date_created'];
                 }
+
                 if($row['date_created'] < $row_page['min_date']) {
                     $row_page['min_date'] = $row['date_created'];
                 }
             }
         }
 
-        $result = mysql_query($query);
-        while($row = mysql_fetch_assoc($result)) {
-            $row['total_orders'] = intval($row['total_orders']);
-            $customers[] = $row;
-        }
-        if($row_page['count_custs'] > 0) {
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            while($row = $this->rLink->results($result)) {
+                $row['total_orders'] = intval($row['total_orders']);
+                $customers[] = $row;
+            }
+
             $max_date = date("n/j/Y", strtotime($row_page['max_date']));
             $min_date = date("n/j/Y", strtotime($row_page['min_date']));
         }
-        return array("customers_count" => $row_page['count_custs'],
+        return array("customers_count" => intval($row_page['count_custs']),
             "customers" => $customers,
-            "max_date" => $max_date,
-            "min_date" => $min_date);
+            "max_date" => strval($max_date),
+            "min_date" => strval($min_date));
     }
 
     public function get_customers_info() {
@@ -986,10 +1152,14 @@ class osCommSA extends MainSA {
 				  	LEFT JOIN ".$this->sDBPrefix."customers_info AS ci ON ci.customers_info_id = c.customers_id
 				  	LEFT JOIN ".$this->sDBPrefix."address_book AS ab ON ab.customers_id = c.customers_id AND ab.address_book_id = c.customers_default_address_id
 				  	LEFT JOIN ".$this->sDBPrefix."countries AS co ON co.countries_id = ab.entry_country_id
-				  WHERE c.customers_id = '".$this->user_id."'";
+				  WHERE c.customers_id = '%d'";
+        $query = sprintf($query, $this->user_id);
 
-        $result = mysql_query($query);
-        $user_info = mysql_fetch_assoc($result);
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            $user_info = $this->rLink->results($result);
+        }
+
         $user_info['address'] = $this->split_values($user_info, array('countries_name', 'entry_city', 'entry_street_address'));
         $user_info['phone'] = (isset($user_info['customers_telephone']) ? $user_info['customers_telephone'] : $user_info['entry_telephone']);
 
@@ -1004,22 +1174,33 @@ class osCommSA extends MainSA {
 				  FROM ".$this->sDBPrefix."orders AS o
 				    LEFT JOIN ".$this->sDBPrefix."orders_total AS ot ON ot.orders_id = o.orders_id AND ot.class = 'ot_total'
 				    LEFT JOIN ".$this->sDBPrefix."orders_status AS os ON os.orders_status_id = o.orders_status AND os.language_id = '".$default_attrs['DEFAULT_LANGUAGE_ID']."'
-				  WHERE o.customers_id = '".$this->user_id."'";
+				  WHERE o.customers_id = '%d' ORDER BY o.orders_id DESC LIMIT %d, %d";
+        $query = sprintf($query, $this->user_id, (($this->page - 1)*$this->show), $this->show);
+
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            while($row = $this->rLink->results($result)) {
+                $row['total_paid'] = $this->_price_format($row['currency'], $row['value']);
+                $customer_orders[] = $row;
+            }
+        }
+
         $query_page = "SELECT COUNT(o.orders_id) AS count_ords, SUM(ot.value) AS sum_ords
                         FROM ".$this->sDBPrefix."orders AS o
                         LEFT JOIN ".$this->sDBPrefix."orders_total AS ot ON ot.orders_id = o.orders_id AND ot.class = 'ot_total'
-                       WHERE o.customers_id = '".$this->user_id."' GROUP BY o.orders_id";
-        $result_page = mysql_query($query_page);
-        $row_page = mysql_fetch_assoc($result_page);
+                       WHERE o.customers_id = '%d'";
+        $query_page = sprintf($query_page, $this->user_id);
+
+        $count_ords = 0;
+        $result_page = $this->rLink->query($query_page);
+        if($this->rLink->affected($result_page)) {
+            $row_page = $this->rLink->results($result_page);
+            $count_ords = $row_page['count_ords'];
+        }
+
         $row_page['sum_ords'] = $this->_price_format($default_attrs['DEFAULT_CURRENCY'], $row_page['sum_ords']);
 
-        $query .= " ORDER BY o.orders_id DESC LIMIT ".($this->page - 1)*$this->show." , ".$this->show;
-        $result = mysql_query($query);
-        while($row = mysql_fetch_assoc($result)) {
-            $row['total_paid'] = $this->_price_format($row['currency'], $row['value']);
-            $customer_orders[] = $row;
-        }
-        $customer_info = array("user_info" => $user_info, "customer_orders" => $customer_orders, "c_orders_count" => intval($row_page['count_ords']), "sum_ords" => $row_page['sum_ords']);
+        $customer_info = array("user_info" => $user_info, "customer_orders" => $customer_orders, "c_orders_count" => intval($count_ords), "sum_ords" => $row_page['sum_ords']);
         return $customer_info;
     }
 
@@ -1030,23 +1211,25 @@ class osCommSA extends MainSA {
         foreach($this->params as $param) {
             switch ($param) {
                 case 'pr_id':
-                    $query_where_parts[] = " p.products_id = '".$this->val."'";
+                    $query_where_parts[] = sprintf(" p.products_id = '%d'", $this->val);
                     break;
                 case 'pr_sku':
-                    $query_where_parts[] = " p.products_model = '".$this->val."'";
+                    $query_where_parts[] = sprintf(" p.products_model = '%s'", $this->val);
                     break;
                 case 'pr_name':
-                    $query_where_parts[] = " pd.products_name LIKE '%".$this->val."%'";
+                    $query_where_parts[] = sprintf(" pd.products_name LIKE '%%%s%%'", $this->val."%");
                     break;
                 case 'pr_desc':
                 case 'pr_short_desc':
-                    $query_where_parts[] = " pd.products_description LIKE '%".$this->val."%'";
+                    $query_where_parts[] = sprintf(" pd.products_description LIKE '%%%s%%'", $this->val."%");
                     break;
             }
         }
+
         $default_attrs = $this->_get_default_attrs();
         $query = "SELECT
                     p.products_id AS main_id,
+                    p.products_id AS product_id,
                     pd.products_name AS name,
                     p.products_price,
                     sp.specials_new_products_price,
@@ -1062,18 +1245,39 @@ class osCommSA extends MainSA {
             $query_page .= " WHERE ( " . implode(" OR ", $query_where_parts) . " )";
         }
 
-        $result_page = mysql_query($query_page);
-        $row_page = mysql_fetch_assoc($result_page);
-        $query .= " ORDER BY p.products_id DESC LIMIT ".($this->page - 1)*$this->show." , ".$this->show;
-        $result = mysql_query($query);
-        while($row = mysql_fetch_assoc($result)) {
-            $row['price'] = $this->_price_format($default_attrs['DEFAULT_CURRENCY'], $row['products_price']);
-            if($row['specials_new_products_price'] > 0) {
-                $row['spec_price'] = $this->_price_format($default_attrs['DEFAULT_CURRENCY'], $row['specials_new_products_price']);
-            }
-            $products[] = $row;
+        if(empty($this->sort_by)) {
+            $this->sort_by = "id";
         }
-        return array("products_count" => $row_page['count_prods'], "products" => $products);
+
+        $query .= " ORDER BY ";
+        switch ($this->sort_by) {
+            case 'name':
+                $query .= "name ASC";
+                break;
+            case 'id':
+                $query .= "p.products_id DESC";
+                break;
+        }
+
+        $query .= sprintf(" LIMIT %d, %d", (($this->page - 1)*$this->show), $this->show);
+
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            while($row = $this->rLink->results($result)) {
+                $row['price'] = $this->_price_format($default_attrs['DEFAULT_CURRENCY'], $row['products_price']);
+                if($row['specials_new_products_price'] > 0) {
+                    $row['spec_price'] = $this->_price_format($default_attrs['DEFAULT_CURRENCY'], $row['specials_new_products_price']);
+                }
+                $products[] = $row;
+            }
+        }
+
+        $result = $this->rLink->query($query_page);
+        if($this->rLink->affected($result)) {
+            $row_page = $this->rLink->results($result);
+        }
+
+        return array("products_count" => intval($row_page['count_prods']), "products" => $products);
     }
 
     public function search_products_ordered() {
@@ -1084,24 +1288,40 @@ class osCommSA extends MainSA {
         foreach($this->params as $param) {
             switch ($param) {
                 case 'pr_id':
-                    $query_where_parts[] = " op.products_id = '".$this->val."'";
+                    $query_where_parts[] = sprintf(" op.products_id = '%d'", $this->val);
                     break;
                 case 'pr_sku':
-                    $query_where_parts[] = " op.products_model = '".$this->val."'";
+                    $query_where_parts[] = sprintf(" op.products_model = '%s'", $this->val);
                     break;
                 case 'pr_name':
-                    $query_where_parts[] = " op.products_name LIKE '%".$this->val."%'";
+                    $query_where_parts[] = sprintf(" op.products_name LIKE '%%%s%%'", $this->val);
                     break;
             }
         }
         if(!empty($this->products_from)) {
-            $query_where_parts[] = " UNIX_TIMESTAMP(o.date_purchased) >= '".strtotime($this->products_from." 00:00:00")."'";
+            $query_where_parts[] = sprintf(" UNIX_TIMESTAMP(o.date_purchased) >= '%d'", strtotime($this->products_from." 00:00:00"));
         }
         if(!empty($this->products_to)) {
-            $query_where_parts[] = " UNIX_TIMESTAMP(o.date_purchased) <= '".strtotime($this->products_to." 23:59:59")."'";
+            $query_where_parts[] = sprintf(" UNIX_TIMESTAMP(o.date_purchased) <= '%d'", strtotime($this->products_to." 23:59:59"));
         }
+
+        if(!empty($this->statuses)) {
+            $statuses = explode("|", $this->statuses);
+            if(!empty($statuses)) {
+                $stat = array();
+                foreach($statuses as $status) {
+                    if($status != "") {
+                        $stat[] = $status;
+                    }
+                }
+                $parse_statuses = implode("','", $stat);
+                $query_where_parts[] = sprintf(" o.orders_status IN ('%s')", $parse_statuses);
+            }
+        }
+
         $query = "SELECT
                     op.orders_id AS main_id,
+                    op.products_id AS product_id,
                     op.products_model AS sku,
                     op.products_name AS name,
                     op.products_price,
@@ -1119,26 +1339,44 @@ class osCommSA extends MainSA {
             $query_page .= " WHERE " . implode(" AND ", $query_where_parts);
         }
 
-        $result_page = mysql_query($query_page);
-        $row_page = mysql_fetch_assoc($result_page);
-        $query .= " ORDER BY op.orders_id DESC LIMIT ".($this->page - 1)*$this->show." , ".$this->show;
-        $result = mysql_query($query);
+        if(empty($this->sort_by)) {
+            $this->sort_by = "id";
+        }
 
-        while($row = mysql_fetch_assoc($result)) {
-            $row['price'] = $this->_price_format($default_attrs['DEFAULT_CURRENCY'], $row['products_price']);
-            if($row['final_price'] > 0) {
-                $row['final_price'] = $this->_price_format($default_attrs['DEFAULT_CURRENCY'], $row['final_price']);
-            } else {
-                unset($row['final_price']);
+        $query .= " ORDER BY ";
+        switch ($this->sort_by) {
+            case 'id':
+                $query .= "op.products_id DESC";
+                break;
+            case 'name':
+                $query .= "name ASC";
+                break;
+        }
+
+        $query .= sprintf(" LIMIT %d, %d", (($this->page - 1)*$this->show), $this->show);
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            while($row = $this->rLink->results($result)) {
+                $row['price'] = $this->_price_format($default_attrs['DEFAULT_CURRENCY'], $row['products_price']);
+                if($row['final_price'] > 0) {
+                    $row['final_price'] = $this->_price_format($default_attrs['DEFAULT_CURRENCY'], $row['final_price']);
+                } else {
+                    unset($row['final_price']);
+                }
+                $products[] = $row;
             }
-            $products[] = $row;
+        }
+
+        $result = $this->rLink->query($query_page);
+        if($this->rLink->affected($result)) {
+            $row_page = $this->rLink->results($result);
         }
 
         if($row_page['count_prods'] > 0) {
             $max_date = date("n/j/Y", strtotime($row_page['max_date']));
             $min_date = date("n/j/Y", strtotime($row_page['min_date']));
         }
-        return array("products_count" => $row_page['count_prods'],
+        return array("products_count" => intval($row_page['count_prods']),
             "products" => $products,
             "max_date" => $max_date,
             "min_date" => $min_date);
@@ -1148,6 +1386,7 @@ class osCommSA extends MainSA {
         $default_attrs = $this->_get_default_attrs();
         $query = "SELECT
 					p.products_id AS id_product,
+					p.products_id AS product_id,
 					pd.products_name AS name,
 					p.products_model AS sku,
 					p.products_price,
@@ -1160,13 +1399,14 @@ class osCommSA extends MainSA {
 				FROM ".$this->sDBPrefix."products AS p
 				LEFT JOIN ".$this->sDBPrefix."specials AS sp ON sp.products_id = p.products_id
 				LEFT JOIN ".$this->sDBPrefix."products_description AS pd ON pd.products_id = p.products_id AND language_id = '".$default_attrs['DEFAULT_LANGUAGE_ID']."'
-				WHERE p.products_id = '".$this->product_id."'";
+				WHERE p.products_id = '%d'";
+        $query = sprintf($query, $this->product_id);
 
-        $result = mysql_query($query);
-        if(mysql_num_rows($result) == 0) {
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result) <= 0) {
             return false;
         }
-        $row = mysql_fetch_assoc($result);
+        $row = $this->rLink->results($result);
 
         $row['price'] = $this->_price_format($default_attrs['DEFAULT_CURRENCY'], $row['products_price']);
         if($row['specials_new_products_price'] > 0) {
@@ -1184,42 +1424,62 @@ class osCommSA extends MainSA {
         $query = "SELECT pd.products_description AS descr
 				FROM ".$this->sDBPrefix."products AS p
 				LEFT JOIN ".$this->sDBPrefix."products_description AS pd ON pd.products_id = p.products_id AND language_id = '".$default_attrs['DEFAULT_LANGUAGE_ID']."'
-				WHERE p.products_id = '".$this->product_id."'";
-        $row = mysql_fetch_assoc(mysql_query($query));
+				WHERE p.products_id = '%d'";
+        $query = sprintf($query, $this->product_id);
 
-        return $row;
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            $row = $this->rLink->results($result);
+            return $row;
+        }
+
+        return false;
     }
 
     private function _get_default_attrs() {
         $default_attrs = array();
         $query = "SELECT configuration_key, configuration_value FROM ".$this->sDBPrefix."configuration WHERE configuration_key IN ( 'DEFAULT_CURRENCY', 'DEFAULT_LANGUAGE' )";
-        $result = mysql_query($query);
-        while($row = mysql_fetch_assoc($result)) {
-            $default_attrs[$row['configuration_key']] = $row['configuration_value'];
-            if($row['configuration_key'] == 'DEFAULT_LANGUAGE') {
-                $query_lang = "SELECT languages_id FROM ".$this->sDBPrefix."languages WHERE code = '".$row['configuration_value']."'";
-                $row_lang = mysql_fetch_assoc(mysql_query($query_lang));
-                $default_attrs['DEFAULT_LANGUAGE_ID'] = $row_lang['languages_id'];
-            }
-            if($row['configuration_key'] == 'DEFAULT_CURRENCY') {
-                $query_sign = "SELECT symbol_left, symbol_right, decimal_point, decimal_places, value FROM  ".$this->sDBPrefix."currencies WHERE code = '".$row['configuration_value']."'";
-                $row_sign = mysql_fetch_assoc(mysql_query($query_sign));
-                $default_attrs['DEFAULT_CURRENCY_SIGN_LEFT'] = $row_sign['symbol_left'];
-                $default_attrs['DEFAULT_CURRENCY_SIGN_RIGHT'] = $row_sign['symbol_right'];
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            while($row = $this->rLink->results($result)) {
+                $default_attrs[$row['configuration_key']] = $row['configuration_value'];
+                if($row['configuration_key'] == 'DEFAULT_LANGUAGE') {
+                    $query_lang = "SELECT languages_id FROM ".$this->sDBPrefix."languages WHERE code = '".$row['configuration_value']."'";
+                    $result_lang = $this->rLink->query($query_lang);
+                    if($this->rLink->affected($result_lang)) {
+                        $row_lang = $this->rLink->results($result_lang);
+                    }
+                    $default_attrs['DEFAULT_LANGUAGE_ID'] = $row_lang['languages_id'];
+                }
+                if($row['configuration_key'] == 'DEFAULT_CURRENCY') {
+                    $query_sign = "SELECT symbol_left, symbol_right, decimal_point, decimal_places, value FROM  ".$this->sDBPrefix."currencies WHERE code = '".$row['configuration_value']."'";
+                    $result_sign = $this->rLink->query($query_sign);
+                    if($this->rLink->affected($result_sign)) {
+                        $row_sign = $this->rLink->results($result_sign);
+                    }
+
+                    $default_attrs['DEFAULT_CURRENCY_SIGN_LEFT'] = $row_sign['symbol_left'];
+                    $default_attrs['DEFAULT_CURRENCY_SIGN_RIGHT'] = $row_sign['symbol_right'];
+                }
             }
         }
         return $default_attrs;
     }
 
     private function _price_format($sign, $price, $clear = false, $short_numb = false) {
-        $query = "SELECT symbol_left, symbol_right, decimal_point, decimal_places, value FROM  ".$this->sDBPrefix."currencies WHERE code = '".$sign."'";
-        $row = mysql_fetch_assoc(mysql_query($query));
+        $query = "SELECT symbol_left, symbol_right, decimal_point, decimal_places, value FROM  ".$this->sDBPrefix."currencies WHERE code = '%s'";
+        $query = sprintf($query, $sign);
+
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            $row = $this->rLink->results($result);
+        }
         if($short_numb) {
             $result = ($row['symbol_left'] ? '<span>' . $row['symbol_left'] . '</span>' : '') . $this->bd_nice_number(round($price,2)*$row['value']) . ($row['symbol_right'] ? '<span>' . $row['symbol_right'] . '</span>' : '');
         } elseif($clear) {
-            $result = number_format(round($price,2)*$row['value'], intval($row['decimal_places']), $row['decimal_point'], '');
+            $result = number_format(round($price,2)*$row['value'], intval($row['decimal_places']), $row['decimal_point'], ' ');
         } else {
-            $result = ($row['symbol_left'] ? '<span>' . $row['symbol_left'] . '</span>' : '') . number_format(round($price,2)*$row['value'], intval($row['decimal_places']), $row['decimal_point'], '') . ($row['symbol_right'] ? '<span>' . $row['symbol_right'] . '</span>' : '');
+            $result = ($row['symbol_left'] ? '<span>' . $row['symbol_left'] . '</span>' : '') . number_format(round($price,2)*$row['value'], intval($row['decimal_places']), $row['decimal_point'], ' ') . ($row['symbol_right'] ? '<span>' . $row['symbol_right'] . '</span>' : '');
         }
         return $result;
     }
@@ -1229,26 +1489,36 @@ class osCommSA extends MainSA {
 class PrestaShopSA extends MainSA {
     public function get_store_title() {
         $query = "SELECT value FROM  ".$this->sDBPrefix."configuration WHERE name = 'PS_SHOP_NAME'";
-        $result = mysql_query($query);
-        $row = mysql_fetch_assoc($result);
-        return array('test' => 1, 'title' => $row['value']);
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            $row = $this->rLink->results($result);
+            return array('test' => 1, 'title' => $row['value']);
+        }
+        return false;
     }
 
     public function get_store_stats() {
-        $store_stats = array('count_orders' => "0", 'total_sales' => "0", 'count_customers' => "0", "last_order_id" => "0", "new_orders" => "0");
+        $store_stats = array('count_orders' => "0", 'total_sales' => "0", 'count_customers' => "0", 'count_products' => "0", "last_order_id" => "0", "new_orders" => "0");
         $default_attrs = $this->_get_default_attrs();
-        /*
-        if(!empty($this->date_from)) {
-            $query_where_parts[] = " UNIX_TIMESTAMP(o.date_add) >= '".strtotime($this->date_from." 00:00:00")."'";
-        }
-        if(!empty($this->date_to)) {
-            $query_where_parts[] = " UNIX_TIMESTAMP(o.date_add) <= '".strtotime($this->date_to." 23:59:59")."'";
-        }
-        */
 
         $today = date("Y-m-d", time());
-        $query_where_parts[] = " UNIX_TIMESTAMP(o.date_add) >= '".strtotime($today . " 00:00:00")."'";
-        $query_where_parts[] = " UNIX_TIMESTAMP(o.date_add) <= '".strtotime($today . " 23:59:59")."'";
+        $date_from = $date_to = $today;
+
+        if(!empty($this->stats_from)) {
+            $date_from = $this->stats_from;
+        }
+
+        if(!empty($this->stats_to)) {
+            $date_to = $this->stats_to;
+        }
+
+        $query = "SELECT COUNT(o.id_order) AS count_orders, SUM(o.total_paid/c.conversion_rate) AS total_sales
+		 		  FROM ".$this->sDBPrefix."orders AS o
+				    LEFT JOIN ".$this->sDBPrefix."currency AS c ON o.id_currency = c.id_currency
+                    LEFT JOIN ".$this->sDBPrefix."order_history AS oh ON oh.id_order = o.id_order AND oh.id_order_history = (SELECT MAX(id_order_history) AS id_order_history FROM ".$this->sDBPrefix."order_history WHERE id_order = o.id_order LIMIT 1)";
+
+        $query_where_parts[] = sprintf(" UNIX_TIMESTAMP(o.date_add) >= '%d'", strtotime($date_from . " 00:00:00"));
+        $query_where_parts[] = sprintf(" UNIX_TIMESTAMP(o.date_add) <= '%d'", strtotime($date_to . " 23:59:59"));
 
         if(!empty($this->statuses)) {
             $statuses = explode("|", $this->statuses);
@@ -1260,37 +1530,51 @@ class PrestaShopSA extends MainSA {
                     }
                 }
                 $parse_statuses = implode("','", $stat);
-                $query_where_parts[] = " oh.id_order_state IN ('".$parse_statuses."')";
+                $query_where_parts[] = sprintf(" oh.id_order_state IN ('%s')", $parse_statuses);
             }
         }
 
-        $query = "SELECT COUNT(o.id_order) AS count_orders, SUM(o.total_paid/c.conversion_rate) AS total_sales
-		 		  FROM ".$this->sDBPrefix."orders AS o
-				    LEFT JOIN ".$this->sDBPrefix."currency AS c ON o.id_currency = c.id_currency
-                    LEFT JOIN (SELECT id_order, id_order_history, id_order_state FROM ".$this->sDBPrefix."order_history ORDER BY id_order, id_order_history DESC) AS oh ON oh.id_order = o.id_order";
         if (!empty($query_where_parts)) {
             $query .= " WHERE " . implode(" AND ", $query_where_parts);
         }
 
-        $result = mysql_query($query);
-        if(mysql_num_rows($result) > 0) {
-            $row = mysql_fetch_assoc($result);
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            $row = $this->rLink->results($result);
+
             $row['total_sales'] = $this->_price_format($default_attrs['sign'], $default_attrs['format'], $this->bd_nice_number($row['total_sales']), true);
             $store_stats = array_merge($store_stats, $row);
         }
 
+
+        $query_prods = "SELECT COUNT(od.product_id) AS count_products
+		 		  FROM ".$this->sDBPrefix."orders AS o
+				    LEFT JOIN ".$this->sDBPrefix."currency AS c ON o.id_currency = c.id_currency
+				    LEFT JOIN ".$this->sDBPrefix."order_detail AS od ON od.id_order = o.id_order
+                    LEFT JOIN ".$this->sDBPrefix."order_history AS oh ON oh.id_order = o.id_order AND oh.id_order_history = (SELECT MAX(id_order_history) AS id_order_history FROM ".$this->sDBPrefix."order_history WHERE id_order = o.id_order LIMIT 1)";
+        if (!empty($query_where_parts)) {
+            $query_prods .= " WHERE " . implode(" AND ", $query_where_parts);
+        }
+        $result_prods = $this->rLink->query($query_prods);
+        if($this->rLink->affected($result_prods)) {
+            $row_prods = $this->rLink->results($result_prods);
+            $store_stats['count_products'] = $this->bd_nice_number($row_prods['count_products'], true);
+        }
+
+
         if($this->last_order_id != "") {
             $query_max = "SELECT COUNT(o.id_order) AS count_orders, MAX(o.id_order) AS last_order_id
                           FROM ".$this->sDBPrefix."orders AS o
-                          LEFT JOIN (SELECT id_order, id_order_history, id_order_state FROM ".$this->sDBPrefix."order_history ORDER BY id_order, id_order_history DESC) AS oh ON oh.id_order = o.id_order
-                          WHERE o.id_order > ".$this->last_order_id;
+                          LEFT JOIN ".$this->sDBPrefix."order_history AS oh ON oh.id_order = o.id_order AND oh.id_order_history = (SELECT MAX(id_order_history) AS id_order_history FROM ".$this->sDBPrefix."order_history WHERE id_order = o.id_order LIMIT 1)
+                          WHERE o.id_order > '%d'";
+            $query_max = sprintf($query_max, $this->last_order_id);
             if(!empty($query_where_parts)) {
                 $query_max .= " AND " . implode(" AND ", $query_where_parts);
             }
 
-            $result_max = mysql_query($query_max);
-            if(mysql_num_rows($result_max) > 0) {
-                $row_max = mysql_fetch_assoc($result_max);
+            $result_max = $this->rLink->query($query_max);
+            if($this->rLink->affected($result_max)) {
+                $row_max = $this->rLink->results($result_max);
                 $store_stats['last_order_id'] = intval($this->last_order_id);
                 if(intval($row_max['last_order_id']) > intval($this->last_order_id)) {
                     $store_stats['last_order_id'] = intval($row_max['last_order_id']);
@@ -1299,31 +1583,30 @@ class PrestaShopSA extends MainSA {
             }
         }
 
-        unset($query_where_parts);
-        /*
-        if(!empty($this->date_from)) {
-            $query_where_parts[] = " UNIX_TIMESTAMP(date_add) >= '".strtotime($this->date_from." 00:00:00")."'";
-        }
-        if(!empty($this->date_to)) {
-            $query_where_parts[] = " UNIX_TIMESTAMP(date_add) <= '".strtotime($this->date_to." 23:59:59")."'";
-        }
-        */
+        $query = "SELECT COUNT(id_customer) AS count_customers
+                  FROM ".$this->sDBPrefix."customer
+                  WHERE UNIX_TIMESTAMP(date_add) >= '%d'
+                    AND UNIX_TIMESTAMP(date_add) <= '%d'";
+        $query = sprintf($query, strtotime($date_from . " 00:00:00"), strtotime($date_to . " 23:59:59"));
 
-        $query_where_parts[] = " UNIX_TIMESTAMP(date_add) >= '".strtotime($today . " 00:00:00")."'";
-        $query_where_parts[] = " UNIX_TIMESTAMP(date_add) <= '".strtotime($today . " 23:59:59")."'";
-        $query = "SELECT COUNT(id_customer) AS count_customers FROM ".$this->sDBPrefix."customer";
-        if (!empty($query_where_parts)) {
-            $query .= " WHERE " . implode(" AND ", $query_where_parts);
-        }
-        $result = mysql_query($query);
-        if(mysql_num_rows($result) > 0) {
-            $row = mysql_fetch_assoc($result);
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            $row = $this->rLink->results($result);
             $store_stats = array_merge($store_stats, $row);
         }
 
-        $this->graph_to = $today;
-        $this->graph_from = date("Y-m-d", mktime(0, 0, 0, date("m"), date("d")-7, date("Y")));
-        $data_graphs = $this->get_data_graphs();
+
+        if(empty($this->graph_from)) {
+            $this->graph_from = date("Y-m-d", mktime(0, 0, 0, date("m"), date("d")-7, date("Y")));
+        }
+
+        if(empty($this->graph_to)) {
+            $this->graph_to = $this->stats_to;
+        }
+
+        if(!isset($this->data_for_widget) || empty($this->data_for_widget) || $this->data_for_widget != 1) {
+            $data_graphs = $this->get_data_graphs();
+        }
 
         $store_stats['count_orders'] = $this->bd_nice_number($store_stats['count_orders'], true);
         $store_stats['count_customers'] = $this->bd_nice_number($store_stats['count_customers'], true);
@@ -1339,7 +1622,8 @@ class PrestaShopSA extends MainSA {
         $date = $startDate;
         $d = 0;
         $average = array('avg_sum_orders' => 0, 'avg_orders' => 0, 'avg_customers' => 0, 'avg_cust_order' => '0.00');
-        while ($date <= $endDate) {
+
+        while($date <= $endDate) {
             $d++;
             $query = "SELECT
                         UNIX_TIMESTAMP(o.date_add) AS date_add,
@@ -1347,9 +1631,10 @@ class PrestaShopSA extends MainSA {
                         COUNT(o.id_order) AS tot_orders
                       FROM ".$this->sDBPrefix."orders AS o
                       LEFT JOIN ".$this->sDBPrefix."currency AS c ON o.id_currency = c.id_currency
-                      LEFT JOIN (SELECT id_order, id_order_history, id_order_state FROM ".$this->sDBPrefix."order_history ORDER BY id_order, id_order_history DESC) AS oh ON oh.id_order = o.id_order
-                       WHERE UNIX_TIMESTAMP(o.date_add) >= '".$date."'
-                       AND UNIX_TIMESTAMP(o.date_add) < '".strtotime('+1 day', $date)."'";
+                      LEFT JOIN ".$this->sDBPrefix."order_history AS oh ON oh.id_order = o.id_order AND oh.id_order_history = (SELECT MAX(id_order_history) AS id_order_history FROM ".$this->sDBPrefix."order_history WHERE id_order = o.id_order LIMIT 1)
+                       WHERE UNIX_TIMESTAMP(o.date_add) >= '%d'
+                       AND UNIX_TIMESTAMP(o.date_add) < '%d'";
+            $query = sprintf($query, $date, strtotime('+1 day', $date));
 
             if(!empty($this->statuses)) {
                 $statuses = explode("|", $this->statuses);
@@ -1361,53 +1646,58 @@ class PrestaShopSA extends MainSA {
                         }
                     }
                     $parse_statuses = implode("','", $stat);
-                    $query .= " AND oh.id_order_state IN ('".$parse_statuses."')";
+                    $query .= sprintf(" AND oh.id_order_state IN ('%s')", $parse_statuses);
                 }
             }
             $query .= " GROUP BY DATE(o.date_add) ORDER BY o.date_add";
 
-            $result = mysql_query($query);
+            $total_order_per_day = 0;
+            $result = $this->rLink->query($query);
+            if($this->rLink->affected($result)) {
+                while($row = $this->rLink->results($result)) {
+                    $total_order_per_day += $row['value'];
 
-            if(mysql_num_rows($result) > 0) {
-                while($row = mysql_fetch_assoc($result)) {
-                    $row['value'] = number_format($row['value'], 2, '.', '');
-                    $orders[] = array($row['date_add']*1000, $row['value']);
                     $average['tot_orders'] += $row['tot_orders'];
                     $average['sum_orders'] += $row['value'];
                 }
-            } else {
-                $orders[] = array($date*1000, 0);
+//            } else {
+//                $orders[] = array($date*1000, 0);
             }
+            $orders[] = array($date*1000, $total_order_per_day);
 
             $query = "SELECT COUNT(id_customer) AS tot_customers, UNIX_TIMESTAMP(date_add) AS date_add
                       FROM ".$this->sDBPrefix."customer
-                      WHERE UNIX_TIMESTAMP(date_add) >= '".$date."'
-                        AND UNIX_TIMESTAMP(date_add) < '".strtotime('+1 day', $date)."'
+                      WHERE UNIX_TIMESTAMP(date_add) >= '%d'
+                        AND UNIX_TIMESTAMP(date_add) < '%d'
                        GROUP BY DATE(date_add) ORDER BY date_add";
+            $query = sprintf($query, $date, strtotime('+1 day', $date));
 
-            $result = mysql_query($query);
-
-            if(mysql_num_rows($result) > 0) {
-                while($row = mysql_fetch_assoc($result)) {
-                    $customers[] = array($row['date_add']*1000, $row['tot_customers']);
+            $total_customer_per_day = 0;
+            $result = $this->rLink->query($query);
+            if($this->rLink->affected($result)) {
+                while($row = $this->rLink->results($result)) {
+                    $total_customer_per_day += $row['tot_customers'];
                     $average['tot_customers'] += $row['tot_customers'];
                 }
-            } else {
-                $customers[] = array($date*1000, 0);
+//            } else {
+//                $customers[] = array($date*1000, 0);
             }
+            $customers[] = array($date*1000, $total_customer_per_day);
+
             $date = strtotime('+1 day', $date);
         }
 
-        $average['avg_sum_orders'] = number_format($average['sum_orders']/$d, 2, '.', '');
-        $average['avg_orders'] = number_format($average['tot_orders']/$d, 1, '.', '');
-        $average['avg_customers'] = number_format($average['tot_customers']/$d, 1, '.', '');
+        if($d <= 0) $d = 1;
+        $average['avg_sum_orders'] = number_format($average['sum_orders']/$d, 2, '.', ' ');
+        $average['avg_orders'] = number_format($average['tot_orders']/$d, 1, '.', ' ');
+        $average['avg_customers'] = number_format($average['tot_customers']/$d, 1, '.', ' ');
 
         if($average['tot_customers'] > 0) {
-            $average['avg_cust_order'] = number_format($average['sum_orders']/$average['tot_customers'], 1, '.', '');
+            $average['avg_cust_order'] = number_format($average['sum_orders']/$average['tot_customers'], 1, '.', ' ');
         }
-        $average['sum_orders'] = number_format($average['sum_orders'], 2, '.', '');
-        $average['tot_customers'] = number_format($average['tot_customers'], 1, '.', '');
-        $average['tot_orders'] = number_format($average['tot_orders'], 1, '.', '');
+        $average['sum_orders'] = number_format($average['sum_orders'], 2, '.', ' ');
+        $average['tot_customers'] = number_format($average['tot_customers'], 1, '.', ' ');
+        $average['tot_orders'] = number_format($average['tot_orders'], 1, '.', ' ');
         return array('orders' => $orders, 'customers' => $customers, 'currency_sign' => $default_attrs['sign'], 'average' => $average);
     }
 
@@ -1415,13 +1705,13 @@ class PrestaShopSA extends MainSA {
         $orders = array();
         $default_attrs = $this->_get_default_attrs();
         if(!empty($this->search_order_id)) {
-            $query_where_parts[] = " o.id_order = '".$this->search_order_id."'";
+            $query_where_parts[] = sprintf(" o.id_order = '%d'", $this->search_order_id);
         }
         if(!empty($this->orders_from)) {
-            $query_where_parts[] = " UNIX_TIMESTAMP(o.date_add) >= '".strtotime($this->orders_from." 00:00:00")."'";
+            $query_where_parts[] = sprintf(" UNIX_TIMESTAMP(o.date_add) >= '%d'", strtotime($this->orders_from." 00:00:00"));
         }
         if(!empty($this->orders_to)) {
-            $query_where_parts[] = " UNIX_TIMESTAMP(o.date_add) <= '".strtotime($this->orders_to." 23:59:59")."'";
+            $query_where_parts[] = sprintf(" UNIX_TIMESTAMP(o.date_add) <= '%d'", strtotime($this->orders_to." 23:59:59"));
         }
         if(!empty($this->statuses)) {
             $statuses = explode("|", $this->statuses);
@@ -1433,22 +1723,32 @@ class PrestaShopSA extends MainSA {
                     }
                 }
                 $parse_statuses = implode("','", $stat);
-                $query_where_parts[] = " oh.id_order_state IN ('".$parse_statuses."')";
+                $query_where_parts[] = sprintf(" oh.id_order_state IN ('%s')", $parse_statuses);
             }
         }
 
-        $query = "SELECT o.id_order, o.date_add, o.total_paid, c.iso_code, c.sign, c.format, cus.firstname, cus.lastname, osl.name AS ord_status,
-                        (SELECT COUNT(product_id) FROM ".$this->sDBPrefix."order_detail WHERE id_order = o.id_order) AS count_prods
+        $query = "SELECT
+                    o.id_order,
+                    o.date_add,
+                    o.total_paid,
+                    c.iso_code,
+                    c.sign,
+                    c.format,
+                    cus.firstname,
+                    cus.lastname,
+                    CONCAT(cus.firstname, ' ', cus.lastname) AS full_name,
+                    osl.name AS ord_status,
+                    (SELECT SUM(product_quantity) FROM ".$this->sDBPrefix."order_detail WHERE id_order = o.id_order) AS count_prods
 				  FROM ".$this->sDBPrefix."orders AS o
 				    LEFT JOIN ".$this->sDBPrefix."customer AS cus ON cus.id_customer = o.id_customer
 				    LEFT JOIN ".$this->sDBPrefix."currency AS c ON o.id_currency = c.id_currency
-                    LEFT JOIN (SELECT id_order, id_order_history, id_order_state FROM ".$this->sDBPrefix."order_history ORDER BY id_order, id_order_history DESC) AS oh ON oh.id_order = o.id_order
-                    LEFT JOIN ".$this->sDBPrefix."order_state_lang AS osl ON osl.id_order_state = oh.id_order_state AND osl.id_lang = '".$default_attrs['lang_id']."'";
+                    LEFT JOIN ".$this->sDBPrefix."order_history AS oh ON oh.id_order = o.id_order AND oh.id_order_history = (SELECT MAX(id_order_history) AS id_order_history FROM ".$this->sDBPrefix."order_history WHERE id_order = o.id_order LIMIT 1)
+                    LEFT JOIN ".$this->sDBPrefix."order_state_lang AS osl ON osl.id_order_state = oh.id_order_state AND osl.id_lang = ".intval($default_attrs['lang_id']);
 
         $query_page = "SELECT COUNT(o.id_order) AS count_ords, MAX(o.date_add) AS max_date, MIN(o.date_add) AS min_date, SUM(o.total_paid/c.conversion_rate) AS orders_total
 				  FROM ".$this->sDBPrefix."orders AS o
 				    LEFT JOIN ".$this->sDBPrefix."customer AS cus ON cus.id_customer = o.id_customer
-				    LEFT JOIN (SELECT id_order, id_order_history, id_order_state FROM ".$this->sDBPrefix."order_history ORDER BY id_order, id_order_history DESC) AS oh ON oh.id_order = o.id_order
+				    LEFT JOIN ".$this->sDBPrefix."order_history AS oh ON oh.id_order = o.id_order AND oh.id_order_history = (SELECT MAX(id_order_history) AS id_order_history FROM ".$this->sDBPrefix."order_history WHERE id_order = o.id_order LIMIT 1)
 				    LEFT JOIN ".$this->sDBPrefix."currency AS c ON o.id_currency = c.id_currency";
 
         if (!empty($query_where_parts)) {
@@ -1456,16 +1756,39 @@ class PrestaShopSA extends MainSA {
             $query_page .= " WHERE " . implode(" AND ", $query_where_parts);
         }
 
-        $result_page = mysql_query($query_page);
-        $row_page = mysql_fetch_assoc($result_page);
-        $query .= " GROUP BY o.id_order ORDER BY o.id_order DESC LIMIT ".($this->page - 1)*$this->show." , ".$this->show;
-
-        $result = mysql_query($query);
-        while($row = mysql_fetch_assoc($result)) {
-            $row['total_paid'] = $this->_price_format($row['sign'], $row['format'], $row['total_paid']);
-            $row['customer'] = $row['firstname'] . ' ' . $row['lastname'];
-            $orders[] = $row;
+        if(empty($this->sort_by)) {
+            $this->sort_by = "id";
         }
+
+        $query .= " GROUP BY o.id_order ORDER BY ";
+        switch ($this->sort_by) {
+            case 'id':
+                $query .= "o.id_order DESC";
+                break;
+            case 'date':
+                $query .= "o.date_add DESC";
+                break;
+            case 'name':
+                $query .= "full_name ASC";
+                break;
+        }
+
+        $query .= sprintf(" LIMIT %d, %d", (($this->page - 1)*$this->show), $this->show);
+
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            while($row = $this->rLink->results($result)) {
+                $row['total_paid'] = $this->_price_format($row['sign'], $row['format'], $row['total_paid']);
+                $row['customer'] = $row['firstname'] . ' ' . $row['lastname'];
+                $orders[] = $row;
+            }
+        }
+
+        $result = $this->rLink->query($query_page);
+        if($this->rLink->affected($result)) {
+            $row_page = $this->rLink->results($result);
+        }
+
         if($row_page['count_ords'] > 0) {
             $max_date = date("n/j/Y", strtotime($row_page['max_date']));
             $min_date = date("n/j/Y", strtotime($row_page['min_date']));
@@ -1489,10 +1812,13 @@ class PrestaShopSA extends MainSA {
     public function get_orders_statuses() {
         $orders_status = array();
         $default_attrs = $this->_get_default_attrs();
-        $query = "SELECT id_order_state AS st_id, name AS st_name FROM ".$this->sDBPrefix."order_state_lang WHERE id_lang = '".$default_attrs['lang_id']."'";
-        $result_status = mysql_query($query);
-        while($row = mysql_fetch_assoc($result_status)) {
-            $orders_status[] = $row;
+        $query = sprintf("SELECT id_order_state AS st_id, name AS st_name FROM ".$this->sDBPrefix."order_state_lang WHERE id_lang = '%d'", $default_attrs['lang_id']);
+
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            while($row = $this->rLink->results($result)) {
+                $orders_status[] = $row;
+            }
         }
         return $orders_status;
     }
@@ -1545,11 +1871,16 @@ class PrestaShopSA extends MainSA {
 				    LEFT JOIN ".$this->sDBPrefix."address AS ai ON o.id_address_invoice = ai.id_address
 				    LEFT JOIN ".$this->sDBPrefix."state AS sd ON ad.id_state = sd.id_state
 				    LEFT JOIN ".$this->sDBPrefix."state AS si ON ai.id_state = si.id_state
-				    LEFT JOIN ".$this->sDBPrefix."country_lang AS cld ON ad.id_country = cld.id_country AND cld.id_lang = '".$default_attrs['lang_id']."'
-				    LEFT JOIN ".$this->sDBPrefix."country_lang AS cli ON ai.id_country = cli.id_country AND cli.id_lang = '".$default_attrs['lang_id']."'
-				  WHERE o.id_order = '".$this->order_id."'";
-        $result = mysql_query($query);
-        $order_info = mysql_fetch_assoc($result);
+				    LEFT JOIN ".$this->sDBPrefix."country_lang AS cld ON ad.id_country = cld.id_country AND cld.id_lang = ".intval($default_attrs['lang_id'])."
+				    LEFT JOIN ".$this->sDBPrefix."country_lang AS cli ON ai.id_country = cli.id_country AND cli.id_lang = ".intval($default_attrs['lang_id'])."
+				  WHERE o.id_order = '%d'";
+        $query = sprintf($query, $this->order_id);
+
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            $order_info = $this->rLink->results($result);
+        }
+
         $order_info['total_paid_real'] = $order_info['total_paid'];
 
         $elements = array('total_paid', 'total_products', 'total_products_wt', 'total_discounts', 'total_shipping', 'total_wrapping', 'total_paid_real');
@@ -1559,10 +1890,21 @@ class PrestaShopSA extends MainSA {
 
         $query_stat = "SELECT osl.name FROM ".$this->sDBPrefix."order_history AS oh
 				         LEFT JOIN ".$this->sDBPrefix."order_state_lang AS osl ON osl.id_order_state = oh.id_order_state
-				       WHERE oh.id_order = '".$this->order_id."' AND osl.id_lang = '".$default_attrs['lang_id']."'";
-        $result_stat = mysql_query($query_stat);
-        $row_stat = mysql_fetch_assoc($result_stat);
+				       WHERE oh.id_order = '%d' AND osl.id_lang = '%d' ORDER BY oh.id_order_history DESC LIMIT 1";
+        $query_stat = sprintf($query_stat, $this->order_id, intval($default_attrs['lang_id']));
+        $result = $this->rLink->query($query_stat);
+        if($this->rLink->affected($result)) {
+            $row_stat = $this->rLink->results($result);
+        }
+
         $order_info['status'] = $row_stat['name'];
+
+        $where_id_shop = "";
+        $query_id_shop = "SHOW COLUMNS FROM ".$this->sDBPrefix."order_detail WHERE `Field` = 'id_shop'";
+        $result_id_shop = $this->rLink->query($query_id_shop);
+        if($this->rLink->affected($result_id_shop)) {
+            $where_id_shop = " AND od.id_shop = pl.id_shop";
+        }
 
         $query = "SELECT
 					od.id_order,
@@ -1580,30 +1922,39 @@ class PrestaShopSA extends MainSA {
 					c.format
 				  FROM ".$this->sDBPrefix."order_detail AS od
 				    LEFT JOIN ".$this->sDBPrefix."orders AS o ON od.id_order = o.id_order
-				    LEFT JOIN ".$this->sDBPrefix."product_lang AS pl ON od.product_id = pl.id_product AND o.id_lang = pl.id_lang
+				    LEFT JOIN ".$this->sDBPrefix."product_lang AS pl ON od.product_id = pl.id_product AND o.id_lang = pl.id_lang ".$where_id_shop."
 				    LEFT JOIN ".$this->sDBPrefix."currency AS c ON o.id_currency = c.id_currency
-				  WHERE od.id_order = '".$this->order_id."'";
+				  WHERE od.id_order = '%d' LIMIT %d, %d";
+        $query = sprintf($query, $this->order_id, (($this->page - 1)*$this->show), $this->show);
+
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            while($row = $this->rLink->results($result)) {
+                //$product_tax = round($row['product_price']/100*$row['tax_rate'],2);
+                //$red_percent = round(($row['product_price']+$product_tax)/100*$row['reduction_percent'],2);
+                //$red_amount = $row['reduction_amount'];
+                //$group_red = $row['group_reduction'];
+                unset($row['tax_rate']); unset($row['reduction_percent']); unset($row['reduction_amount']); unset($row['group_reduction']);
+                //$row['product_price'] = ($row['product_price'] + $product_tax - $red_percent - $red_amount - $group_red)*$row['product_quantity'];
+                $row['product_price'] = $this->_price_format($row['sign'], $row['format'], $row['product_price']);
+                //$row['product_price'] = "";
+                unset($row['iso_code']); unset($row['sign']); unset($row['format']);
+                $order_products[] = $row;
+            }
+        }
+
         $query_page = "SELECT COUNT(od.product_id) AS count_prods
 					   FROM ".$this->sDBPrefix."order_detail AS od
 						 LEFT JOIN ".$this->sDBPrefix."orders AS o ON od.id_order = o.id_order
-						 LEFT JOIN ".$this->sDBPrefix."product_lang AS pl ON od.product_id = pl.id_product AND o.id_lang = pl.id_lang
-					   WHERE od.id_order = '".$this->order_id."'";
-        $query .= " LIMIT ".($this->page - 1)*$this->show." , ".$this->show;
-        $result_page = mysql_query($query_page);
-        $row_page = mysql_fetch_assoc($result_page);
-        $result = mysql_query($query);
-        while($row = mysql_fetch_assoc($result)) {
-            //$product_tax = round($row['product_price']/100*$row['tax_rate'],2);
-            //$red_percent = round(($row['product_price']+$product_tax)/100*$row['reduction_percent'],2);
-            //$red_amount = $row['reduction_amount'];
-            //$group_red = $row['group_reduction'];
-            unset($row['tax_rate']); unset($row['reduction_percent']); unset($row['reduction_amount']); unset($row['group_reduction']);
-            //$row['product_price'] = ($row['product_price'] + $product_tax - $red_percent - $red_amount - $group_red)*$row['product_quantity'];
-            //$row['product_price'] = $this->_price_format($row['sign'], $row['format'], $row['product_price']);
-            $row['product_price'] = "";
-            unset($row['iso_code']); unset($row['sign']); unset($row['format']);
-            $order_products[] = $row;
+						 LEFT JOIN ".$this->sDBPrefix."product_lang AS pl ON od.product_id = pl.id_product AND o.id_lang = pl.id_lang ".$where_id_shop."
+					   WHERE od.id_order = '%d'";
+        $query_page = sprintf($query_page, $this->order_id);
+
+        $result = $this->rLink->query($query_page);
+        if($this->rLink->affected($result)) {
+            $row_page = $this->rLink->results($result);
         }
+
         $order_full_info = array("order_info" => $order_info, "order_products" => $order_products, "o_products_count" => $row_page['count_prods']);
         return $order_full_info;
     }
@@ -1611,13 +1962,13 @@ class PrestaShopSA extends MainSA {
     public function get_customers() {
         $customers = array();
         if(!empty($this->customers_from)) {
-            $query_where_parts[] = " UNIX_TIMESTAMP(c.date_add) >= '".strtotime($this->customers_from." 00:00:00")."'";
+            $query_where_parts[] = sprintf(" UNIX_TIMESTAMP(c.date_add) >= '%d'", strtotime($this->customers_from." 00:00:00"));
         }
         if(!empty($this->customers_to)) {
-            $query_where_parts[] = " UNIX_TIMESTAMP(c.date_add) <= '".strtotime($this->customers_to." 23:59:59")."'";
+            $query_where_parts[] = sprintf(" UNIX_TIMESTAMP(c.date_add) <= '%d'", strtotime($this->customers_to." 23:59:59"));
         }
         if(!empty($this->search_val)) {
-            $query_where_parts[] = " (c.email LIKE '%".$this->search_val."%' OR c.firstname LIKE '%".$this->search_val."%' OR c.lastname LIKE '%".$this->search_val."%')";
+            $query_where_parts[] = sprintf(" (c.email LIKE '%%%s%%' OR c.firstname LIKE '%%%s%%' OR c.lastname LIKE '%%%s%%' OR CONCAT(c.firstname, ' ', c.lastname) LIKE '%%%s%%')", $this->search_val, $this->search_val, $this->search_val, $this->search_val);
         }
         if(!empty($this->cust_with_orders)) {
             $query_where_parts[] = " tot.total_orders > 0";
@@ -1626,6 +1977,7 @@ class PrestaShopSA extends MainSA {
                     c.id_customer,
                     c.firstname,
                     c.lastname,
+                    CONCAT(c.firstname, ' ', c.lastname) AS full_name,
                     c.email,
                     c.date_add,
                     IFNULL(tot.total_orders, 0) AS total_orders
@@ -1638,21 +1990,44 @@ class PrestaShopSA extends MainSA {
             $query_page .= " WHERE " . implode(" AND ", $query_where_parts);
         }
 
-        $query .= " LIMIT ".($this->page - 1)*$this->show." , ".$this->show;
-        $result_page = mysql_query($query_page);
-        $row_page = mysql_fetch_assoc($result_page);
-        $result = mysql_query($query);
-        while($row = mysql_fetch_assoc($result)) {
-            $date = explode(' ', $row['date_add']);
-            $row['date_add'] = $date[0];
-            $row['total_orders'] = intval($row['total_orders']);
-            $customers[] = $row;
+        if(empty($this->sort_by)) {
+            $this->sort_by = "id";
         }
-        if($row_page['count_custs'] > 0) {
-            $max_date = date("n/j/Y", strtotime($row_page['max_date']));
-            $min_date = date("n/j/Y", strtotime($row_page['min_date']));
+
+        $query .= " ORDER BY ";
+        switch ($this->sort_by) {
+            case 'id':
+                $query .= "c.id_customer DESC";
+                break;
+            case 'date':
+                $query .= "c.date_add DESC";
+                break;
+            case 'name':
+                $query .= "full_name ASC";
+                break;
         }
-        return array("customers_count" => $row_page['count_custs'],
+
+        $query .= sprintf(" LIMIT %d, %d", (($this->page - 1)*$this->show), $this->show);
+
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            while($row = $this->rLink->results($result)) {
+                $date = explode(' ', $row['date_add']);
+                $row['date_add'] = $date[0];
+                $row['total_orders'] = intval($row['total_orders']);
+                $customers[] = $row;
+            }
+        }
+
+        $result = $this->rLink->query($query_page);
+        if($this->rLink->affected($result)) {
+            $row_page = $this->rLink->results($result);
+            if($row_page['count_custs'] > 0) {
+                $max_date = date("n/j/Y", strtotime($row_page['max_date']));
+                $min_date = date("n/j/Y", strtotime($row_page['min_date']));
+            }
+        }
+        return array("customers_count" => intval($row_page['count_custs']),
             "customers" => $customers,
             "max_date" => $max_date,
             "min_date" => $min_date
@@ -1661,38 +2036,59 @@ class PrestaShopSA extends MainSA {
 
     public function get_customers_info() {
         $customer_orders = array();
+
         $default_attrs = $this->_get_default_attrs();
         $query = "SELECT c.id_customer, c.firstname, c.lastname, c.date_add, c.email, a.address1, a.phone, a.city, cl.name AS country_name FROM ".$this->sDBPrefix."customer AS c
 				    LEFT JOIN ".$this->sDBPrefix."address AS a ON a.id_customer = c.id_customer
-				    LEFT JOIN ".$this->sDBPrefix."country_lang AS cl ON cl.id_country = a.id_country AND cl.id_lang = '".$default_attrs['lang_id']."'
-				  WHERE c.id_customer = '".$this->user_id."'";
+				    LEFT JOIN ".$this->sDBPrefix."country_lang AS cl ON cl.id_country = a.id_country AND cl.id_lang = ".intval($$default_attrs['lang_id'])."
+				  WHERE c.id_customer = '%d'";
+        $query = sprintf($query, $this->user_id);
 
-        $result = mysql_query($query);
-        $user_info = mysql_fetch_assoc($result);
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            $user_info = $this->rLink->results($result);
+        }
+
         $user_info['address'] = $this->split_values($user_info, array('country_name', 'city', 'address1'));
 
         $query = "SELECT o.id_order, o.date_add, o.total_paid, c.iso_code, c.sign, c.format, SUM(od.product_quantity) AS pr_qty
 				  FROM ".$this->sDBPrefix."orders AS o
 				    LEFT JOIN ".$this->sDBPrefix."currency AS c ON o.id_currency = c.id_currency
 				    LEFT JOIN ".$this->sDBPrefix."order_detail AS od ON od.id_order = o.id_order
-				  WHERE o.id_customer = '".$this->user_id."' GROUP BY o.id_order";
+				  WHERE o.id_customer = '%d'
+				    GROUP BY o.id_order
+				    ORDER BY o.id_order DESC LIMIT %d, %d";
+        $query = sprintf($query, $this->user_id, (($this->page - 1)*$this->show), $this->show);
 
-        $query_page = "SELECT COUNT(o.id_order) AS count_ords, SUM(o.total_paid/c.conversion_rate) AS sum_ords
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            while($row = $this->rLink->results($result)) {
+                $row['total_paid'] = $this->_price_format($row['sign'], $row['format'], $row['total_paid']);
+
+                $query_stat = "SELECT osl.name FROM ".$this->sDBPrefix."order_history AS oh
+					         LEFT JOIN ".$this->sDBPrefix."order_state_lang AS osl ON osl.id_order_state = oh.id_order_state
+					       WHERE oh.id_order = '%d' AND osl.id_lang = '".intval($default_attrs['lang_id'])."' ORDER BY oh.id_order_history DESC LIMIT 1";
+                $query_stat = sprintf($query_stat, $row['id_order']);
+
+                $result_stat = $this->rLink->query($query_stat);
+                if($this->rLink->affected($result_stat)) {
+                    $row_stat = $this->rLink->results($result_stat);
+                }
+
+                $row['ord_status'] = $row_stat['name'];
+                $customer_orders[] = $row;
+            }
+        }
+
+        $query_page = sprintf("SELECT COUNT(o.id_order) AS count_ords, SUM(o.total_paid/c.conversion_rate) AS sum_ords
 					   FROM ".$this->sDBPrefix."orders AS o
 						 LEFT JOIN ".$this->sDBPrefix."currency AS c ON o.id_currency = c.id_currency
-					   WHERE o.id_customer = '".$this->user_id."'";
+					   WHERE o.id_customer = '%d'", $this->user_id);
+        $query_page = sprintf($query_page, $this->user_id);
 
-        $result_page = mysql_query($query_page);
-        $row_page = mysql_fetch_assoc($result_page);
-        $query .= " ORDER BY o.id_customer DESC LIMIT ".($this->page - 1)*$this->show." , ".$this->show;
-        $result = mysql_query($query);
-        while($row = mysql_fetch_assoc($result)) {
-            $row['total_paid'] = $this->_price_format($row['sign'], $row['format'], $row['total_paid']);
-            $row_stat = mysql_fetch_assoc(mysql_query("SELECT osl.name FROM ".$this->sDBPrefix."order_history AS oh
-					         LEFT JOIN ".$this->sDBPrefix."order_state_lang AS osl ON osl.id_order_state = oh.id_order_state
-					       WHERE oh.id_order = '".$row['id_order']."' AND osl.id_lang = '".$default_attrs['lang_id']."'"));
-            $row['ord_status'] = $row_stat['name'];
-            $customer_orders[] = $row;
+        $result = $this->rLink->query($query_page);
+        if($this->rLink->affected($result)) {
+            $row_page = $this->rLink->results($result);
         }
 
         $row_page['sum_ords'] = $this->_price_format($default_attrs['sign'], $default_attrs['format'], $row_page['sum_ords']);
@@ -1704,55 +2100,91 @@ class PrestaShopSA extends MainSA {
         $products = array();
         $default_attrs = $this->_get_default_attrs();
         $this->params = explode("|", $this->params);
+
         foreach($this->params as $param) {
             switch ($param) {
                 case 'pr_id':
-                    $query_where_parts[] = " p.id_product = '".$this->val."'";
+                    $query_where_parts[] = sprintf(" p.id_product = '%d'", $this->val);
                     break;
                 case 'pr_sku':
-                    $query_where_parts[] = " p.ean13 = '".$this->val."'";
+                    $query_where_parts[] = sprintf(" p.ean13 = '%s'", $this->val);
                     break;
                 case 'pr_name':
-                    $query_where_parts[] = " pl.name LIKE '%".$this->val."%'";
+                    $query_where_parts[] = sprintf(" pl.name LIKE '%%%s%%'", $this->val);
                     break;
                 case 'pr_desc':
-                    $query_where_parts[] = " pl.description LIKE '%".$this->val."%'";
+                    $query_where_parts[] = sprintf(" pl.description LIKE '%%%s%%'", $this->val);
                     break;
                 case 'pr_short_desc':
-                    $query_where_parts[] = " pl.description_short LIKE '%".$this->val."%'";
+                    $query_where_parts[] = sprintf(" pl.description_short LIKE '%%%s%%'", $this->val);
                     break;
             }
         }
 
         $row_quantity = "p.quantity";
         $join_stock_available = "";
-        if(mysql_num_rows(mysql_query("SHOW TABLES LIKE '".$this->sDBPrefix."stock_available'"))==1) {
+        $query = "SHOW TABLES LIKE '".$this->sDBPrefix."stock_available'";
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
             $row_quantity = "sa.quantity";
-            $join_stock_available = "LEFT JOIN ".$this->sDBPrefix."stock_available AS sa ON p.id_product = sa.id_product AND sa.id_product_attribute = 0";
+            $join_stock_available = " LEFT JOIN ".$this->sDBPrefix."stock_available AS sa ON p.id_product = sa.id_product AND sa.id_product_attribute = 0 ";
         }
 
-        $query = "SELECT p.id_product AS main_id, pl.name, p.price, ".$row_quantity.", p.ean13 AS sku, c.sign, c.format, c.iso_code FROM ".$this->sDBPrefix."product AS p
+        $query = "SELECT
+                    p.id_product AS main_id,
+                    p.id_product AS product_id,
+                    pl.name,
+                    p.price,
+                    ".$row_quantity.",
+                    p.ean13 AS sku,
+                    c.sign,
+                    c.format,
+                    c.iso_code
+                FROM ".$this->sDBPrefix."product AS p
                 LEFT JOIN ".$this->sDBPrefix."product_lang AS pl ON p.id_product = pl.id_product
-                LEFT JOIN ".$this->sDBPrefix."currency AS c ON c.id_currency = '".$default_attrs['curr_id']."'
+                LEFT JOIN ".$this->sDBPrefix."currency AS c ON c.id_currency = '".intval($default_attrs['curr_id'])."'
                 ".$join_stock_available."
-              WHERE pl.id_lang = '".$default_attrs['lang_id']."'";
+              WHERE pl.id_lang = '".intval($default_attrs['lang_id'])."'";
+
         $query_page = "SELECT COUNT(p.id_product) AS count_prods FROM ".$this->sDBPrefix."product AS p
 					     LEFT JOIN ".$this->sDBPrefix."product_lang AS pl ON p.id_product = pl.id_product
-					     LEFT JOIN ".$this->sDBPrefix."currency AS c ON c.id_currency = '".$default_attrs['curr_id']."'
-					   WHERE pl.id_lang = '".$default_attrs['lang_id']."'";
+					     LEFT JOIN ".$this->sDBPrefix."currency AS c ON c.id_currency = '".intval($default_attrs['curr_id'])."'
+					   WHERE pl.id_lang = '".intval($default_attrs['lang_id'])."'";
         if (!empty($query_where_parts)) {
             $query .= " AND ( " . implode(" OR ", $query_where_parts) . " )";
             $query_page .= " AND ( " . implode(" OR ", $query_where_parts) . " )";
         }
-        $query .= " GROUP BY p.id_product LIMIT ".($this->page - 1)*$this->show." , ".$this->show;
-        $result_page = mysql_query($query_page);
-        $row_page = mysql_fetch_assoc($result_page);
-        $result = mysql_query($query);
-        while($row = mysql_fetch_assoc($result)) {
-            $row['price'] = $this->_price_format($row['sign'], $row['format'], $row['price']);
-            $products[] = $row;
+
+        if(empty($this->sort_by)) {
+            $this->sort_by = "id";
         }
-        return array("products_count" => $row_page['count_prods'], "products" => $products);
+
+        $query .= " GROUP BY p.id_product ORDER BY ";
+        switch ($this->sort_by) {
+            case 'id':
+                $query .= "p.id_product DESC";
+                break;
+            case 'name':
+                $query .= "pl.name ASC";
+                break;
+        }
+
+        $query .= sprintf(" LIMIT %d, %d", (($this->page - 1)*$this->show), $this->show);
+
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            while($row = $this->rLink->results($result)) {
+                $row['price'] = $this->_price_format($row['sign'], $row['format'], $row['price']);
+                $products[] = $row;
+            }
+        }
+
+        $result = $this->rLink->query($query_page);
+        if($this->rLink->affected($result)) {
+            $row_page = $this->rLink->results($result);
+        }
+
+        return array("products_count" => intval($row_page['count_prods']), "products" => $products);
     }
 
     public function search_products_ordered() {
@@ -1763,21 +2195,42 @@ class PrestaShopSA extends MainSA {
         foreach($this->params as $param) {
             switch ($param) {
                 case 'pr_id':
-                    $query_where_parts[] = " od.product_id = '".$this->val."'";
+                    $query_where_parts[] = sprintf(" od.product_id = '%d'", $this->val);
                     break;
                 case 'pr_sku':
-                    $query_where_parts[] = " od.product_ean13 = '".$this->val."'";
+                    $query_where_parts[] = sprintf(" od.product_ean13 = '%s'", $this->val);
                     break;
                 case 'pr_name':
-                    $query_where_parts[] = " od.product_name LIKE '%".$this->val."%'";
+                    $query_where_parts[] = sprintf(" od.product_name LIKE '%%%s%%'", $this->val);
                     break;
             }
         }
         if(!empty($this->products_from)) {
-            $query_where_parts[] = " UNIX_TIMESTAMP(o.date_add) >= '".strtotime($this->products_from." 00:00:00")."'";
+            $query_where_parts[] = sprintf(" UNIX_TIMESTAMP(o.date_add) >= '%d'", strtotime($this->products_from." 00:00:00"));
         }
         if(!empty($this->products_to)) {
-            $query_where_parts[] = " UNIX_TIMESTAMP(o.date_add) <= '".strtotime($this->products_to." 23:59:59")."'";
+            $query_where_parts[] = sprintf(" UNIX_TIMESTAMP(o.date_add) <= '%d'", strtotime($this->products_to." 23:59:59"));
+        }
+
+        if(!empty($this->statuses)) {
+            $statuses = explode("|", $this->statuses);
+            if(!empty($statuses)) {
+                $stat = array();
+                foreach($statuses as $status) {
+                    if($status != "") {
+                        $stat[] = $status;
+                    }
+                }
+                $parse_statuses = implode("','", $stat);
+                $query_where_parts[] = sprintf(" oh.id_order_state IN ('%s')", $parse_statuses);
+            }
+        }
+
+        $where_id_shop = "";
+        $query_id_shop = "SHOW COLUMNS FROM ".$this->sDBPrefix."order_detail WHERE `Field` = 'id_shop'";
+        $result_id_shop = $this->rLink->query($query_id_shop);
+        if($this->rLink->affected($result_id_shop)) {
+            $where_id_shop = " AND od.id_shop = pl.id_shop";
         }
 
         $query = "SELECT
@@ -1798,45 +2251,72 @@ class PrestaShopSA extends MainSA {
 				  FROM ".$this->sDBPrefix."order_detail AS od
 				    LEFT JOIN ".$this->sDBPrefix."orders AS o ON od.id_order = o.id_order
 				    LEFT JOIN ".$this->sDBPrefix."product AS p ON p.id_product = od.product_id
-				    LEFT JOIN ".$this->sDBPrefix."product_lang AS pl ON od.product_id = pl.id_product AND o.id_lang = pl.id_lang
-				    LEFT JOIN ".$this->sDBPrefix."currency AS c ON o.id_currency = c.id_currency";
+				    LEFT JOIN ".$this->sDBPrefix."product_lang AS pl ON od.product_id = pl.id_product AND o.id_lang = pl.id_lang ".$where_id_shop."
+				    LEFT JOIN ".$this->sDBPrefix."currency AS c ON o.id_currency = c.id_currency
+				    LEFT JOIN ".$this->sDBPrefix."order_history AS oh ON oh.id_order = o.id_order AND oh.id_order_history = (SELECT MAX(id_order_history) AS id_order_history FROM ".$this->sDBPrefix."order_history WHERE id_order = o.id_order LIMIT 1)";
 
         $query_page = "SELECT COUNT(od.product_id) AS count_prods, MAX(o.date_add) AS max_date, MIN(o.date_add) AS min_date
 					   FROM ".$this->sDBPrefix."order_detail AS od
 						 LEFT JOIN ".$this->sDBPrefix."orders AS o ON od.id_order = o.id_order
-						 LEFT JOIN ".$this->sDBPrefix."product_lang AS pl ON od.product_id = pl.id_product AND o.id_lang = pl.id_lang";
+						 LEFT JOIN ".$this->sDBPrefix."product_lang AS pl ON od.product_id = pl.id_product AND o.id_lang = pl.id_lang ".$where_id_shop;
 
         if (!empty($query_where_parts)) {
             $query .= " WHERE " . implode(" AND ", $query_where_parts);
             $query_page .= " WHERE " . implode(" AND ", $query_where_parts);
         }
 
-        $query .= " ORDER BY od.id_order DESC LIMIT ".($this->page - 1)*$this->show." , ".$this->show;
-        $result_page = mysql_query($query_page);
-        $row_page = mysql_fetch_assoc($result_page);
-        $result = mysql_query($query);
-        while($row = mysql_fetch_assoc($result)) {
+        if(empty($this->sort_by)) {
+            $this->sort_by = "id";
+        }
+
+        $query .= " ORDER BY ";
+        switch ($this->sort_by) {
+            case 'id':
+                $query .= "od.id_order DESC";
+                break;
+            case 'name':
+                $query .= "pl.name ASC";
+                break;
+        }
+
+        $query .= sprintf(" LIMIT %d, %d", (($this->page - 1)*$this->show), $this->show);
+
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            while($row = $this->rLink->results($result)) {
 //            $product_tax = round($row['product_price']/100*$row['tax_rate'],2);
 //            $red_percent = round(($row['product_price']+$product_tax)/100*$row['reduction_percent'],2);
 //            $red_amount = $row['reduction_amount'];
 //            $group_red = $row['group_reduction'];
-            unset($row['tax_rate']); unset($row['reduction_percent']); unset($row['reduction_amount']); unset($row['group_reduction']);
+                unset($row['tax_rate']); unset($row['reduction_percent']); unset($row['reduction_amount']); unset($row['group_reduction']);
 //            $row['product_price'] = ($row['product_price'] + $product_tax - $red_percent - $red_amount - $group_red)*$row['quantity'];
 //            $row['price'] = $this->_price_format($row['sign'], $row['format'], $row['product_price']);
-            $row['price'] = $this->_price_format($row['sign'], $row['format'], $row['real_product_price']);
-            unset($row['sign']); unset($row['format']);
-            $row_stat = mysql_fetch_assoc(mysql_query("SELECT osl.name FROM ".$this->sDBPrefix."order_history AS oh
-					         LEFT JOIN ".$this->sDBPrefix."order_state_lang AS osl ON osl.id_order_state = oh.id_order_state
-					       WHERE oh.id_order = '".$row['main_id']."'  AND osl.id_lang = '".$default_attrs['lang_id']."'"));
-            $row['status'] = $row_stat['name'];
-            $products[] = $row;
+                $row['price'] = $this->_price_format($row['sign'], $row['format'], $row['real_product_price']);
+                unset($row['sign']); unset($row['format']);
+                $query_stat = "SELECT osl.name FROM ".$this->sDBPrefix."order_history AS oh
+                                 LEFT JOIN ".$this->sDBPrefix."order_state_lang AS osl ON osl.id_order_state = oh.id_order_state
+                               WHERE oh.id_order = '".intval($row['main_id'])."' AND osl.id_lang = '".intval($default_attrs['lang_id'])."' ORDER BY oh.id_order_history DESC LIMIT 1";
+
+                $result_stat = $this->rLink->query($query_stat);
+                if($this->rLink->affected($result_stat)) {
+                    $row_stat = $this->rLink->results($result_stat);
+                }
+                $row['status'] = $row_stat['name'];
+                $products[] = $row;
+            }
         }
+
+        $result = $this->rLink->query($query_page);
+        if($this->rLink->affected($result)) {
+            $row_page = $this->rLink->results($result);
+        }
+
         if($row_page['count_prods'] > 0) {
             $max_date = date("n/j/Y", strtotime($row_page['max_date']));
             $min_date = date("n/j/Y", strtotime($row_page['min_date']));
         }
 
-        return array("products_count" => $row_page['count_prods'],
+        return array("products_count" => intval($row_page['count_prods']),
             "products" => $products,
             "max_date" => $max_date,
             "min_date" => $min_date);
@@ -1844,12 +2324,13 @@ class PrestaShopSA extends MainSA {
 
     public function get_products_info() {
         $default_attrs = $this->_get_default_attrs();
-
         $row_quantity = "p.quantity";
         $join_stock_available = "";
-        if(mysql_num_rows(mysql_query("SHOW TABLES LIKE '".$this->sDBPrefix."stock_available'"))==1) {
+        $query = "SHOW TABLES LIKE '".$this->sDBPrefix."stock_available'";
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
             $row_quantity = "sa.quantity";
-            $join_stock_available = "LEFT JOIN ".$this->sDBPrefix."stock_available AS sa ON p.id_product = sa.id_product AND sa.id_product_attribute = 0";
+            $join_stock_available = " LEFT JOIN ".$this->sDBPrefix."stock_available AS sa ON p.id_product = sa.id_product AND sa.id_product_attribute = 0 ";
         }
 
         $query = "SELECT
@@ -1866,41 +2347,56 @@ class PrestaShopSA extends MainSA {
 					(SELECT SUM(product_quantity) FROM ".$this->sDBPrefix."order_detail WHERE product_id = p.id_product) AS total_ordered
 				  FROM ".$this->sDBPrefix."product AS p
 				    LEFT JOIN ".$this->sDBPrefix."product_lang AS pl ON pl.id_product = p.id_product
-				    LEFT JOIN ".$this->sDBPrefix."image AS i ON i.id_product = p.id_product AND i.position = 1 AND i.cover = 1
-				    LEFT JOIN ".$this->sDBPrefix."currency AS c ON c.id_currency = '".$default_attrs['curr_id']."'
+				    LEFT JOIN ".$this->sDBPrefix."image AS i ON i.id_product = p.id_product AND i.cover = 1
+				    LEFT JOIN ".$this->sDBPrefix."currency AS c ON c.id_currency = '".intval($default_attrs['curr_id'])."'
 				    ".$join_stock_available."
-				  WHERE pl.id_lang = '".$default_attrs['lang_id']."' AND p.id_product = '".$this->product_id."'";
-        $result = mysql_query($query);
-        if(mysql_num_rows($result) == 0) {
+				  WHERE pl.id_lang = '".intval($default_attrs['lang_id'])."' AND p.id_product = '%d'";
+        $query = sprintf($query, $this->product_id);
+
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result) <= 0) {
             return false;
         }
-        $row = mysql_fetch_assoc($result);
+        $row = $this->rLink->results($result);
+
         $row['price'] = $this->_price_format($row['sign'], $row['format'], $row['price']);
         if(!$row['total_ordered']) $row['total_ordered'] = 0;
         $id_image = $row['id_image'];
         $id_image_path = str_split($id_image);
         $image_path = "img/p/".implode('/', $id_image_path)."/".$id_image."-home.jpg";
         $image_path_5 = "img/p/".implode('/', $id_image_path)."/".$id_image."-home_default.jpg";
+
         if(file_exists($image_path) && is_file($image_path)) {
             $row['id_image'] = $this->site_url . $image_path;
         } elseif(file_exists($image_path_5) && is_file($image_path_5)) {
             $row['id_image'] = $this->site_url . $image_path_5;
+        } else {
+            $row['id_image'] = "";
+        }
+
+        $image_path_large = "img/p/".implode('/', $id_image_path)."/".$id_image."-thickbox_default.jpg";
+        if(file_exists($image_path_large) && is_file($image_path_large)) {
+            $row['id_image_large'] = $this->site_url . $image_path_large;
         }
         return $row;
     }
 
     public function get_products_descr() {
         $default_attrs = $this->_get_default_attrs();
-        $query = "SELECT description AS descr FROM ".$this->sDBPrefix."product_lang WHERE id_product = '".$this->product_id."' AND id_lang = '".$default_attrs['lang_id']."'";
-        $row = mysql_fetch_assoc(mysql_query($query));
+        $query = "SELECT description AS descr FROM ".$this->sDBPrefix."product_lang WHERE id_product = '%d' AND id_lang = '".intval($default_attrs['lang_id'])."'";
+        $query = sprintf($query, $this->product_id);
+
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            $row = $this->rLink->results($result);
+        }
 
         return $row;
     }
 
     private function _price_format($sign, $curr_format, $price, $no_format = false) {
-        $prc_format = "";
         if(!$no_format) {
-            $price = number_format($price, 2, '.', '');
+            $price = number_format($price, 2, '.', ' ');
         }
         $sign = '<span>' . $sign . '</span>';
         if(in_array($curr_format, array(1,3))) {
@@ -1916,9 +2412,10 @@ class PrestaShopSA extends MainSA {
 				    LEFT JOIN ".$this->sDBPrefix."configuration AS l ON l.name = 'PS_LANG_DEFAULT'
 				    LEFT JOIN ".$this->sDBPrefix."currency AS cu ON cu.id_currency = c.value
 				  WHERE c.name = 'PS_CURRENCY_DEFAULT'";
-        $result = mysql_query($query);
-        if(mysql_num_rows($result) == 1) {
-            $row = mysql_fetch_assoc($result);
+
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            $row = $this->rLink->results($result);
             return $row;
         }
         return array();
@@ -1928,25 +2425,33 @@ class PrestaShopSA extends MainSA {
 
 class MagentoSA extends MainSA {
     public function get_store_title() {
-        $result = mysql_query("SELECT value FROM ".$this->sDBPrefix."core_config_data WHERE path = 'design/head/default_title'");
-        $row = mysql_fetch_assoc($result);
-
-        return array('test' => 1, 'title' => $row['value']);
+        //$title_path = 'design/head/default_title';
+        $title_path = 'general/store_information/name';
+        $query = "SELECT value FROM ".$this->sDBPrefix."core_config_data WHERE path = '".$title_path."'";
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            $row = $this->rLink->results($result);
+            return array('test' => 1, 'title' => $row['value']);
+        }
+        return false;
     }
 
     public function get_store_stats() {
-        $store_stats = array('count_orders' => "0", 'total_sales' => "0", 'count_customers' => "0", "last_order_id" => "0", "new_orders" => "0");
-        /*
-        if(!empty($this->date_from)) {
-            $query_where_parts[] = " UNIX_TIMESTAMP(o.created_at) >= '".strtotime($this->date_from." 00:00:00")."'";
-        }
-        if(!empty($this->date_to)) {
-            $query_where_parts[] = " UNIX_TIMESTAMP(o.created_at) <= '".strtotime($this->date_to." 23:59:59")."'";
-        }
-        */
+        $offset = $this->_get_timezone_offset();
         $today = date("Y-m-d", time());
-        $query_where_parts[] = " UNIX_TIMESTAMP(o.created_at) >= '".strtotime($today . " 00:00:00")."'";
-        $query_where_parts[] = " UNIX_TIMESTAMP(o.created_at) <= '".strtotime($today . " 23:59:59")."'";
+        $date_from = $date_to = $today;
+
+        if(!empty($this->stats_from)) {
+            $date_from = $this->stats_from;
+        }
+
+        if(!empty($this->stats_to)) {
+            $date_to = $this->stats_to;
+        }
+
+        $store_stats = array('count_orders' => "0", 'total_sales' => "0", 'count_customers' => "0", 'count_products' => "0", "last_order_id" => "0", "new_orders" => "0");
+        $query_where_parts[] = sprintf(" UNIX_TIMESTAMP(DATE_ADD(o.created_at, INTERVAL ".$offset." HOUR)) >= '%d'", strtotime($date_from . " 00:00:00"));
+        $query_where_parts[] = sprintf(" UNIX_TIMESTAMP(DATE_ADD(o.created_at, INTERVAL ".$offset." HOUR)) <= '%d'", strtotime($date_to . " 23:59:59"));
 
         if(!empty($this->statuses)) {
             $statuses = explode("|", $this->statuses);
@@ -1958,33 +2463,58 @@ class MagentoSA extends MainSA {
                     }
                 }
                 $this->statuses = implode("','", $stat);
-                $query_where_parts[] = " o.status IN ('".$this->statuses."')";
+                $query_where_parts[] = sprintf(" o.status IN ('%s')", $this->statuses);
             }
         }
 
-        $query = "SELECT COUNT(o.entity_id) AS count_orders, SUM(o.base_grand_total) AS total_sales, o.global_currency_code AS iso_code
-				  FROM ".$this->sDBPrefix."sales_flat_order AS o";
+        $query_currency = "SELECT global_currency_code FROM ".$this->sDBPrefix."sales_flat_order AS o";
+        if(!empty($query_where_parts)) {
+            $query_currency .= " WHERE " . implode(" AND ", $query_where_parts);
+        }
+
+        $result_currency = $this->rLink->query($query_currency);
+        if($this->rLink->affected($result_currency)) {
+            $row_currency = $this->rLink->results($result_currency);
+            $iso_code = $row_currency['global_currency_code'];
+        }
+
+        $query = "SELECT COUNT(o.entity_id) AS count_orders, SUM(o.base_grand_total) AS total_sales
+                    FROM ".$this->sDBPrefix."sales_flat_order AS o";
         if(!empty($query_where_parts)) {
             $query .= " WHERE " . implode(" AND ", $query_where_parts);
         }
 
-        $result = mysql_query($query);
-        if(mysql_num_rows($result) > 0) {
-            $row = mysql_fetch_assoc($result);
-            $row['total_sales'] = $this->_price_format((floatval($row['total_sales']) > 0 ? $row['iso_code'] : $this->_get_default_currency()), 1, $this->bd_nice_number($row['total_sales']), 0, 0);
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            $row = $this->rLink->results($result);
+            $row['total_sales'] = $this->_price_format((floatval($row['total_sales']) > 0 ? $iso_code : $this->_get_default_currency()), 1, $this->bd_nice_number($row['total_sales']), 0, 0);
             $store_stats = array_merge($store_stats, $row);
+        }
+
+        $query_prods = "SELECT COUNT(sfoi.order_id) AS count_products FROM ".$this->sDBPrefix."sales_flat_order AS o
+                    LEFT JOIN ".$this->sDBPrefix."sales_flat_order_item AS sfoi ON o.entity_id = sfoi.order_id";
+        if(!empty($query_where_parts)) {
+            $query_prods .= " WHERE " . implode(" AND ", $query_where_parts);
+        }
+
+        $result_prods = $this->rLink->query($query_prods);
+        if($this->rLink->affected($result_prods)) {
+            $row_prods = $this->rLink->results($result_prods);
+            $store_stats['count_products'] = $this->bd_nice_number($row_prods['count_products'], true);
         }
 
         if($this->last_order_id != "") {
             $query_max = "SELECT COUNT(o.entity_id) AS count_orders, MAX(o.entity_id) AS last_order_id
                           FROM ".$this->sDBPrefix."sales_flat_order AS o
-                          WHERE o.entity_id > ".$this->last_order_id;
+                          WHERE o.entity_id > '%d'";
+            $query_max = sprintf($query_max, $this->last_order_id);
             if(!empty($query_where_parts)) {
                 $query_max .= " AND " . implode(" AND ", $query_where_parts);
             }
-            $result_max = mysql_query($query_max);
-            if(mysql_num_rows($result_max) > 0) {
-                $row_max = mysql_fetch_assoc($result_max);
+
+            $result_max = $this->rLink->query($query_max);
+            if($this->rLink->affected($result_max)) {
+                $row_max = $this->rLink->results($result_max);
                 $store_stats['last_order_id'] = intval($this->last_order_id);
                 if(intval($row_max['last_order_id']) > intval($this->last_order_id)) {
                     $store_stats['last_order_id'] = intval($row_max['last_order_id']);
@@ -1994,49 +2524,59 @@ class MagentoSA extends MainSA {
         }
 
         unset($query_where_parts);
-        /*
-        if(!empty($this->date_from)) {
-            $query_where_parts[] = " UNIX_TIMESTAMP(c.created_at) >= '".strtotime($this->date_from." 00:00:00")."'";
-        }
-        if(!empty($this->date_to)) {
-            $query_where_parts[] = " UNIX_TIMESTAMP(c.created_at) <= '".strtotime($this->date_to." 23:59:59")."'";
-        }
-        */
-
-        $query_where_parts[] = " UNIX_TIMESTAMP(c.created_at) >= '".strtotime($today . " 00:00:00")."'";
-        $query_where_parts[] = " UNIX_TIMESTAMP(c.created_at) <= '".strtotime($today . " 23:59:59")."'";
+        $query_where_parts[] = sprintf(" UNIX_TIMESTAMP(DATE_ADD(c.created_at, INTERVAL ".$offset." HOUR)) >= '%d'", strtotime($date_from . " 00:00:00"));
+        $query_where_parts[] = sprintf(" UNIX_TIMESTAMP(DATE_ADD(c.created_at, INTERVAL ".$offset." HOUR)) <= '%d'", strtotime($date_to . " 23:59:59"));
         $query = "SELECT COUNT(c.entity_id) AS count_customers FROM ".$this->sDBPrefix."customer_entity AS c";
         if (!empty($query_where_parts)) {
             $query .= " WHERE " . implode(" AND ", $query_where_parts);
         }
-        $result = mysql_query($query);
-        if(mysql_num_rows($result) > 0) {
-            $row = mysql_fetch_assoc($result);
+
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            $row = $this->rLink->results($result);
             $store_stats = array_merge($store_stats, $row);
         }
 
-        $this->graph_to = $today;
-        $this->graph_from = date("Y-m-d", mktime(0, 0, 0, date("m"), date("d")-7, date("Y")));
-        $data_graphs = $this->get_data_graphs();
+        if(empty($this->graph_from)) {
+            $this->graph_from = date("Y-m-d", mktime(0, 0, 0, date("m"), date("d")-7, date("Y")));
+        }
+
+        if(empty($this->graph_to)) {
+            $this->graph_to = $this->stats_to;
+        }
+
+        if(!isset($this->data_for_widget) || empty($this->data_for_widget) || $this->data_for_widget != 1) {
+            $data_graphs = $this->get_data_graphs();
+        }
+
         $store_stats['count_orders'] = $this->bd_nice_number($store_stats['count_orders'], true);
         $store_stats['count_customers'] = $this->bd_nice_number($store_stats['count_customers'], true);
+
+        /* for fulldata screenshots
+        $total_sales = $this->_price_format($this->_get_default_currency(), 1, $this->bd_nice_number(rand(23564,567849) / 100), 0, 0);
+        $store_stats = array('count_orders' => rand(5, 25), 'total_sales' => $total_sales, 'count_customers' => rand(3, 13), 'new_orders' => rand(4, 10));
+        */
 
         $result = array_merge($store_stats, array('data_graphs' => $data_graphs));
         return $result;
     }
 
     public function get_data_graphs() {
+        $offset = $this->_get_timezone_offset();
         $startDate = strtotime($this->graph_from." 00:00:00");
         $endDate = strtotime($this->graph_to." 23:59:59");
 
         $date = $startDate;
         $d = 0;
         $average = array('avg_sum_orders' => 0, 'avg_orders' => 0, 'avg_customers' => 0, 'avg_cust_order' => '0.00');
+
         while ($date <= $endDate) {
             $d++;
-            $query = "SELECT UNIX_TIMESTAMP(o.created_at) AS date_add, SUM(o.base_grand_total) AS value, COUNT(o.entity_id) AS tot_orders
+            $query = "SELECT UNIX_TIMESTAMP(DATE_ADD(o.created_at, INTERVAL ".$offset." HOUR)) AS date_add, SUM(o.base_grand_total) AS value, COUNT(o.entity_id) AS tot_orders
                       FROM ".$this->sDBPrefix."sales_flat_order AS o
-                      WHERE UNIX_TIMESTAMP(o.created_at) >= '".$date."' AND UNIX_TIMESTAMP(o.created_at) < '".strtotime('+1 day', $date)."'";
+                      WHERE UNIX_TIMESTAMP(DATE_ADD(o.created_at, INTERVAL ".$offset." HOUR)) >= '%d'
+                        AND UNIX_TIMESTAMP(DATE_ADD(o.created_at, INTERVAL ".$offset." HOUR)) < '%d'";
+            $query = sprintf($query, $date, strtotime('+1 day', $date));
 
             if(!empty($this->statuses)) {
                 $statuses = explode("|", $this->statuses);
@@ -2048,67 +2588,101 @@ class MagentoSA extends MainSA {
                         }
                     }
                     $this->statuses = implode("','", $stat);
-                    $query .= " AND o.status IN ('".$this->statuses."')";
+                    $query .= sprintf(" AND o.status IN ('%s')", $this->statuses);
                 }
             }
             $query .= " GROUP BY DATE(o.created_at) ORDER BY o.created_at";
 
-            $result = mysql_query($query);
-            if(mysql_num_rows($result) > 0) {
-                while($row = mysql_fetch_assoc($result)) {
-                    $row['value'] = number_format($row['value'], 2, '.', '');
-                    $orders[] = array($row['date_add']*1000, $row['value']);
+            $total_order_per_day = 0;
+            $result = $this->rLink->query($query);
+            if($this->rLink->affected($result)) {
+                while($row = $this->rLink->results($result)) {
+                    $total_order_per_day += $row['value'];
+
                     $average['tot_orders'] += $row['tot_orders'];
                     $average['sum_orders'] += $row['value'];
                 }
-            } else {
-                $orders[] = array($date*1000, 0);
+//            } else {
+//                $orders[] = array($date*1000, 0);
             }
 
-            $query = "SELECT COUNT(entity_id) AS tot_customers, UNIX_TIMESTAMP(created_at) AS date_add
+            $total_order_per_day = number_format($total_order_per_day, 2, '.', '');
+            $orders[] = array($date*1000, $total_order_per_day);
+
+
+            $query = "SELECT COUNT(entity_id) AS tot_customers, UNIX_TIMESTAMP(DATE_ADD(created_at, INTERVAL ".$offset." HOUR)) AS date_add
                       FROM ".$this->sDBPrefix."customer_entity
-                        WHERE UNIX_TIMESTAMP(created_at) >= '".$date."' AND UNIX_TIMESTAMP(created_at) < '".strtotime('+1 day', $date)."'
+                        WHERE UNIX_TIMESTAMP(DATE_ADD(created_at, INTERVAL ".$offset." HOUR)) >= '%d'
+                          AND UNIX_TIMESTAMP(DATE_ADD(created_at, INTERVAL ".$offset." HOUR)) < '%d'
                            GROUP BY DATE(created_at) ORDER BY created_at";
+            $query = sprintf($query, $date, strtotime('+1 day', $date));
 
-            $result = mysql_query($query);
+            $total_customer_per_day = 0;
+            $result = $this->rLink->query($query);
+            if($this->rLink->affected($result)) {
+                while($row = $this->rLink->results($result)) {
+                    $total_customer_per_day += $row['tot_customers'];
 
-            if(mysql_num_rows($result) > 0) {
-                while($row = mysql_fetch_assoc($result)) {
-                    $customers[] = array($row['date_add']*1000, $row['tot_customers']);
+                    //$customers[] = array($row['date_add']*1000, $row['tot_customers']);
                     $average['tot_customers'] += $row['tot_customers'];
                 }
-            } else {
-                $customers[] = array($date*1000, 0);
+//            } else {
+//                $customers[] = array($date*1000, 0);
             }
+
+            $customers[] = array($date*1000, $total_customer_per_day);
+
             $date = strtotime('+1 day', $date);
         }
+
+        /* for fulldata screenshots
+        while ($date <= $endDate) {
+            $d++;
+
+            $tot_customers = rand(0, 6);
+            $tot_orders = rand(50, 1000);
+
+            $orders[] = array($date*1000, $tot_orders);
+            $customers[] = array($date*1000, $tot_customers);
+
+            $average['tot_orders'] += rand(0, 6);
+            $average['sum_orders'] += $tot_orders;
+
+            $average['tot_customers'] += $tot_customers;
+
+            $date = strtotime('+1 day', $date);
+        }
+        */
+
         $sum = '0';
         $default_currency_sign = $this->_price_format($this->_get_default_currency(), 1, $sum, true);
 
-        $average['avg_sum_orders'] = number_format($average['sum_orders']/$d, 2, '.', '');
-        $average['avg_orders'] = number_format($average['tot_orders']/$d, 1, '.', '');
-        $average['avg_customers'] = number_format($average['tot_customers']/$d, 1, '.', '');
+        if($d <= 0) $d = 1;
+        $average['avg_sum_orders'] = number_format($average['sum_orders']/$d, 2, '.', ' ');
+        $average['avg_orders'] = number_format($average['tot_orders']/$d, 1, '.', ' ');
+        $average['avg_customers'] = number_format($average['tot_customers']/$d, 1, '.', ' ');
 
         if($average['tot_customers'] > 0) {
-            $average['avg_cust_order'] = number_format($average['sum_orders']/$average['tot_customers'], 1, '.', '');
+            $average['avg_cust_order'] = number_format($average['sum_orders']/$average['tot_customers'], 1, '.', ' ');
         }
-        $average['sum_orders'] = number_format($average['sum_orders'], 2, '.', '');
-        $average['tot_customers'] = number_format($average['tot_customers'], 1, '.', '');
-        $average['tot_orders'] = number_format($average['tot_orders'], 1, '.', '');
+        $average['sum_orders'] = number_format($average['sum_orders'], 2, '.', ' ');
+        $average['tot_customers'] = number_format($average['tot_customers'], 1, '.', ' ');
+        $average['tot_orders'] = number_format($average['tot_orders'], 1, '.', ' ');
 
         return array('orders' => $orders, 'customers' => $customers, 'currency_sign' => $default_currency_sign, 'average' => $average);
     }
 
     public function get_orders() {
+        $offset = $this->_get_timezone_offset();
         $orders = array();
         if(!empty($this->search_order_id)) {
-            $query_where_parts[] = " (entity_id = '".$this->search_order_id."' OR increment_id = '".$this->search_order_id."')";
+            $query_where_parts[] = sprintf(" (sfo.entity_id = '%d' OR sfo.increment_id = '%d')", $this->search_order_id, $this->search_order_id);
         }
         if(!empty($this->orders_from)) {
-            $query_where_parts[] = " UNIX_TIMESTAMP(created_at) >= '".strtotime($this->orders_from." 00:00:00")."'";
+            $query_where_parts[] = sprintf(" UNIX_TIMESTAMP(DATE_ADD(sfo.created_at, INTERVAL ".$offset." HOUR)) >= '%d'", strtotime($this->orders_from." 00:00:00"));
         }
         if(!empty($this->orders_to)) {
-            $query_where_parts[] = " UNIX_TIMESTAMP(created_at) <= '".strtotime($this->orders_to." 23:59:59")."'";
+            $query_where_parts[] = sprintf(" UNIX_TIMESTAMP(DATE_ADD(sfo.created_at, INTERVAL ".$offset." HOUR)) <= '%d'", strtotime($this->orders_to." 23:59:59"));
         }
         if(!empty($this->statuses)) {
             $statuses = explode("|", $this->statuses);
@@ -2120,38 +2694,63 @@ class MagentoSA extends MainSA {
                     }
                 }
                 $parse_statuses = implode("','", $stat);
-                $query_where_parts[] = " status IN ('".$parse_statuses."')";
+                $query_where_parts[] = sprintf(" sfo.status IN ('%s')", $parse_statuses);
             }
         }
         $query = "SELECT
-					entity_id AS id_order,
-					increment_id AS order_number,
-					customer_id AS id_customer,
-					status AS ord_status,
-					total_qty_ordered AS qty_ordered,
-					base_grand_total AS total_paid,
-					customer_firstname AS firstname,
-					customer_lastname AS lastname,
-					global_currency_code AS iso_code,
-					created_at AS date_add,
-					total_item_count AS count_prods
-				  FROM ".$this->sDBPrefix."sales_flat_order";
-        $query_page = "SELECT COUNT(entity_id) AS count_ords, MAX(created_at) AS max_date, MIN(created_at) AS min_date, SUM(base_grand_total) AS orders_total
-						FROM ".$this->sDBPrefix."sales_flat_order";
+					sfo.entity_id AS id_order,
+					sfo.increment_id AS order_number,
+					sfo.customer_id AS id_customer,
+					sos.label AS ord_status,
+					sfo.total_qty_ordered AS qty_ordered,
+					sfo.base_grand_total AS total_paid,
+					sfo.customer_firstname AS firstname,
+					sfo.customer_lastname AS lastname,
+					CONCAT(sfo.customer_firstname, ' ', sfo.customer_lastname) AS full_name,
+					sfo.global_currency_code AS iso_code,
+					DATE_ADD(sfo.created_at, INTERVAL ".$offset." HOUR) AS date_add,
+					sfo.total_item_count AS count_prods
+				  FROM ".$this->sDBPrefix."sales_flat_order AS sfo
+				  LEFT JOIN ".$this->sDBPrefix."sales_order_status AS sos ON sos.status = sfo.status";
+
+        $query_page = "SELECT COUNT(sfo.entity_id) AS count_ords, MAX(DATE_ADD(sfo.created_at, INTERVAL ".$offset." HOUR)) AS max_date, MIN(DATE_ADD(sfo.created_at, INTERVAL ".$offset." HOUR)) AS min_date, SUM(sfo.base_grand_total) AS orders_total
+						FROM ".$this->sDBPrefix."sales_flat_order AS sfo
+						LEFT JOIN ".$this->sDBPrefix."sales_order_status AS sos ON sos.status = sfo.status";
         if (!empty($query_where_parts)) {
             $query .= " WHERE " . implode(" AND ", $query_where_parts);
             $query_page .= " WHERE " . implode(" AND ", $query_where_parts);
         }
-        $result_page = mysql_query($query_page);
-        $row_page = mysql_fetch_assoc($result_page);
-        $query .= " ORDER BY entity_id DESC LIMIT ".($this->page - 1)*$this->show." , ".$this->show;
-        $result = mysql_query($query);
-        while($row = mysql_fetch_assoc($result)) {
-            //$date = explode(' ', $row['date_add']);
-            //$row['date_add'] = $date[0];
-            $this->_price_format($row['iso_code'], 1, $row['total_paid']);
-            $row['customer'] = $row['firstname'] . ' ' . $row['lastname'];
-            $orders[] = $row;
+
+        if(empty($this->sort_by)) {
+            $this->sort_by = "id";
+        }
+
+        $query .= " ORDER BY ";
+        switch ($this->sort_by) {
+            case 'name':
+                $query .= "full_name ASC";
+                break;
+            case 'date':
+                $query .= "date_add DESC";
+                break;
+            case 'id':
+                $query .= "sfo.entity_id DESC";
+                break;
+        }
+
+        $query .= sprintf(" LIMIT %d, %d", (($this->page - 1)*$this->show), $this->show);
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            while($row = $this->rLink->results($result)) {
+                $this->_price_format($row['iso_code'], 1, $row['total_paid']);
+                $row['customer'] = $row['firstname'] . ' ' . $row['lastname'];
+                $orders[] = $row;
+            }
+        }
+
+        $result_page = $this->rLink->query($query_page);
+        if($this->rLink->affected($result_page)) {
+            $row_page = $this->rLink->results($result_page);
         }
         if($row_page['count_ords'] > 0) {
             $max_date = date("n/j/Y", strtotime($row_page['max_date']));
@@ -2176,23 +2775,26 @@ class MagentoSA extends MainSA {
     public function get_orders_statuses() {
         $orders_status = array();
         $query = "SELECT status AS st_id, label AS st_name FROM ".$this->sDBPrefix."sales_order_status";
-        $result_status = mysql_query($query);
-        while($row = mysql_fetch_assoc($result_status)) {
-            $orders_status[] = $row;
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            while($row = $this->rLink->results($result)) {
+                $orders_status[] = $row;
+            }
         }
         return $orders_status;
     }
 
     public function get_orders_info() {
+        $offset = $this->_get_timezone_offset();
         $order_products = array();
         $order_info = array();
         $query = "SELECT
 					o.entity_id AS id_order,
-					o.status,
+					sos.label AS status,
 					o.base_grand_total AS total_paid,
 					CONCAT(o.customer_firstname, ' ', o.customer_lastname) AS customer,
 					o.global_currency_code AS iso_code,
-					o.created_at AS date_add,
+					DATE_ADD(o.created_at, INTERVAL ".$offset." HOUR) AS date_add,
 					o.customer_email AS email,
 					o.customer_id AS id_customer,
 					o.base_subtotal AS subtotal,
@@ -2224,12 +2826,15 @@ class MagentoSA extends MainSA {
 				  FROM ".$this->sDBPrefix."sales_flat_order AS o
 				  LEFT JOIN ".$this->sDBPrefix."sales_flat_order_address AS oa_s ON oa_s.entity_id = o.shipping_address_id
 				  LEFT JOIN ".$this->sDBPrefix."sales_flat_order_address AS oa_b ON oa_b.entity_id = o.billing_address_id
-				  WHERE o.entity_id = '".$this->order_id."'";
+				  LEFT JOIN ".$this->sDBPrefix."sales_order_status AS sos ON sos.status = o.status
+				  WHERE o.entity_id = '%d'";
+        $query = sprintf($query, $this->order_id);
 
-        $result = mysql_query($query);
-        $order_info = mysql_fetch_assoc($result);
-        //$date = explode(' ', $order_info['date_add']);
-        //$order_info['date_add'] = $date[0];
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            $order_info = $this->rLink->results($result);
+        }
+
         $iso_code = $order_info['iso_code'];
         $elements = array('total_paid', 'subtotal', 'sh_amount', 'tax_amount', 'd_amount', 'g_total', 't_paid', 't_refunded', 't_due');
         foreach($elements as $element) {
@@ -2252,36 +2857,46 @@ class MagentoSA extends MainSA {
 					sfo.global_currency_code AS iso_code
  				 FROM ".$this->sDBPrefix."sales_flat_order_item AS sfoi
 					LEFT JOIN ".$this->sDBPrefix."sales_flat_order AS sfo ON sfo.entity_id = sfoi.order_id
-				 WHERE sfoi.order_id = '".$this->order_id."'
+				 WHERE sfoi.order_id = '%d'
 					AND ((sfoi.parent_item_id IS NULL)
-					OR (sfoi.parent_item_id = 0))";
+					OR (sfoi.parent_item_id = 0)) LIMIT %d, %d";
+        $query = sprintf($query, $this->order_id, ($this->page - 1)*$this->show, $this->show);
+
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            while($row = $this->rLink->results($result)) {
+                $row['product_price'] = $this->_price_format($order_info['iso_code'], 1, $row['product_price']);
+                $row['product_quantity'] = intval($row['product_quantity']);
+                //$row['product_name'] = utf8_encode($row['product_name']);
+                $order_products[] = $row;
+            }
+        }
+
         $query_page = "SELECT COUNT(item_id) AS count_prods
 					   FROM ".$this->sDBPrefix."sales_flat_order_item
-					   WHERE order_id = '".$this->order_id."' AND ((parent_item_id IS NULL) OR (parent_item_id = 0))";
-        $result_page = mysql_query($query_page);
-        $row_page = mysql_fetch_assoc($result_page);
-        $query .= " LIMIT ".($this->page - 1)*$this->show." , ".$this->show;
-        $result = mysql_query($query);
-        while($row = mysql_fetch_assoc($result)) {
-            $row['product_price'] = $this->_price_format($order_info['iso_code'], 1, $row['product_price']);
-            $row['product_quantity'] = intval($row['product_quantity']);
-            $row['product_name'] = utf8_encode($row['product_name']);
-            $order_products[] = $row;
+					   WHERE order_id = '%d' AND ((parent_item_id IS NULL) OR (parent_item_id = 0))";
+        $query_page = sprintf($query_page, $this->order_id);
+
+        $result = $this->rLink->query($query_page);
+        if($this->rLink->affected($result)) {
+            $row_page = $this->rLink->results($result);
         }
+
         $order_full_info = array("order_info" => $order_info, "order_products" => $order_products, "o_products_count" => $row_page['count_prods']);
         return $order_full_info;
     }
 
     public function get_customers() {
+        $offset = $this->_get_timezone_offset();
         $customers = array();
         if(!empty($this->customers_from)) {
-            $query_where_parts[] = " UNIX_TIMESTAMP(c.created_at) >= '".strtotime($this->customers_from." 00:00:00")."'";
+            $query_where_parts[] = sprintf(" UNIX_TIMESTAMP(DATE_ADD(c.created_at, INTERVAL ".$offset." HOUR)) >= '%d'", strtotime($this->customers_from." 00:00:00"));
         }
         if(!empty($this->customers_to)) {
-            $query_where_parts[] = " UNIX_TIMESTAMP(c.created_at) <= '".strtotime($this->customers_to." 23:59:59")."'";
+            $query_where_parts[] = sprintf(" UNIX_TIMESTAMP(DATE_ADD(c.created_at, INTERVAL ".$offset." HOUR)) <= '%d'", strtotime($this->customers_to." 23:59:59"));
         }
         if(!empty($this->search_val)) {
-            $query_where_parts[] = " (c.email LIKE '%".$this->search_val."%' OR f.value LIKE '%".$this->search_val."%' OR m.value LIKE '%".$this->search_val."%' OR l.value LIKE '%".$this->search_val."%')";
+            $query_where_parts[] = sprintf(" (c.email LIKE '%%%s%%' OR f.value LIKE '%%%s%%' OR m.value LIKE '%%%s%%' OR l.value LIKE '%%%s%%' OR CONCAT(f.value, ' ', l.value) LIKE '%%%s%%')", $this->search_val, $this->search_val, $this->search_val, $this->search_val, $this->search_val);
         }
         if(!empty($this->cust_with_orders)) {
             $query_where_parts[] = " tot.total_orders > 0";
@@ -2293,7 +2908,8 @@ class MagentoSA extends MainSA {
 					f.value AS firstname,
 					m.value AS middlename,
 					l.value AS lastname,
-					c.created_at AS date_add,
+					CONCAT(f.value, ' ', l.value) AS full_name,
+					DATE_ADD(c.created_at, INTERVAL ".$offset." HOUR) AS date_add,
 					c.email,
 					IFNULL(tot.total_orders, 0) AS total_orders
 				  FROM ".$this->sDBPrefix."customer_entity AS c
@@ -2302,7 +2918,7 @@ class MagentoSA extends MainSA {
 				    LEFT JOIN ".$this->sDBPrefix."customer_entity_varchar AS m ON m.entity_id = c.entity_id AND m.attribute_id = '".$cust_attr_ids['middlename']."'
 				    LEFT JOIN ".$this->sDBPrefix."customer_entity_varchar AS l ON l.entity_id = c.entity_id AND l.attribute_id = '".$cust_attr_ids['lastname']."'";
 
-        $query_page = "SELECT COUNT(c.entity_id) AS count_custs, MAX(c.created_at) AS max_date, MIN(c.created_at) AS min_date FROM  ".$this->sDBPrefix."customer_entity AS c
+        $query_page = "SELECT COUNT(c.entity_id) AS count_custs, MAX(DATE_ADD(c.created_at, INTERVAL ".$offset." HOUR)) AS max_date, MIN(DATE_ADD(c.created_at, INTERVAL ".$offset." HOUR)) AS min_date FROM  ".$this->sDBPrefix."customer_entity AS c
                         LEFT OUTER JOIN (SELECT COUNT(entity_id) AS total_orders, customer_id FROM ".$this->sDBPrefix."sales_flat_order GROUP BY customer_id) AS tot ON tot.customer_id = c.entity_id
                         LEFT JOIN ".$this->sDBPrefix."customer_entity_varchar AS f ON f.entity_id = c.entity_id AND f.attribute_id = '".$cust_attr_ids['firstname']."'
 				        LEFT JOIN ".$this->sDBPrefix."customer_entity_varchar AS m ON m.entity_id = c.entity_id AND m.attribute_id = '".$cust_attr_ids['middlename']."'
@@ -2311,34 +2927,58 @@ class MagentoSA extends MainSA {
             $query .= " WHERE " . implode(" AND ", $query_where_parts);
             $query_page .= " WHERE " . implode(" AND ", $query_where_parts);
         }
-        $query .= " LIMIT ".($this->page - 1)*$this->show." , ".$this->show;
-        $result_page = mysql_query($query_page);
-        $row_page = mysql_fetch_assoc($result_page);
-        $result = mysql_query($query);
-        while($row = mysql_fetch_assoc($result)) {
-            $date = explode(' ', $row['date_add']);
-            $row['date_add'] = $date[0];
-            $row['total_orders'] = intval($row['total_orders']);
-            $customers[] = $row;
+
+        if(empty($this->sort_by)) {
+            $this->sort_by = "id";
+        }
+
+        $query .= " ORDER BY ";
+        switch ($this->sort_by) {
+            case 'name':
+                $query .= "full_name ASC";
+                break;
+            case 'date':
+                $query .= "date_add DESC";
+                break;
+            case 'id':
+                $query .= "c.entity_id DESC";
+                break;
+        }
+
+        $query .= sprintf(" LIMIT %d, %d", (($this->page - 1)*$this->show), $this->show);
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            while($row = $this->rLink->results($result)) {
+                $date = explode(' ', $row['date_add']);
+                $row['date_add'] = $date[0];
+                $row['total_orders'] = intval($row['total_orders']);
+                $customers[] = $row;
+            }
+        }
+
+        $result = $this->rLink->query($query_page);
+        if($this->rLink->affected($result)) {
+            $row_page = $this->rLink->results($result);
         }
         if($row_page['count_custs'] > 0) {
             $max_date = date("n/j/Y", strtotime($row_page['max_date']));
             $min_date = date("n/j/Y", strtotime($row_page['min_date']));
         }
-        return array("customers_count" => $row_page['count_custs'],
+        return array("customers_count" => intval($row_page['count_custs']),
             "customers" => $customers,
             "max_date" => $max_date,
             "min_date" => $min_date);
     }
 
     public function get_customers_info() {
+        $offset = $this->_get_timezone_offset();
         $customer_orders = array();
         $cust_attr_ids = $this->_get_customers_attr($this->user_id);
 
         $query = "SELECT
 					c.entity_id,
 					c.email,
-					c.created_at AS date_add,
+					DATE_ADD(c.created_at, INTERVAL ".$offset." HOUR) AS date_add,
 					f.value AS firstname,
 					m.value AS middlename,
 					l.value AS lastname,
@@ -2359,11 +2999,13 @@ class MagentoSA extends MainSA {
 					LEFT JOIN ".$this->sDBPrefix."customer_address_entity_varchar AS region ON cae.entity_id = region.entity_id AND region.attribute_id = '".$cust_attr_ids['region']."'
 					LEFT JOIN ".$this->sDBPrefix."customer_address_entity_varchar AS country ON cae.entity_id = country.entity_id AND country.attribute_id = '".$cust_attr_ids['country_id']."'
 					LEFT JOIN ".$this->sDBPrefix."customer_address_entity_text AS street ON cae.entity_id = street.entity_id AND street.attribute_id = '".$cust_attr_ids['street']."'
-				  WHERE c.entity_id = '".$this->user_id."'";
+				  WHERE c.entity_id = '%d'";
+        $query = sprintf($query, $this->user_id);
 
-        $result = mysql_query($query);
-        if(mysql_num_rows($result) > 0) {
-            $user_info = mysql_fetch_assoc($result);
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            $user_info = $this->rLink->results($result);
+            $user_info['id_customer'] = $user_info['entity_id'];
             $locales = simplexml_load_file("lib/Zend/Locale/Data/en.xml");
             $country_name = $locales->xpath("//localeDisplayNames/territories/territory[@type='".$user_info['country_code']."']");
             $user_info['country_name'] = (string)$country_name[0];
@@ -2371,22 +3013,28 @@ class MagentoSA extends MainSA {
             $user_info['address'] = $this->split_values($user_info, array('street', 'city', 'region', 'postcode', 'country_name'));
             unset($user_info['country_name']);
 
+            $query_page = "SELECT COUNT(entity_id) AS count_ords, SUM(base_grand_total) AS sum_ords FROM ".$this->sDBPrefix."sales_flat_order WHERE customer_id = '%d'";
+            $query_page = sprintf($query_page, $this->user_id);
+
+            $result_page = $this->rLink->query($query_page);
+            if($this->rLink->affected($result_page)) {
+                $row_page = $this->rLink->results($result_page);
+            }
+
             $query = "SELECT
                         entity_id AS id_order,
                         status AS ord_status,
                         total_item_count AS pr_qty,
                         base_grand_total AS total_paid,
                         global_currency_code AS iso_code,
-                        created_at AS date_add
+                        DATE_ADD(created_at, INTERVAL ".$offset." HOUR) AS date_add
                       FROM ".$this->sDBPrefix."sales_flat_order
-                      WHERE customer_id = '".$this->user_id."'";
-            $query_page = "SELECT COUNT(entity_id) AS count_ords, SUM(base_grand_total) AS sum_ords FROM ".$this->sDBPrefix."sales_flat_order WHERE customer_id = '".$this->user_id."'";
-            $result_page = mysql_query($query_page);
-            $row_page = mysql_fetch_assoc($result_page);
-            $query .= " LIMIT ".($this->page - 1)*$this->show." , ".$this->show;
-            $result = mysql_query($query);
-            if(mysql_num_rows($result) > 0) {
-                while($row = mysql_fetch_assoc($result)) {
+                      WHERE customer_id = '%d' ORDER BY entity_id DESC LIMIT %d, %d";
+            $query = sprintf($query, $this->user_id, ($this->page - 1)*$this->show, $this->show);
+
+            $result = $this->rLink->query($query);
+            if($this->rLink->affected($result)) {
+                while($row = $this->rLink->results($result)) {
                     $row['total_paid'] = $this->_price_format($row['iso_code'], 1, $row['total_paid']);
                     $row['pr_qty'] = intval($row['pr_qty']);
                     $customer_orders[] = $row;
@@ -2406,25 +3054,32 @@ class MagentoSA extends MainSA {
         foreach($this->params as $param) {
             switch ($param) {
                 case 'pr_id':
-                    $query_where_parts[] = " cpe.entity_id = '".$this->val."'";
+                    $query_where_parts[] = sprintf(" cpe.entity_id = '%s'", $this->val);
                     break;
                 case 'pr_sku':
-                    $query_where_parts[] = " cpe.sku = '".$this->val."'";
+                    $query_where_parts[] = sprintf(" cpe.sku = '%s'", $this->val);
                     break;
                 case 'pr_name':
-                    $query_where_parts[] = " name.value LIKE '%".$this->val."%'";
-                    $query_where_parts[] = " df_name.value LIKE '%".$this->val."%'";
+                    $query_where_parts[] = sprintf(" name.value LIKE '%%%s%%'", $this->val);
+                    $query_where_parts[] = sprintf(" df_name.value LIKE '%%%s%%'", $this->val);
                     break;
                 case 'pr_desc':
-                    $query_where_parts[] = " descr.value LIKE '%".$this->val."%'";
+                    $query_where_parts[] = sprintf(" descr.value LIKE '%%%s%%'", $this->val);
                     break;
                 case 'pr_short_desc':
-                    $query_where_parts[] = " short_desc.value LIKE '%".$this->val."%'";
-                    $query_where_parts[] = " df_short_desc.value LIKE '%".$this->val."%'";
+                    $query_where_parts[] = sprintf(" short_desc.value LIKE '%%%s%%'", $this->val);
+                    $query_where_parts[] = sprintf(" df_short_desc.value LIKE '%%%s%%'", $this->val);
                     break;
             }
         }
-        $query = "SELECT cpe.entity_id AS main_id, IFNULL(name.value, df_name.value) AS name, price.value AS price, sp_price.value AS spec_price, qty.qty AS quantity, cpe.sku
+        $query = "SELECT
+                    cpe.entity_id AS main_id,
+                    cpe.entity_id AS product_id,
+                    IFNULL(name.value, df_name.value) AS name,
+                    price.value AS price,
+                    sp_price.value AS spec_price,
+                    qty.qty AS quantity,
+                    cpe.sku
 				  FROM ".$this->sDBPrefix."catalog_product_entity AS cpe
 					  LEFT JOIN ".$this->sDBPrefix."catalog_product_entity_varchar AS name ON name.entity_id = cpe.entity_id AND name.attribute_id = '".$prods_attr_ids['name']."' AND name.store_id = '".$prods_attr_ids['store_id']."'
 					  LEFT JOIN ".$this->sDBPrefix."catalog_product_entity_varchar AS df_name ON df_name.entity_id = cpe.entity_id AND df_name.attribute_id = '".$prods_attr_ids['name']."' AND df_name.store_id = 0
@@ -2434,8 +3089,7 @@ class MagentoSA extends MainSA {
 					  LEFT JOIN ".$this->sDBPrefix."catalog_product_entity_varchar AS descr ON descr.entity_id = cpe.entity_id AND descr.attribute_id = '".$prods_attr_ids['description']."'
 					  LEFT JOIN ".$this->sDBPrefix."catalog_product_entity_text AS short_desc ON short_desc.entity_id = cpe.entity_id AND short_desc.attribute_id = '".$prods_attr_ids['short_description']."' AND short_desc.store_id = '".$prods_attr_ids['store_id']."'
 					  LEFT JOIN ".$this->sDBPrefix."catalog_product_entity_text AS df_short_desc ON df_short_desc.entity_id = cpe.entity_id AND df_short_desc.attribute_id = '".$prods_attr_ids['short_description']."' AND df_short_desc.store_id = 0
-				  WHERE IF (cpe.type_id = 'configurable' OR cpe.type_id = 'bundle', cpe.has_options = 1, '1=1')
-				 ";
+				  WHERE IF (cpe.type_id = 'configurable' OR cpe.type_id = 'bundle', cpe.has_options = 1, '1=1')";
         $query_page = "SELECT COUNT(cpe.entity_id) AS count_prods
 					   FROM ".$this->sDBPrefix."catalog_product_entity AS cpe
 							LEFT JOIN ".$this->sDBPrefix."catalog_product_entity_varchar AS name ON name.entity_id = cpe.entity_id AND name.attribute_id = '".$prods_attr_ids['name']."' AND name.store_id = '".$prods_attr_ids['store_id']."'
@@ -2445,51 +3099,85 @@ class MagentoSA extends MainSA {
 							LEFT JOIN ".$this->sDBPrefix."catalog_product_entity_varchar AS descr ON descr.entity_id = cpe.entity_id AND descr.attribute_id = '".$prods_attr_ids['description']."'
 							LEFT JOIN ".$this->sDBPrefix."catalog_product_entity_text AS short_desc ON short_desc.entity_id = cpe.entity_id AND short_desc.attribute_id = '".$prods_attr_ids['short_description']."' AND short_desc.store_id = '".$prods_attr_ids['store_id']."'
 							LEFT JOIN ".$this->sDBPrefix."catalog_product_entity_text AS df_short_desc ON df_short_desc.entity_id = cpe.entity_id AND df_short_desc.attribute_id = '".$prods_attr_ids['short_description']."' AND df_short_desc.store_id = 0
-					  WHERE IF (cpe.type_id = 'configurable' OR cpe.type_id = 'bundle', cpe.has_options = 1, '1=1')
-					";
+					  WHERE IF (cpe.type_id = 'configurable' OR cpe.type_id = 'bundle', cpe.has_options = 1, '1=1')";
         if (!empty($query_where_parts)) {
             $query .= " AND ( " . implode(" OR ", $query_where_parts) . " )";
             $query_page .= " AND ( " . implode(" OR ", $query_where_parts) . " )";
         }
-        $query .= " LIMIT ".($this->page - 1)*$this->show." , ". $this->show;
-        $result_page = mysql_query($query_page);
-        $row_page = mysql_fetch_assoc($result_page);
-        $result = mysql_query($query);
-        while($row = mysql_fetch_assoc($result)) {
-            $row['price'] = $this->_price_format($this->_get_default_currency(), 1, $row['price']);
-            if($row['spec_price'] > 0 && $row['spec_price'] != '') {
-                $row['spec_price'] = $this->_price_format($this->_get_default_currency(), 1, $row['spec_price']);
-            } else {
-                unset($row['spec_price']);
-            }
-            $row['quantity'] = intval($row['quantity']);
-            $row['name'] = utf8_encode($row['name']);
-            $products[] = $row;
+
+        if(empty($this->sort_by)) {
+            $this->sort_by = "id";
         }
-        return array("products_count" => $row_page['count_prods'], "products" => $products);
+
+        $query .= " ORDER BY ";
+        switch ($this->sort_by) {
+            case 'name':
+                $query .= "name ASC";
+                break;
+            case 'id':
+                $query .= "product_id DESC";
+                break;
+        }
+
+        $query .= sprintf(" LIMIT %d, %d", (($this->page - 1)*$this->show), $this->show);
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            while($row = $this->rLink->results($result)) {
+                $row['price'] = $this->_price_format($this->_get_default_currency(), 1, $row['price']);
+                if($row['spec_price'] > 0 && $row['spec_price'] != '') {
+                    $row['spec_price'] = $this->_price_format($this->_get_default_currency(), 1, $row['spec_price']);
+                } else {
+                    unset($row['spec_price']);
+                }
+                $row['quantity'] = intval($row['quantity']);
+                //$row['name'] = utf8_encode($row['name']);
+                $products[] = $row;
+            }
+        }
+
+        $result = $this->rLink->query($query_page);
+        if($this->rLink->affected($result)) {
+            $row_page = $this->rLink->results($result);
+        }
+        return array("products_count" => intval($row_page['count_prods']), "products" => $products);
     }
 
     public function search_products_ordered() {
+        $offset = $this->_get_timezone_offset();
         $query_where_parts = array();
         $this->params = explode("|", $this->params);
         foreach($this->params as $param) {
             switch ($param) {
                 case 'pr_id':
-                    $query_where_parts[] = " sfoi.product_id = '".$this->val."'";
+                    $query_where_parts[] = sprintf(" sfoi.product_id = '%s'", $this->val);
                     break;
                 case 'pr_sku':
-                    $query_where_parts[] = " sfoi.sku  = '".$this->val."'";
+                    $query_where_parts[] = sprintf(" sfoi.sku  = '%s'", $this->val);
                     break;
                 case 'pr_name':
-                    $query_where_parts[] = " sfoi.name LIKE '%".$this->val."%'";
+                    $query_where_parts[] = sprintf(" sfoi.name LIKE '%%%s%%'", $this->val);
                     break;
             }
         }
         if(!empty($this->products_from)) {
-            $query_where_parts[] = " UNIX_TIMESTAMP(sfo.created_at) >= '".strtotime($this->products_from." 00:00:00")."'";
+            $query_where_parts[] = sprintf(" UNIX_TIMESTAMP(DATE_ADD(sfo.created_at, INTERVAL ".$offset." HOUR)) >= '%d'", strtotime($this->products_from." 00:00:00"));
         }
         if(!empty($this->products_to)) {
-            $query_where_parts[] = " UNIX_TIMESTAMP(sfo.created_at) <= '".strtotime($this->products_to." 23:59:59")."'";
+            $query_where_parts[] = sprintf(" UNIX_TIMESTAMP(DATE_ADD(sfo.created_at, INTERVAL ".$offset." HOUR)) <= '%d'", strtotime($this->products_to." 23:59:59"));
+        }
+
+        if(!empty($this->statuses)) {
+            $statuses = explode("|", $this->statuses);
+            if(!empty($statuses)) {
+                $stat = array();
+                foreach($statuses as $status) {
+                    if($status != "") {
+                        $stat[] = $status;
+                    }
+                }
+                $this->statuses = implode("','", $stat);
+                $query_where_parts[] = sprintf(" sfo.status IN ('%s')", $this->statuses);
+            }
         }
 
         $query = "SELECT
@@ -2501,12 +3189,12 @@ class MagentoSA extends MainSA {
 					(sfoi.original_price*sfoi.qty_ordered) AS orig_price,
 					sfoi.sku AS sku,
 					sfo.global_currency_code AS iso_code,
-					sfo.created_at,
+					DATE_ADD(sfo.created_at, INTERVAL ".$offset." HOUR),
 					sfo.status
  				 FROM ".$this->sDBPrefix."sales_flat_order_item AS sfoi
 					LEFT JOIN ".$this->sDBPrefix."sales_flat_order AS sfo ON sfo.entity_id = sfoi.order_id";
 
-        $query_page = "SELECT COUNT(sfoi.order_id) AS count_prods, MAX(sfo.created_at) AS max_date, MIN(sfo.created_at) AS min_date
+        $query_page = "SELECT COUNT(sfoi.order_id) AS count_prods, MAX(DATE_ADD(sfo.created_at, INTERVAL ".$offset." HOUR)) AS max_date, MIN(DATE_ADD(sfo.created_at, INTERVAL ".$offset." HOUR)) AS min_date
                        FROM ".$this->sDBPrefix."sales_flat_order_item AS sfoi
                          LEFT JOIN ".$this->sDBPrefix."sales_flat_order AS sfo ON sfo.entity_id = sfoi.order_id";
 
@@ -2515,21 +3203,39 @@ class MagentoSA extends MainSA {
             $query_page .= " WHERE " . implode(" AND ", $query_where_parts);
         }
 
-        $result_page = mysql_query($query_page);
-        $row_page = mysql_fetch_assoc($result_page);
-        $query .= " LIMIT ".($this->page - 1)*$this->show." , ".$this->show;
-        $result = mysql_query($query);
+        if(empty($this->sort_by)) {
+            $this->sort_by = "id";
+        }
 
-        while($row = mysql_fetch_assoc($result)) {
-            $row['price'] = $this->_price_format($row['iso_code'], 1, $row['price']);
-            if($row['orig_price'] > 0) {
-                $row['orig_price'] = $this->_price_format($row['iso_code'], 1, $row['orig_price']);
-            } else {
-                unset($row['orig_price']);
+        $query .= " ORDER BY ";
+        switch ($this->sort_by) {
+            case 'name':
+                $query .= "name ASC";
+                break;
+            case 'id':
+                $query .= "sfoi.product_id DESC";
+                break;
+        }
+
+        $query .= sprintf(" LIMIT %d, %d", (($this->page - 1)*$this->show), $this->show);
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            while($row = $this->rLink->results($result)) {
+                $row['price'] = $this->_price_format($row['iso_code'], 1, $row['price']);
+                if($row['orig_price'] > 0) {
+                    $row['orig_price'] = $this->_price_format($row['iso_code'], 1, $row['orig_price']);
+                } else {
+                    unset($row['orig_price']);
+                }
+                $row['quantity'] = intval($row['quantity']);
+                //$row['name'] = utf8_encode($row['name']);
+                $order_products[] = $row;
             }
-            $row['quantity'] = intval($row['quantity']);
-            $row['name'] = utf8_encode($row['name']);
-            $order_products[] = $row;
+        }
+
+        $result = $this->rLink->query($query_page);
+        if($this->rLink->affected($result)) {
+            $row_page = $this->rLink->results($result);
         }
 
         if($row_page['count_prods'] > 0) {
@@ -2537,7 +3243,7 @@ class MagentoSA extends MainSA {
             $min_date = date("n/j/Y", strtotime($row_page['min_date']));
         }
 
-        return array("products_count" => $row_page['count_prods'],
+        return array("products_count" => intval($row_page['count_prods']),
             "products" => $order_products,
             "max_date" => $max_date,
             "min_date" => $min_date);
@@ -2545,7 +3251,6 @@ class MagentoSA extends MainSA {
 
     public function get_products_info() {
         $prods_attr_ids = $this->_get_products_attr();
-        $row = false;
         $query = "SELECT cpe.entity_id AS id_product, name.value AS name, price.value AS price, sp_price.value AS spec_price, qty.qty AS quantity, cpe.sku,
 					IF(status.value = 1, 'Enabled', 'Disabled') AS active,
 					(SELECT SUM(qty_ordered) FROM ".$this->sDBPrefix."sales_flat_order_item WHERE product_id = cpe.entity_id) AS total_ordered,
@@ -2558,10 +3263,12 @@ class MagentoSA extends MainSA {
 					LEFT JOIN ".$this->sDBPrefix."catalog_product_entity_varchar AS descr ON descr.entity_id = cpe.entity_id AND descr.attribute_id = '".$prods_attr_ids['description']."'
 					LEFT JOIN ".$this->sDBPrefix."catalog_product_entity_text AS short_desc ON short_desc.entity_id = cpe.entity_id AND short_desc.attribute_id = '".$prods_attr_ids['short_description']."'
 					LEFT JOIN ".$this->sDBPrefix."catalog_product_entity_int AS status ON status.entity_id = cpe.entity_id AND status.attribute_id = '".$prods_attr_ids['status']."'
-				  WHERE cpe.entity_id = '".$this->product_id."'";
-        $result = mysql_query($query);
-        if(mysql_num_rows($result) > 0) {
-            $row = mysql_fetch_assoc($result);
+				  WHERE cpe.entity_id = '%d'";
+        $query = sprintf($query, $this->product_id);
+
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            $row = $this->rLink->results($result);
             $row['price'] = $this->_price_format($this->_get_default_currency(), 1, $row['price']);
             if($row['spec_price'] > 0 && $row['spec_price'] != '') {
                 $row['spec_price'] = $this->_price_format($this->_get_default_currency(), 1, $row['spec_price']);
@@ -2569,14 +3276,15 @@ class MagentoSA extends MainSA {
                 unset($row['spec_price']);
             }
             $row['quantity'] = intval($row['quantity']);
-            $row['name'] = utf8_encode($row['name']);
+            //$row['name'] = utf8_encode($row['name']);
             $row['total_ordered'] = intval($row['total_ordered']);
             $id_image_path = "/media/catalog/product".$row['image'];
             if(file_exists(realpath(dirname(__FILE__).$id_image_path)) && is_file(realpath(dirname(__FILE__).$id_image_path))) {
                 $row['id_image'] = $this->site_url . $id_image_path;
             }
+            return $row;
         }
-        return $row;
+        return false;
     }
 
     public function get_products_descr() {
@@ -2585,16 +3293,21 @@ class MagentoSA extends MainSA {
 				  FROM ".$this->sDBPrefix."catalog_product_entity AS cpe
 					LEFT JOIN ".$this->sDBPrefix."catalog_product_entity_varchar AS descr ON descr.entity_id = cpe.entity_id AND descr.attribute_id = '".$prods_attr_ids['description']."'
 					LEFT JOIN ".$this->sDBPrefix."catalog_product_entity_text AS df_descr ON df_descr.entity_id = cpe.entity_id AND df_descr.attribute_id = '".$prods_attr_ids['description']."' AND df_descr.store_id = 0
-				  WHERE cpe.entity_id = '".$this->product_id."'";
-        $row = mysql_fetch_assoc(mysql_query($query));
+				  WHERE cpe.entity_id = '%d'";
+        $query = sprintf($query, $this->product_id);
 
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            $row = $this->rLink->results($result);
+        }
         return $row;
     }
 
     private function _get_default_currency() {
-        $result = mysql_query("SELECT value FROM ".$this->sDBPrefix."core_config_data WHERE path = 'currency/options/base'");
-        if(mysql_num_rows($result) == 1) {
-            $row = mysql_fetch_assoc($result);
+        $query = "SELECT value FROM ".$this->sDBPrefix."core_config_data WHERE path = 'currency/options/base'";
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            $row = $this->rLink->results($result);
             return $row['value'];
         }
 
@@ -2606,7 +3319,7 @@ class MagentoSA extends MainSA {
 
     private function _price_format($iso_code, $curr_format, &$price, $force = false, $format = true) {
         if($format) {
-            $price = number_format($price, 2, '.', '');
+            $price = number_format($price, 2, '.', ' ');
         }
         if($iso_code == 'USD') {
             $currency_sign = '$';
@@ -2632,28 +3345,33 @@ class MagentoSA extends MainSA {
     private function _get_customers_attr($user_id = false) {
         $customers_attrs = array('default_billing' => false, 'default_shipping' => false);
 
-        $result = mysql_query("SELECT attribute_code, attribute_id FROM ".$this->sDBPrefix."eav_attribute
+        $query = "SELECT attribute_code, attribute_id FROM ".$this->sDBPrefix."eav_attribute
 							   WHERE
 								(attribute_code IN ('firstname', 'lastname', 'middlename')
 									AND entity_type_id = (SELECT entity_type_id FROM ".$this->sDBPrefix."eav_entity_type WHERE entity_type_code = 'customer'))
 								OR (attribute_code IN ('city', 'street', 'country_id', 'telephone', 'region', 'postcode')
-									AND entity_type_id = (SELECT entity_type_id FROM ".$this->sDBPrefix."eav_entity_type WHERE entity_type_code = 'customer_address'))");
-        while($row = mysql_fetch_assoc($result)) {
-            $customers_attrs[$row['attribute_code']] = $row['attribute_id'];
+									AND entity_type_id = (SELECT entity_type_id FROM ".$this->sDBPrefix."eav_entity_type WHERE entity_type_code = 'customer_address'))";
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            while($row = $this->rLink->results($result)) {
+                $customers_attrs[$row['attribute_code']] = $row['attribute_id'];
+            }
         }
 
         if(intval($user_id)) {
-            $result = mysql_query("SELECT value FROM ".$this->sDBPrefix."customer_entity_int
-							   WHERE entity_id = '".intval($user_id)."' AND attribute_id = (SELECT attribute_id FROM ".$this->sDBPrefix."eav_attribute WHERE attribute_code = 'default_billing')");
-            if(mysql_num_rows($result) > 0) {
-                $row = mysql_fetch_assoc($result);
+            $query = "SELECT value FROM ".$this->sDBPrefix."customer_entity_int
+							   WHERE entity_id = '".intval($user_id)."' AND attribute_id = (SELECT attribute_id FROM ".$this->sDBPrefix."eav_attribute WHERE attribute_code = 'default_billing')";
+            $result = $this->rLink->query($query);
+            if($this->rLink->affected($result)) {
+                $row = $this->rLink->results($result);
                 $customers_attrs['default_billing'] = $row['value'];
             }
 
-            $result = mysql_query("SELECT value FROM ".$this->sDBPrefix."customer_entity_int
-							   WHERE entity_id = '".intval($user_id)."' AND attribute_id = (SELECT attribute_id FROM ".$this->sDBPrefix."eav_attribute WHERE attribute_code = 'default_shipping')");
-            if(mysql_num_rows($result) > 0) {
-                $row = mysql_fetch_assoc($result);
+            $query = "SELECT value FROM ".$this->sDBPrefix."customer_entity_int
+							   WHERE entity_id = '".intval($user_id)."' AND attribute_id = (SELECT attribute_id FROM ".$this->sDBPrefix."eav_attribute WHERE attribute_code = 'default_shipping')";
+            $result = $this->rLink->query($query);
+            if($this->rLink->affected($result)) {
+                $row = $this->rLink->results($result);
                 $customers_attrs['default_shipping'] = $row['value'];
             }
         }
@@ -2669,11 +3387,32 @@ class MagentoSA extends MainSA {
 					AND entity_type_id = (SELECT entity_type_id FROM ".$this->sDBPrefix."eav_entity_type WHERE entity_type_code = 'catalog_product')
 				  UNION
 					SELECT 'store_id' AS attribute_code, default_store_id AS attribute_id FROM ".$this->sDBPrefix."core_store_group WHERE group_id = (SELECT default_group_id FROM ".$this->sDBPrefix."core_website WHERE `is_default` = 1)";
-        $result = mysql_query($query);
-        while($row = mysql_fetch_assoc($result)) {
-            $products_attrs[$row['attribute_code']] = $row['attribute_id'];
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            while($row = $this->rLink->results($result)) {
+                $products_attrs[$row['attribute_code']] = $row['attribute_id'];
+            }
         }
         return $products_attrs;
+    }
+
+    private function _get_timezone_offset() {
+        $offset = 0;
+
+        $query = "SELECT value FROM ".$this->sDBPrefix."core_config_data WHERE path = 'general/locale/timezone'";
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            $row = $this->rLink->results($result);
+            $timezone = $row['value'];
+
+            $origin_dtz = new DateTimeZone("UTC");
+            $remote_dtz = new DateTimeZone($timezone);
+            $origin_dt = new DateTime("now", $origin_dtz);
+            $remote_dt = new DateTime("now", $remote_dtz);
+            $offset = $remote_dtz->getOffset($remote_dt) - $origin_dtz->getOffset($origin_dt);
+            $offset =  $offset / 60 / 60;
+        }
+        return $offset;
     }
 }
 
@@ -2682,27 +3421,36 @@ class VirtueMartv2xSA extends MainSA {
     public function get_store_title() {
         $title = '';
         $active_language = $this->_get_active_languages();
-        $query = "SELECT vendor_store_name FROM  ".$this->sDBCartPrefix."vendors_".$active_language;
-        if($result = mysql_query($query)) {
-            $row = mysql_fetch_assoc($result);
+        if($active_language != "") {
+            $active_language = "_" . $active_language;
+        }
+
+        $query = "SELECT vendor_store_name FROM ".$this->sDBCartPrefix."vendors".$active_language;
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            $row = $this->rLink->results($result);
             $title = $row['vendor_store_name'];
         }
         return array('test' => 1, 'title' => $title);
     }
 
     public function get_store_stats() {
-        $store_stats = array('count_orders' => "0", 'total_sales' => "0", 'count_customers' => "0", "last_order_id" => "0", "new_orders" => "0");
-        /*
-        if(!empty($this->date_from)) {
-            $query_where_parts[] = " UNIX_TIMESTAMP(created_on) >= '".strtotime($this->date_from." 00:00:00")."'";
-        }
-        if(!empty($this->date_to)) {
-            $query_where_parts[] = " UNIX_TIMESTAMP(created_on) <= '".strtotime($this->date_to." 23:59:59")."'";
-        }
-        */
+        $store_stats = array('count_orders' => "0", 'total_sales' => "0", 'count_customers' => "0", 'count_products' => "0", "last_order_id" => "0", "new_orders" => "0");
+
         $today = date("Y-m-d", time());
-        $query_where_parts[] = " UNIX_TIMESTAMP(created_on) >= '".strtotime($today . " 00:00:00")."'";
-        $query_where_parts[] = " UNIX_TIMESTAMP(created_on) <= '".strtotime($today . " 23:59:59")."'";
+        $date_from = $date_to = $today;
+
+        if(!empty($this->stats_from)) {
+            $date_from = $this->stats_from;
+        }
+
+        if(!empty($this->stats_to)) {
+            $date_to = $this->stats_to;
+        }
+
+        $query_where_parts[] = sprintf(" UNIX_TIMESTAMP(o.created_on) >= '%d'", strtotime($date_from . " 00:00:00"));
+        $query_where_parts[] = sprintf(" UNIX_TIMESTAMP(o.created_on) <= '%d'", strtotime($date_to . " 23:59:59"));
+
         if(!empty($this->statuses)) {
             $statuses = explode("|", $this->statuses);
             if(!empty($statuses)) {
@@ -2713,35 +3461,52 @@ class VirtueMartv2xSA extends MainSA {
                     }
                 }
                 $parse_statuses = implode("','", $stat);
-                $query_where_parts[] = " order_status IN ('".$parse_statuses."')";
+                $query_where_parts[] = sprintf(" o.order_status IN ('%s')", $parse_statuses);
             }
         }
 
-        $query = "SELECT COUNT(virtuemart_order_id) AS count_orders, SUM(order_total) AS total_sales, user_currency_id, order_currency
-				  FROM ".$this->sDBCartPrefix."orders";
+        $query = "SELECT COUNT(o.virtuemart_order_id) AS count_orders, SUM(o.order_total) AS total_sales, o.user_currency_id, o.order_currency
+				  FROM ".$this->sDBCartPrefix."orders AS o";
 
         if(!empty($query_where_parts)) {
             $query .= " WHERE " . implode(" AND ", $query_where_parts);
         }
 
-        $result = mysql_query($query);
-        if(mysql_num_rows($result) > 0) {
-            $row = mysql_fetch_assoc($result);
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            $row = $this->rLink->results($result);
             $convert_price = $this->_currency_convert($row['total_sales'], '', $row['order_currency']);
             $store_stats['count_orders'] = $row['count_orders'];
             $store_stats['total_sales'] = $this->_price_format($this->bd_nice_number($convert_price), 0, true);
         }
 
+
+        $query_prods = "SELECT COUNT(oi.virtuemart_order_id) AS count_products
+				  FROM ".$this->sDBCartPrefix."orders AS o
+				  LEFT JOIN ".$this->sDBCartPrefix."order_items AS oi ON oi.virtuemart_order_id = o.virtuemart_order_id";
+
+        if(!empty($query_where_parts)) {
+            $query_prods .= " WHERE " . implode(" AND ", $query_where_parts);
+        }
+        $result_prods = $this->rLink->query($query_prods);
+        if($this->rLink->affected($result_prods)) {
+            $row_prods = $this->rLink->results($result_prods);
+            $store_stats['count_products'] = $this->bd_nice_number($row_prods['count_products'], true);
+        }
+
+
         if($this->last_order_id != "") {
-            $query_max = "SELECT COUNT(virtuemart_order_id) AS count_orders, MAX(virtuemart_order_id) AS last_order_id
-                          FROM ".$this->sDBCartPrefix."orders
-                          WHERE virtuemart_order_id > ".$this->last_order_id;
+            $query_max = "SELECT COUNT(o.virtuemart_order_id) AS count_orders, MAX(o.virtuemart_order_id) AS last_order_id
+                          FROM ".$this->sDBCartPrefix."orders AS o
+                          WHERE o.virtuemart_order_id > '%d'";
+            $query_max = sprintf($query_max, $this->last_order_id);
+
             if(!empty($query_where_parts)) {
                 $query_max .= " AND " . implode(" AND ", $query_where_parts);
             }
-            $result_max = mysql_query($query_max);
-            if(mysql_num_rows($result_max) > 0) {
-                $row_max = mysql_fetch_assoc($result_max);
+            $result = $this->rLink->query($query_max);
+            if($this->rLink->affected($result)) {
+                $row_max = $this->rLink->results($result);
                 $store_stats['last_order_id'] = intval($this->last_order_id);
                 if(intval($row_max['last_order_id']) > intval($this->last_order_id)) {
                     $store_stats['last_order_id'] = intval($row_max['last_order_id']);
@@ -2751,17 +3516,8 @@ class VirtueMartv2xSA extends MainSA {
         }
 
         unset($query_where_parts);
-        /*
-        if(!empty($this->date_from)) {
-            $query_where_parts[] = " UNIX_TIMESTAMP(ju.registerDate) >= '".strtotime($this->date_from." 00:00:00")."'";
-        }
-        if(!empty($this->date_to)) {
-            $query_where_parts[] = " UNIX_TIMESTAMP(ju.registerDate) <= '".strtotime($this->date_to." 23:59:59")."'";
-        }
-        */
-
-        $query_where_parts[] = " UNIX_TIMESTAMP(ju.registerDate) >= '".strtotime($today . " 00:00:00")."'";
-        $query_where_parts[] = " UNIX_TIMESTAMP(ju.registerDate) <= '".strtotime($today . " 23:59:59")."'";
+        $query_where_parts[] = sprintf(" UNIX_TIMESTAMP(ju.registerDate) >= '%d'", strtotime($date_from . " 00:00:00"));
+        $query_where_parts[] = sprintf(" UNIX_TIMESTAMP(ju.registerDate) <= '%d'", strtotime($date_to . " 23:59:59"));
 
         $query = "SELECT COUNT(u.virtuemart_user_id) AS count_customers FROM ".$this->sDBCartPrefix."vmusers AS u
                   LEFT JOIN ".$this->sDBPrefix."users AS ju ON ju.id = u.virtuemart_user_id
@@ -2771,15 +3527,24 @@ class VirtueMartv2xSA extends MainSA {
             $query .= " AND " . implode(" AND ", $query_where_parts);
         }
 
-        $result = mysql_query($query);
-        if(mysql_num_rows($result) > 0) {
-            $row = mysql_fetch_assoc($result);
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            $row = $this->rLink->results($result);
             $store_stats['count_customers'] = $row['count_customers'];
         }
 
-        $this->graph_to = $today;
-        $this->graph_from = date("Y-m-d", mktime(0, 0, 0, date("m"), date("d")-7, date("Y")));
-        $data_graphs = $this->get_data_graphs();
+
+        if(empty($this->graph_from)) {
+            $this->graph_from = date("Y-m-d", mktime(0, 0, 0, date("m"), date("d")-7, date("Y")));
+        }
+
+        if(empty($this->graph_to)) {
+            $this->graph_to = $this->stats_to;
+        }
+
+        if(!isset($this->data_for_widget) || empty($this->data_for_widget) || $this->data_for_widget != 1) {
+            $data_graphs = $this->get_data_graphs();
+        }
 
         $store_stats['count_orders'] = $this->bd_nice_number($store_stats['count_orders'], true);
         $store_stats['count_customers'] = $this->bd_nice_number($store_stats['count_customers'], true);
@@ -2798,10 +3563,10 @@ class VirtueMartv2xSA extends MainSA {
         $customers = array();
         while ($date <= $endDate) {
             $d++;
-            //Orders
             $query = "SELECT COUNT(virtuemart_order_id) AS tot_orders, UNIX_TIMESTAMP(created_on) AS date_add, SUM(order_total) AS value
                       FROM ".$this->sDBCartPrefix."orders
-                      WHERE UNIX_TIMESTAMP(created_on) >= '".$date."' AND UNIX_TIMESTAMP(created_on) < '".strtotime('+1 day', $date)."'";
+                      WHERE UNIX_TIMESTAMP(created_on) >= '%d' AND UNIX_TIMESTAMP(created_on) < '%d'";
+            $query = sprintf($query, $date, strtotime('+1 day', $date));
 
             if(!empty($this->statuses)) {
                 $statuses = explode("|", $this->statuses);
@@ -2813,66 +3578,76 @@ class VirtueMartv2xSA extends MainSA {
                         }
                     }
                     $parse_statuses = implode("','", $stat);
-                    $query .= " AND order_status IN ('".$parse_statuses."')";
+                    $query .= sprintf(" AND order_status IN ('%s')", $parse_statuses);
                 }
             }
             $query .= " GROUP BY DATE(created_on) ORDER BY created_on";
 
-            $result = mysql_query($query);
-
-            if(mysql_num_rows($result) > 0) {
-                while($row = mysql_fetch_assoc($result)) {
-                    $orders[] = array($row['date_add']*1000, $row['value']);
+            $total_order_per_day = 0;
+            $result = $this->rLink->query($query);
+            if($this->rLink->affected($result)) {
+                while($row = $this->rLink->results($result)) {
+                    $total_order_per_day += $row['value'];
 
                     $average['tot_orders'] += $row['tot_orders'];
                     $average['sum_orders'] += $row['value'];
                 }
-            } else {
-                $orders[] = array($date*1000, 0);
+//            } else {
+//                $orders[] = array($date*1000, 0);
             }
+            $orders[] = array($date*1000, $total_order_per_day);
 
-            //Customers
             $query = "SELECT COUNT(u.virtuemart_user_id) AS tot_customers, UNIX_TIMESTAMP(ju.registerDate) AS date_add FROM ".$this->sDBCartPrefix."vmusers AS u
                   LEFT JOIN ".$this->sDBPrefix."users AS ju ON ju.id = u.virtuemart_user_id
 				  WHERE u.user_is_vendor = '0' AND
-				  UNIX_TIMESTAMP(ju.registerDate) >= '".$date."' AND UNIX_TIMESTAMP(ju.registerDate) < '".strtotime('+1 day', $date)."'
+				  UNIX_TIMESTAMP(ju.registerDate) >= '%d' AND UNIX_TIMESTAMP(ju.registerDate) < '%d'
 				  GROUP BY DATE(ju.registerDate) ORDER BY ju.registerDate";
+            $query = sprintf($query, $date, strtotime('+1 day', $date));
 
-            $result = mysql_query($query);
+            $total_customer_per_day = 0;
+            $result = $this->rLink->query($query);
+            if($this->rLink->affected($result)) {
+                while($row = $this->rLink->results($result)) {
+                    $total_customer_per_day += $row['tot_customers'];
 
-            if(mysql_num_rows($result) > 0) {
-                while($row = mysql_fetch_assoc($result)) {
-                    $customers[] = array($row['date_add']*1000, $row['tot_customers']);
                     $average['tot_customers'] += $row['tot_customers'];
                 }
-            } else {
-                $customers[] = array($date*1000, 0);
+//            } else {
+//                $customers[] = array($date*1000, 0);
             }
+            $customers[] = array($date*1000, $total_customer_per_day);
+
             $date = strtotime('+1 day', $date);
         }
 
         $query = "SELECT vendor_currency FROM ".$this->sDBCartPrefix."vendors";
-        $result = mysql_query($query);
-        $row = mysql_fetch_assoc($result);
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            $row = $this->rLink->results($result);
+        }
         $iso_numeric_code = $row['vendor_currency'];
+
         $query = "SELECT currency_symbol, currency_decimal_place, currency_decimal_symbol, currency_thousands, currency_positive_style FROM ".$this->sDBCartPrefix."currencies
 				  WHERE virtuemart_currency_id = '".$iso_numeric_code."'";
-        $result = mysql_query($query);
-        $row = mysql_fetch_assoc($result);
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            $row = $this->rLink->results($result);
+        }
 
         $currency_sign = $row['currency_symbol'];
         $currency_style = $row['currency_positive_style'];
 
+        if($d <= 0) $d = 1;
         $average['avg_sum_orders'] = $this->_price_format($average['sum_orders']/$d);
-        $average['avg_orders'] = number_format($average['tot_orders']/$d, 1, '.', '');
-        $average['avg_customers'] = number_format($average['tot_customers']/$d, 1, '.', '');
+        $average['avg_orders'] = number_format($average['tot_orders']/$d, 1, '.', ' ');
+        $average['avg_customers'] = number_format($average['tot_customers']/$d, 1, '.', ' ');
 
         if($average['tot_customers'] > 0) {
             $average['avg_cust_order'] = $this->_price_format($average['sum_orders']/$average['tot_customers']);
         }
         $average['sum_orders'] = $this->_price_format($average['sum_orders']);
-        $average['tot_customers'] = number_format($average['tot_customers'], 1, '.', '');
-        $average['tot_orders'] = number_format($average['tot_orders'], 1, '.', '');
+        $average['tot_customers'] = number_format($average['tot_customers'], 1, '.', ' ');
+        $average['tot_orders'] = number_format($average['tot_orders'], 1, '.', ' ');
 
         return array('orders' => $orders, 'customers' => $customers, 'currency_sign' => $currency_sign, 'average' => $average, 'currency_style' => $currency_style);
     }
@@ -2880,13 +3655,13 @@ class VirtueMartv2xSA extends MainSA {
     public function get_orders() {
         $orders = array();
         if(!empty($this->search_order_id)) {
-            $query_where_parts[] = " (o.virtuemart_order_id = '".$this->search_order_id."' OR o.order_number = '".$this->search_order_id."')";
+            $query_where_parts[] = sprintf(" (o.virtuemart_order_id = '%d' OR o.order_number = '%d')", $this->search_order_id, $this->search_order_id);
         }
         if(!empty($this->orders_from)) {
-            $query_where_parts[] = " UNIX_TIMESTAMP(o.created_on) >= '".strtotime($this->orders_from." 00:00:00")."'";
+            $query_where_parts[] = sprintf(" UNIX_TIMESTAMP(o.created_on) >= '%d'", strtotime($this->orders_from." 00:00:00"));
         }
         if(!empty($this->orders_to)) {
-            $query_where_parts[] = " UNIX_TIMESTAMP(o.created_on) <= '".strtotime($this->orders_to." 23:59:59")."'";
+            $query_where_parts[] = sprintf(" UNIX_TIMESTAMP(o.created_on) <= '%d'", strtotime($this->orders_to." 23:59:59"));
         }
         if(!empty($this->statuses)) {
             $statuses = explode("|", $this->statuses);
@@ -2898,7 +3673,7 @@ class VirtueMartv2xSA extends MainSA {
                     }
                 }
                 $parse_statuses = implode("','", $stat);
-                $query_where_parts[] = " o.order_status IN ('".$parse_statuses."')";
+                $query_where_parts[] = sprintf(" o.order_status IN ('%s')", $parse_statuses);
             }
         }
 
@@ -2907,12 +3682,12 @@ class VirtueMartv2xSA extends MainSA {
                     o.order_number,
                     o.created_on AS date_add,
                     o.order_total,
-					IF(o.virtuemart_user_id = 0, 'Guest', CONCAT(ui.first_name, ' ', ui.last_name)) AS customer,
+					IF(ui.virtuemart_order_id IS NULL, 'Guest', CONCAT(ui.first_name, ' ', ui.last_name)) AS customer,
 					os.order_status_name AS ord_status,
 					o.order_currency,
-					(SELECT SUM(product_quantity) FROM ".$this->sDBCartPrefix."order_items WHERE virtuemart_order_id = o.virtuemart_order_id) AS qty_ordered
+					(SELECT SUM(product_quantity) FROM ".$this->sDBCartPrefix."order_items WHERE virtuemart_order_id = o.virtuemart_order_id) AS count_prods
 				  FROM ".$this->sDBCartPrefix."orders AS o
-				  LEFT JOIN ".$this->sDBCartPrefix."userinfos AS ui ON ui.virtuemart_user_id = o.virtuemart_user_id AND ui.address_type = 'BT'
+				  LEFT JOIN ".$this->sDBCartPrefix."order_userinfos AS ui ON ui.virtuemart_order_id = o.virtuemart_order_id AND ui.address_type = 'BT'
 				  LEFT JOIN ".$this->sDBCartPrefix."orderstates AS os ON os.order_status_code = o.order_status";
 
         $query_page = "SELECT SUM(o.order_total) AS orders_total, COUNT(o.virtuemart_order_id) AS count_ords, MAX(o.created_on) AS max_date, MIN(o.created_on) AS min_date
@@ -2922,18 +3697,41 @@ class VirtueMartv2xSA extends MainSA {
             $query .= " WHERE " . implode(" AND ", $query_where_parts);
             $query_page .= " WHERE " . implode(" AND ", $query_where_parts);
         }
-        $result_page = mysql_query($query_page);
-        $row_page = mysql_fetch_assoc($result_page);
-        $query .= " ORDER BY o.virtuemart_order_id DESC LIMIT ".($this->page - 1)*$this->show." , ".$this->show;
 
-        $result = mysql_query($query);
-        while($row = mysql_fetch_assoc($result)) {
-            $row['total_paid'] = $this->_price_format($row['order_total'], $row['order_currency']);
-            $orders[] = $row;
+        if(empty($this->sort_by)) {
+            $this->sort_by = "id";
+        }
+
+        $query .= " ORDER BY ";
+        switch ($this->sort_by) {
+            case 'id':
+                $query .= "o.virtuemart_order_id DESC";
+                break;
+            case 'date':
+                $query .= "date_add DESC";
+                break;
+            case 'name':
+                $query .= "customer ASC";
+                break;
+        }
+
+        $query .= sprintf(" LIMIT %d, %d", (($this->page - 1)*$this->show), $this->show);
+
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            while($row = $this->rLink->results($result)) {
+                $row['ord_status'] = str_replace("COM_VIRTUEMART_ORDER_STATUS_", "", $row['ord_status']);
+                $row['total_paid'] = $this->_price_format($row['order_total'], $row['order_currency']);
+                $orders[] = $row;
+            }
         }
 
         $max_date = '';
         $min_date = '';
+        $result = $this->rLink->query($query_page);
+        if($this->rLink->affected($result)) {
+            $row_page = $this->rLink->results($result);
+        }
         if($row_page['count_ords'] > 0) {
             $max_date = date("n/j/Y", strtotime($row_page['max_date']));
             $min_date = date("n/j/Y", strtotime($row_page['min_date']));
@@ -2955,9 +3753,12 @@ class VirtueMartv2xSA extends MainSA {
     public function get_orders_statuses() {
         $orders_status = array();
         $query = "SELECT order_status_code AS st_id, order_status_name AS st_name FROM ".$this->sDBCartPrefix."orderstates";
-        $result_status = mysql_query($query);
-        while($row = mysql_fetch_assoc($result_status)) {
-            $orders_status[] = $row;
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            while($row = $this->rLink->results($result)) {
+                $row['st_name'] = str_replace("COM_VIRTUEMART_ORDER_STATUS_", "", $row['st_name']);
+                $orders_status[] = $row;
+            }
         }
         return $orders_status;
     }
@@ -2968,10 +3769,10 @@ class VirtueMartv2xSA extends MainSA {
 					o.virtuemart_order_id AS id_order,
 					o.virtuemart_user_id AS id_customer,
 					o_stat.order_status_name AS status,
-					CONCAT(ui.first_name, ' ', ui.last_name) AS customer,
+					IF(ui.virtuemart_user_id IS NULL, CONCAT(ui_b.first_name, ' ', ui_b.last_name), CONCAT(ui.first_name, ' ', ui.last_name)) AS customer,
 					o.order_currency,
 					o.created_on AS date_add,
-					ju.email,
+					IF(ju.id IS NULL, ui_b.email, ju.email) AS email,
                     o.order_subtotal,
                     o.order_shipment,
                     o.order_payment,
@@ -3010,10 +3811,14 @@ class VirtueMartv2xSA extends MainSA {
 				  LEFT JOIN ".$this->sDBCartPrefix."order_userinfos AS ui_s ON ui_s.virtuemart_user_id = o.virtuemart_user_id AND ui_s.address_type = 'ST' AND ui_s.virtuemart_order_id = '".$this->order_id."'
 				  LEFT JOIN ".$this->sDBCartPrefix."countries AS s_c ON s_c.virtuemart_country_id = ui_s.virtuemart_country_id
 				  LEFT JOIN ".$this->sDBCartPrefix."states AS s_s ON s_s.virtuemart_state_id = ui_s.virtuemart_state_id
-				  WHERE o.virtuemart_order_id = '".$this->order_id."'";
+				  WHERE o.virtuemart_order_id = '%d'";
+        $query = sprintf($query, $this->order_id);
 
-        $result = mysql_query($query);
-        $order_info = mysql_fetch_assoc($result);
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            $order_info = $this->rLink->results($result);
+            $order_info['status'] = str_replace("COM_VIRTUEMART_ORDER_STATUS_", "", $order_info['status']);
+        }
 
         $elements = array('order_subtotal', 'order_shipment', 'order_payment', 'total_paid');
         foreach($elements as $element) {
@@ -3030,19 +3835,24 @@ class VirtueMartv2xSA extends MainSA {
 					o.order_currency
  				 FROM ".$this->sDBCartPrefix."order_items AS oi
                  LEFT JOIN ".$this->sDBCartPrefix."orders AS o ON o.virtuemart_order_id = oi.virtuemart_order_id
-				 WHERE o.virtuemart_order_id = '".$this->order_id."'";
+				 WHERE o.virtuemart_order_id = '%d' LIMIT %d, %d";
+        $query = sprintf($query, $this->order_id, ($this->page - 1)*$this->show, $this->show);
 
-        $query_page = "SELECT COUNT(virtuemart_order_id) AS count_prods
-					   FROM ".$this->sDBCartPrefix."order_items
-					   WHERE virtuemart_order_id = '".$this->order_id."'";
-        $result_page = mysql_query($query_page);
-        $row_page = mysql_fetch_assoc($result_page);
-        $query .= " LIMIT ".($this->page - 1)*$this->show." , ".$this->show;
-        $result = mysql_query($query);
-        while($row = mysql_fetch_assoc($result)) {
-            $row['product_price'] = $this->_price_format($row['product_price'], $order_info['order_currency']);
-            $row['product_quantity'] = intval($row['product_quantity']);
-            $order_products[] = $row;
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            while($row = $this->rLink->results($result)) {
+                $row['product_price'] = $this->_price_format($row['product_price'], $order_info['order_currency']);
+                $row['product_quantity'] = intval($row['product_quantity']);
+                $order_products[] = $row;
+            }
+        }
+
+        $query_page = "SELECT COUNT(virtuemart_order_id) AS count_prods FROM ".$this->sDBCartPrefix."order_items WHERE virtuemart_order_id = '%d'";
+        $query_page = sprintf($query_page, $this->order_id);
+
+        $result = $this->rLink->query($query_page);
+        if($this->rLink->affected($result)) {
+            $row_page = $this->rLink->results($result);
         }
         $order_full_info = array("order_info" => $order_info, "order_products" => $order_products, "o_products_count" => $row_page['count_prods']);
         return $order_full_info;
@@ -3051,13 +3861,13 @@ class VirtueMartv2xSA extends MainSA {
     public function get_customers() {
         $customers = array();
         if(!empty($this->customers_from)) {
-            $query_where_parts[] = " UNIX_TIMESTAMP(ju.registerDate) >= '".strtotime($this->customers_from." 00:00:00")."'";
+            $query_where_parts[] = sprintf(" UNIX_TIMESTAMP(ju.registerDate) >= '%d'", strtotime($this->customers_from." 00:00:00"));
         }
         if(!empty($this->customers_to)) {
-            $query_where_parts[] = " UNIX_TIMESTAMP(ju.registerDate) <= '".strtotime($this->customers_to." 23:59:59")."'";
+            $query_where_parts[] = sprintf(" UNIX_TIMESTAMP(ju.registerDate) <= '%d'", strtotime($this->customers_to." 23:59:59"));
         }
         if(!empty($this->search_val)) {
-            $query_where_parts[] = " (ju.email LIKE '%".$this->search_val."%' OR ui.first_name LIKE '%".$this->search_val."%' OR ui.last_name LIKE '%".$this->search_val."%')";
+            $query_where_parts[] = sprintf(" (ju.email LIKE '%%%s%%' OR ui.first_name LIKE '%%%s%%' OR ui.last_name LIKE '%%%s%%' OR CONCAT(ui.first_name, ' ', ui.last_name) LIKE '%%%s%%')", $this->search_val, $this->search_val, $this->search_val, $this->search_val);
         }
         if(!empty($this->cust_with_orders)) {
             $query_where_parts[] = " tot.total_orders > 0";
@@ -3067,6 +3877,7 @@ class VirtueMartv2xSA extends MainSA {
 					u.virtuemart_user_id AS id_customer,
 					ui.first_name AS firstname,
 					ui.last_name AS lastname,
+					CONCAT(ui.first_name, ' ', ui.last_name) AS full_name,
 					ju.email,
 					ju.registerDate AS date_add,
 					IFNULL(tot.total_orders, 0) AS total_orders
@@ -3089,16 +3900,38 @@ class VirtueMartv2xSA extends MainSA {
             $query_page .= " AND " . implode(" AND ", $query_where_parts);
         }
 
-        $query .= " LIMIT ".($this->page - 1)*$this->show." , ".$this->show;
-        $result_page = mysql_query($query_page);
-        $row_page = mysql_fetch_assoc($result_page);
-        $result = mysql_query($query);
-        while($row = mysql_fetch_assoc($result)) {
-            $date = explode(' ', $row['date_add']);
-            $row['date_add'] = $date[0];
-            $customers[] = $row;
+        if(empty($this->sort_by)) {
+            $this->sort_by = "id";
         }
-        return array("customers_count" => $row_page['count_custs'],
+
+        $query .= " ORDER BY ";
+        switch ($this->sort_by) {
+            case 'id':
+                $query .= "id_customer DESC";
+                break;
+            case 'date':
+                $query .= "date_add DESC";
+                break;
+            case 'name':
+                $query .= "full_name ASC";
+                break;
+        }
+
+        $query .= sprintf(" LIMIT %d, %d", (($this->page - 1)*$this->show), $this->show);
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            while($row = $this->rLink->results($result)) {
+                $date = explode(' ', $row['date_add']);
+                $row['date_add'] = $date[0];
+                $customers[] = $row;
+            }
+        }
+
+        $result = $this->rLink->query($query_page);
+        if($this->rLink->affected($result)) {
+            $row_page = $this->rLink->results($result);
+        }
+        return array("customers_count" => intval($row_page['count_custs']),
             "customers" => $customers,
             "max_date" => date("n/j/Y", strtotime($row_page['max_date'])),
             "min_date" => date("n/j/Y", strtotime($row_page['min_date']))
@@ -3126,9 +3959,13 @@ class VirtueMartv2xSA extends MainSA {
                     LEFT JOIN ".$this->sDBCartPrefix."countries AS c ON c.virtuemart_country_id = ui.virtuemart_country_id
 				    LEFT JOIN ".$this->sDBCartPrefix."states AS s ON s.virtuemart_state_id = ui.virtuemart_state_id
 				    LEFT JOIN ".$this->sDBPrefix."users AS ju ON ju.id = ui.virtuemart_user_id
-				  WHERE ui.virtuemart_user_id = '".$this->user_id."' AND ui.address_type = 'BT'";
-        $result = mysql_query($query);
-        $user_info = mysql_fetch_assoc($result);
+				  WHERE ui.virtuemart_user_id = '%d' AND ui.address_type = 'BT'";
+        $query = sprintf($query, $this->user_id);
+
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            $user_info = $this->rLink->results($result);
+        }
 
         $user_info['address'] = $this->split_values($user_info, array('country', 'city', 'state', 'address_1', 'address_2'));
         unset($user_info['country']);
@@ -3146,19 +3983,25 @@ class VirtueMartv2xSA extends MainSA {
 					(SELECT SUM(product_quantity) FROM ".$this->sDBCartPrefix."order_items WHERE virtuemart_order_id = o.virtuemart_order_id) AS pr_qty
 				  FROM ".$this->sDBCartPrefix."orders AS o
 				  LEFT JOIN ".$this->sDBCartPrefix."orderstates AS os ON os.order_status_code = o.order_status
-				  WHERE o.virtuemart_user_id = '".$this->user_id."'";
+				  WHERE o.virtuemart_user_id = '%d' ORDER BY o.virtuemart_order_id DESC LIMIT %d, %d";
+        $query = sprintf($query, $this->user_id, ($this->page - 1)*$this->show, $this->show);
+
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            while($row = $this->rLink->results($result)) {
+                $row['ord_status'] = str_replace("COM_VIRTUEMART_ORDER_STATUS_", "", $row['ord_status']);
+                $row['total_paid'] = $this->_price_format($row['total_paid'], $row['order_currency']);
+                $customer_orders[] = $row;
+            }
+        }
 
         $query_page = "SELECT SUM(order_total) AS sum_ords, COUNT(virtuemart_order_id) AS count_ords
-				  FROM ".$this->sDBCartPrefix."orders WHERE virtuemart_user_id = '".$this->user_id."'";
-        $result_page = mysql_query($query_page);
-        $row_page = mysql_fetch_assoc($result_page);
+				  FROM ".$this->sDBCartPrefix."orders WHERE virtuemart_user_id = '%d'";
+        $query_page = sprintf($query_page, $this->user_id);
 
-        $query .= " LIMIT ".($this->page - 1)*$this->show." , ".$this->show;
-        $result = mysql_query($query);
-
-        while($row = mysql_fetch_assoc($result)) {
-            $row['total_paid'] = $this->_price_format($row['total_paid'], $row['order_currency']);
-            $customer_orders[] = $row;
+        $result = $this->rLink->query($query_page);
+        if($this->rLink->affected($result)) {
+            $row_page = $this->rLink->results($result);
         }
 
         $customer_info = array("user_info" => $user_info, "customer_orders" => $customer_orders, "c_orders_count" => intval($row_page['count_ords']), "sum_ords" => $this->_price_format($row_page['sum_ords']));
@@ -3169,28 +4012,33 @@ class VirtueMartv2xSA extends MainSA {
         $query_where_parts = array();
         $products = array();
         $active_language = $this->_get_active_languages();
+        if($active_language != "") {
+            $active_language = "_" . $active_language;
+        }
+
         $this->params = explode("|", $this->params);
         foreach($this->params as $param) {
             switch ($param) {
                 case 'pr_id':
-                    $query_where_parts[] = " p.virtuemart_product_id = '".$this->val."'";
+                    $query_where_parts[] = sprintf(" p.virtuemart_product_id = '%d'", $this->val);
                     break;
                 case 'pr_sku':
-                    $query_where_parts[] = " p.product_sku = '".$this->val."'";
+                    $query_where_parts[] = sprintf(" p.product_sku = '%s'", $this->val);
                     break;
                 case 'pr_name':
-                    $query_where_parts[] = " peg.product_name LIKE '%".$this->val."%'";
+                    $query_where_parts[] = sprintf(" peg.product_name LIKE '%%%s%%'", $this->val);
                     break;
                 case 'pr_desc':
-                    $query_where_parts[] = " peg.product_desc LIKE '%".$this->val."%'";
+                    $query_where_parts[] = sprintf(" peg.product_desc LIKE '%%%s%%'", $this->val);
                     break;
                 case 'pr_short_desc':
-                    $query_where_parts[] = " peg.product_s_desc LIKE '%".$this->val."%'";
+                    $query_where_parts[] = sprintf(" peg.product_s_desc LIKE '%%%s%%'", $this->val);
                     break;
             }
         }
         $query = "SELECT
 					p.virtuemart_product_id AS main_id,
+					p.virtuemart_product_id AS product_id,
 					peg.product_name AS name,
 					pp.product_price AS price,
 					pp.product_currency,
@@ -3198,28 +4046,45 @@ class VirtueMartv2xSA extends MainSA {
 					p.product_in_stock AS quantity
 				  FROM ".$this->sDBCartPrefix."products AS p
 				  	LEFT JOIN ".$this->sDBCartPrefix."product_prices AS pp ON pp.virtuemart_product_id = p.virtuemart_product_id
-				  	LEFT JOIN ".$this->sDBCartPrefix."products_".$active_language." AS peg ON peg.virtuemart_product_id = p.virtuemart_product_id";
+				  	LEFT JOIN ".$this->sDBCartPrefix."products".$active_language." AS peg ON peg.virtuemart_product_id = p.virtuemart_product_id";
 
         $query_page = "SELECT COUNT(p.virtuemart_product_id) AS count_prods FROM ".$this->sDBCartPrefix."products AS p
 						LEFT JOIN ".$this->sDBCartPrefix."product_prices AS pp ON pp.virtuemart_product_id = p.virtuemart_product_id
-						LEFT JOIN ".$this->sDBCartPrefix."products_".$active_language." AS peg ON peg.virtuemart_product_id = p.virtuemart_product_id";
+						LEFT JOIN ".$this->sDBCartPrefix."products".$active_language." AS peg ON peg.virtuemart_product_id = p.virtuemart_product_id";
         if (!empty($query_where_parts)) {
             $query .= " WHERE ( " . implode(" OR ", $query_where_parts) . " )";
             $query_page .= " WHERE ( " . implode(" OR ", $query_where_parts) . " )";
         }
 
-        $result_page = mysql_query($query_page);
-        $row_page = mysql_fetch_assoc($result_page);
-
-        $query .= " GROUP BY p.virtuemart_product_id LIMIT ".($this->page - 1)*$this->show." , ".$this->show;
-
-        $result = mysql_query($query);
-
-        while($row = mysql_fetch_assoc($result)) {
-            $row['price'] = $this->_price_format($row['price'], $row['product_currency']);
-            $products[] = $row;
+        if(empty($this->sort_by)) {
+            $this->sort_by = "id";
         }
-        return array("products_count" => $row_page['count_prods'], "products" => $products);
+
+        $query .= " GROUP BY p.virtuemart_product_id ORDER BY ";
+        switch ($this->sort_by) {
+            case 'id':
+                $query .= "p.virtuemart_product_id DESC";
+                break;
+            case 'name':
+                $query .= "peg.product_name ASC";
+                break;
+        }
+
+        $query .= sprintf(" LIMIT %d, %d", (($this->page - 1)*$this->show), $this->show);
+
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            while($row = $this->rLink->results($result)) {
+                $row['price'] = $this->_price_format($row['price'], $row['product_currency']);
+                $products[] = $row;
+            }
+        }
+
+        $result = $this->rLink->query($query_page);
+        if($this->rLink->affected($result)) {
+            $row_page = $this->rLink->results($result);
+        }
+        return array("products_count" => intval($row_page['count_prods']), "products" => $products);
     }
 
     public function search_products_ordered() {
@@ -3228,25 +4093,40 @@ class VirtueMartv2xSA extends MainSA {
         foreach($this->params as $param) {
             switch ($param) {
                 case 'pr_id':
-                    $query_where_parts[] = " oi.virtuemart_order_id = '".$this->val."'";
+                    $query_where_parts[] = sprintf(" oi.virtuemart_order_id = '%d'", $this->val);
                     break;
                 case 'pr_sku':
-                    $query_where_parts[] = " oi.order_item_sku = '".$this->val."'";
+                    $query_where_parts[] = sprintf(" oi.order_item_sku = '%s'", $this->val);
                     break;
                 case 'pr_name':
-                    $query_where_parts[] = " oi.order_item_name LIKE '%".$this->val."%'";
+                    $query_where_parts[] = sprintf(" oi.order_item_name LIKE '%%%s%%'", $this->val);
                     break;
             }
         }
         if(!empty($this->products_from)) {
-            $query_where_parts[] = " UNIX_TIMESTAMP(o.created_on) >= '".strtotime($this->products_from." 00:00:00")."'";
+            $query_where_parts[] = sprintf(" UNIX_TIMESTAMP(o.created_on) >= '%d'", strtotime($this->products_from." 00:00:00"));
         }
         if(!empty($this->products_to)) {
-            $query_where_parts[] = " UNIX_TIMESTAMP(o.created_on) <= '".strtotime($this->products_to." 23:59:59")."'";
+            $query_where_parts[] = sprintf(" UNIX_TIMESTAMP(o.created_on) <= '%d'", strtotime($this->products_to." 23:59:59"));
+        }
+
+        if(!empty($this->statuses)) {
+            $statuses = explode("|", $this->statuses);
+            if(!empty($statuses)) {
+                $stat = array();
+                foreach($statuses as $status) {
+                    if($status != "") {
+                        $stat[] = $status;
+                    }
+                }
+                $parse_statuses = implode("','", $stat);
+                $query_where_parts[] = sprintf(" o.order_status IN ('%s')", $parse_statuses);
+            }
         }
 
         $query = "SELECT
 					o.virtuemart_order_id AS main_id,
+					oi.virtuemart_product_id AS product_id,
 					oi.order_item_name AS name,
 					oi.product_quantity AS quantity,
 					oi.product_item_price AS price,
@@ -3269,33 +4149,53 @@ class VirtueMartv2xSA extends MainSA {
             $query_page .= " WHERE " . implode(" AND ", $query_where_parts);
         }
 
-        $result_page = mysql_query($query_page);
-        $row_page = mysql_fetch_assoc($result_page);
-        $query .= " LIMIT ".($this->page - 1)*$this->show." , ".$this->show;
-        $result = mysql_query($query);
-
-        while($row = mysql_fetch_assoc($result)) {
-            $row['price'] = $this->_price_format($row['price'], $row['order_currency']);
-            if($row['total_price'] > 0) {
-                $row['total_price'] = $this->_price_format($row['total_price'], $row['order_currency']);
-            } else {
-                unset($row['total_price']);
-            }
-            if($row['final_price'] > 0) {
-                $row['final_price'] = $this->_price_format($row['final_price'], $row['order_currency']);
-            } else {
-                unset($row['final_price']);
-            }
-            $row['quantity'] = intval($row['quantity']);
-            $order_products[] = $row;
+        if(empty($this->sort_by)) {
+            $this->sort_by = "id";
         }
 
+        $query .= " ORDER BY ";
+        switch ($this->sort_by) {
+            case 'id':
+                $query .= "oi.virtuemart_product_id DESC";
+                break;
+            case 'name':
+                $query .= "oi.order_item_name ASC";
+                break;
+        }
+
+        $query .= sprintf(" LIMIT %d, %d", (($this->page - 1)*$this->show), $this->show);
+
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            while($row = $this->rLink->results($result)) {
+                $row['status'] = str_replace("COM_VIRTUEMART_ORDER_STATUS_", "", $row['status']);
+
+                $row['price'] = $this->_price_format($row['price'], $row['order_currency']);
+                if($row['total_price'] > 0) {
+                    $row['total_price'] = $this->_price_format($row['total_price'], $row['order_currency']);
+                } else {
+                    unset($row['total_price']);
+                }
+                if($row['final_price'] > 0) {
+                    $row['final_price'] = $this->_price_format($row['final_price'], $row['order_currency']);
+                } else {
+                    unset($row['final_price']);
+                }
+                $row['quantity'] = intval($row['quantity']);
+                $order_products[] = $row;
+            }
+        }
+
+        $result = $this->rLink->query($query_page);
+        if($this->rLink->affected($result)) {
+            $row_page = $this->rLink->results($result);
+        }
         if($row_page['count_prods'] > 0) {
             $max_date = date("n/j/Y", strtotime($row_page['max_date']));
             $min_date = date("n/j/Y", strtotime($row_page['min_date']));
         }
 
-        return array("products_count" => $row_page['count_prods'],
+        return array("products_count" => intval($row_page['count_prods']),
             "products" => $order_products,
             "max_date" => $max_date,
             "min_date" => $min_date);
@@ -3303,45 +4203,80 @@ class VirtueMartv2xSA extends MainSA {
 
     public function get_products_info() {
         $active_language = $this->_get_active_languages();
+        if($active_language != "") {
+            $active_language = "_" . $active_language;
+        }
+
         $query = "SELECT
 					p.virtuemart_product_id AS id_product,
+					p.virtuemart_product_id AS product_id,
 					peg.product_name AS name,
 					pp.product_price AS price,
 					pp.product_currency,
 					p.product_sku AS sku,
 					IF(p.published = 1, 'Published', 'Unpublished') AS active,
 					p.product_in_stock AS quantity,
-					m.file_url AS id_image,
+					m.file_url_thumb AS id_image,
+					m.file_url AS id_image_large,
 					p.product_ordered AS total_ordered
 				  FROM ".$this->sDBCartPrefix."products AS p
 				  	LEFT JOIN ".$this->sDBCartPrefix."product_prices AS pp ON pp.virtuemart_product_id = p.virtuemart_product_id
-				  	LEFT JOIN ".$this->sDBCartPrefix."products_".$active_language." AS peg ON peg.virtuemart_product_id = p.virtuemart_product_id
+				  	LEFT JOIN ".$this->sDBCartPrefix."products".$active_language." AS peg ON peg.virtuemart_product_id = p.virtuemart_product_id
 				  	LEFT JOIN ".$this->sDBCartPrefix."product_medias AS pm ON pm.virtuemart_product_id = p.virtuemart_product_id
 				  	LEFT JOIN ".$this->sDBCartPrefix."medias AS m ON m.virtuemart_media_id = pm.virtuemart_media_id
-				  WHERE p.virtuemart_product_id  = '".$this->product_id."' GROUP BY pm.virtuemart_product_id";
+				  WHERE p.virtuemart_product_id  = '%d' GROUP BY pm.virtuemart_product_id";
+        $query = sprintf($query, $this->product_id);
 
-        $res = mysql_query($query);
-        $row = false;
-        if(mysql_num_rows($res) > 0) {
-            $row = mysql_fetch_assoc($res);
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            $row = $this->rLink->results($result);
+
+            if(!isset($row['id_image']) || $row['id_image'] == "") {
+                $row['id_image'] = $row['id_image_large'];
+                unset($row['id_image_large']);
+            }
+
             $row['price'] = $this->_price_format($row['price'], $row['product_currency']);
             $row['total_ordered'] = intval($row['total_ordered']);
             //$row['name'] = utf8_encode($row['name']);
-            if(file_exists($row['id_image'])) {
-                $query_url = "SELECT vendor_url FROM ".$this->sDBCartPrefix."vendors_".$active_language;
-                $result_url = mysql_query($query_url);
-                $row_url = mysql_fetch_assoc($result_url);
-
-                $row['id_image'] = $row_url['vendor_url'] . "/" .  $row['id_image'];
+            $query_url = "SELECT vendor_url FROM ".$this->sDBCartPrefix."vendors".$active_language;
+            $result_url = $this->rLink->query($query_url);
+            if($this->rLink->affected($result_url)) {
+                $row_url = $this->rLink->results($result_url);
             }
+
+            if(file_exists($row['id_image'])) {
+                $row['id_image'] = $row_url['vendor_url'] . "/" .  $row['id_image'];
+		        if(preg_match('#^http(.*)$#i', $row['id_image']) == 0) {
+			        $row['id_image'] = 'http://' . $row['id_image'];
+                }
+            }
+
+            if(file_exists($row['id_image_large'])) {
+                $row['id_image_large'] = $row_url['vendor_url'] . "/" .  $row['id_image_large'];
+		        if(preg_match('#^http(.*)$#i', $row['id_image_large']) == 0) {
+			        $row['id_image_large'] = 'http://' . $row['id_image_large'];
+                }
+            }
+
+            return $row;
         }
-        return $row;
+        return false;
     }
 
     public function get_products_descr() {
         $active_language = $this->_get_active_languages();
-        $query = "SELECT product_desc AS descr FROM ".$this->sDBCartPrefix."products_".$active_language." WHERE virtuemart_product_id = '".$this->product_id."'";
-        $row = mysql_fetch_assoc(mysql_query($query));
+        if($active_language != "") {
+            $active_language = "_" . $active_language;
+        }
+
+        $query = "SELECT product_desc AS descr FROM ".$this->sDBCartPrefix."products".$active_language." WHERE virtuemart_product_id = '%d'";
+        $query = sprintf($query, $this->product_id);
+
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            $row = $this->rLink->results($result);
+        }
 
         return $row;
     }
@@ -3349,10 +4284,31 @@ class VirtueMartv2xSA extends MainSA {
     private function _currency_convert($amountA, $currA = '', $currB = '') {
         $amountA = floatval($amountA);
         if(intval($currB) > 0) {
-            $query = "SELECT currency_code_3 FROM ".$this->sDBCartPrefix."currencies
-					  WHERE virtuemart_currency_id = '".$currB."'";
-            $row = mysql_fetch_assoc(mysql_query($query));
+            $query = "SELECT currency_code_3 FROM ".$this->sDBCartPrefix."currencies WHERE virtuemart_currency_id = '".$currB."'";
+            $result = $this->rLink->query($query);
+            if($this->rLink->affected($result)) {
+                $row = $this->rLink->results($result);
+            }
             $currB = $row['currency_code_3'];
+        }
+        if($currA == '') {
+            $query = "SELECT vendor_currency FROM ".$this->sDBCartPrefix."vendors";
+            $result = $this->rLink->query($query);
+            if($this->rLink->affected($result)) {
+                $row = $this->rLink->results($result);
+                $currA = $row['vendor_currency'];
+            }
+        }
+        if(intval($currA) > 0) {
+            $query = "SELECT currency_code_3 FROM ".$this->sDBCartPrefix."currencies WHERE virtuemart_currency_id = '".$currA."'";
+            $result = $this->rLink->query($query);
+            if($this->rLink->affected($result)) {
+                $row = $this->rLink->results($result);
+                $currA = $row['currency_code_3'];
+            }
+        }
+        if( $currA == $currB) {
+            return $amountA;
         }
         $converter_filepath = "administrator/components/com_virtuemart/plugins/currency_converter/convertECB.php";
         if(file_exists(dirname(__FILE__)."/".$converter_filepath)) {
@@ -3379,15 +4335,6 @@ class VirtueMartv2xSA extends MainSA {
                     unset( $currNode );
                 }
             }
-            if($currA == '') {
-                $query = "SELECT vendor_currency FROM ".$this->sDBCartPrefix."vendors";
-                $result = mysql_query($query);
-                $row = mysql_fetch_assoc($result);
-                $currA = $row['vendor_currency'];
-            }
-            if( $currA == $currB) {
-                return $amountA;
-            }
             $valA = isset($currency[$currA]) ? $currency[$currA] : 1;
             $valB = isset($currency[$currB]) ? $currency[$currB] : 1;
             $val = $amountA * $valB / $valA;
@@ -3399,15 +4346,19 @@ class VirtueMartv2xSA extends MainSA {
     private function _price_format($price, $iso_numeric_code = 0, $no_format = false) {
         if($iso_numeric_code == 0) {
             $query = "SELECT vendor_currency FROM ".$this->sDBCartPrefix."vendors";
-            $result = mysql_query($query);
-            $row = mysql_fetch_assoc($result);
+            $result = $this->rLink->query($query);
+            if($this->rLink->affected($result)) {
+                $row = $this->rLink->results($result);
+            }
             $iso_numeric_code = $row['vendor_currency'];
         }
 
         $query = "SELECT currency_symbol, currency_decimal_place, currency_decimal_symbol, currency_thousands, currency_positive_style FROM ".$this->sDBCartPrefix."currencies
 				  WHERE virtuemart_currency_id = '".$iso_numeric_code."'";
-        $result = mysql_query($query);
-        $row = mysql_fetch_assoc($result);
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            $row = $this->rLink->results($result);
+        }
 
         $currency_sign = '<span>' . $row['currency_symbol'] . '</span>';
         $decimals = $row['currency_decimal_place'];
@@ -3420,23 +4371,45 @@ class VirtueMartv2xSA extends MainSA {
 
         $curr_format = str_replace('{number}', $price, $row['currency_positive_style']);
         $curr_format = str_replace('{symbol}', $currency_sign, $curr_format);
+
+        file_put_contents("test_curr_format.html", json_encode($currency_sign));
+
         return $curr_format;
     }
 
     private function _get_active_languages() {
         $query = "SELECT `config` FROM `".$this->sDBCartPrefix."configs` WHERE `virtuemart_config_id` = '1'";
-        $result = mysql_query($query);
-        if(mysql_num_rows($result) == 1) {
-            $row = mysql_fetch_assoc($result);
-            $conn = explode("|", $row['config']);
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            $row = $this->rLink->results($result);
+            if(isset($row['config']) && !empty($row['config'])) {
+                $conn = explode("|", $row['config']);
 
-            $str = null;
-            foreach($conn as $con) {
-                $con = explode("=", $con);
-                $str[$con[0]] = @unserialize($con[1]);
+                $str = null;
+                foreach($conn as $con) {
+                    $con = explode("=", $con);
+                    $str[$con[0]] = @unserialize($con[1]);
+                }
+                if(isset($str['vmlang']) && !empty($str['vmlang'])) {
+                    return $str['vmlang'];
+                }
             }
-            return $str['vmlang'];
         }
+
+        $query = "SELECT `lang_code` FROM `".$this->sDBPrefix."languages` WHERE `published` = '1'";
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            $row = $this->rLink->results($result);
+            if(isset($row['lang_code']) && !empty($row['lang_code'])) {
+                $lang_code = strtolower(str_replace("-", "_", $row['lang_code']));
+
+                if(!empty($lang_code)) {
+                    return $lang_code;
+                }
+            }
+        }
+
+        return "";
     }
 }
 
@@ -3448,19 +4421,22 @@ class XCartSA extends MainSA {
     }
 
     public function get_store_stats() {
-        $store_stats = array('count_orders' => "0", 'total_sales' => "0", 'count_customers' => "0", "last_order_id" => "0", "new_orders" => "0");
-        /*
-        if(!empty($this->date_from)) {
-            $query_where_parts[] = " date >= '".strtotime($this->date_from." 00:00:00")."'";
-        }
-        if(!empty($this->date_to)) {
-            $query_where_parts[] = " date <= '".strtotime($this->date_to." 23:59:59")."'";
-        }
-        */
+        $store_stats = array('count_orders' => "0", 'total_sales' => "0", 'count_customers' => "0", 'count_products' => "0", "last_order_id" => "0", "new_orders" => "0");
 
         $today = date("Y-m-d", time());
-        $query_where_parts[] = " date >= '".strtotime($today . " 00:00:00")."'";
-        $query_where_parts[] = " date <= '".strtotime($today . " 23:59:59")."'";
+        $date_from = $date_to = $today;
+
+        if(!empty($this->stats_from)) {
+            $date_from = $this->stats_from;
+        }
+
+        if(!empty($this->stats_to)) {
+            $date_to = $this->stats_to;
+        }
+
+        $query_where_parts[] = sprintf(" o.date >= '%d'", strtotime($date_from . " 00:00:00"));
+        $query_where_parts[] = sprintf(" o.date <= '%d'", strtotime($date_to . " 23:59:59"));
+
         if(!empty($this->statuses)) {
             $statuses = explode("|", $this->statuses);
             if(!empty($statuses)) {
@@ -3471,30 +4447,46 @@ class XCartSA extends MainSA {
                     }
                 }
                 $parse_statuses = implode("','", $stat);
-                $query_where_parts[] = " status IN ('".$parse_statuses."')";
+                $query_where_parts[] = sprintf(" o.status IN ('%s')", $parse_statuses);
             }
         }
-        $query = "SELECT COUNT(orderid) AS count_orders, SUM(total) AS total_sales FROM ".$this->sDBPrefix."orders";
+
+        $query = "SELECT COUNT(o.orderid) AS count_orders, SUM(o.total) AS total_sales FROM ".$this->sDBPrefix."orders AS o";
         if(!empty($query_where_parts)) {
             $query .= " WHERE " . implode(" AND ", $query_where_parts);
         }
 
-        $result = mysql_query($query);
-        if(mysql_num_rows($result) > 0) {
-            $store_stats = mysql_fetch_assoc($result);
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            $store_stats = $this->rLink->results($result);
             $store_stats['total_sales'] = $this->_price_format($this->bd_nice_number($store_stats['total_sales']), true);
         }
 
+
+        $query_prods = "SELECT COUNT(od.orderid) AS count_products FROM ".$this->sDBPrefix."orders AS o
+                  LEFT JOIN ".$this->sDBPrefix."order_details AS od ON o.orderid = od.orderid";
+        if(!empty($query_where_parts)) {
+            $query_prods .= " WHERE " . implode(" AND ", $query_where_parts);
+        }
+        $result_prods = $this->rLink->query($query_prods);
+        if($this->rLink->affected($result_prods)) {
+            $row_prods = $this->rLink->results($result_prods);
+            $store_stats['count_products'] = $this->bd_nice_number($row_prods['count_products'], true);
+        }
+
+
         if($this->last_order_id != "") {
-            $query_max = "SELECT COUNT(orderid) AS count_orders, MAX(orderid) AS last_order_id
-                          FROM ".$this->sDBPrefix."orders
-                          WHERE orderid > ".$this->last_order_id;
+            $query_max = "SELECT COUNT(o.orderid) AS count_orders, MAX(o.orderid) AS last_order_id
+                          FROM ".$this->sDBPrefix."orders AS o WHERE o.orderid > '%d'";
+            $query_max = sprintf($query_max, $this->last_order_id);
+
             if(!empty($query_where_parts)) {
                 $query_max .= " AND " . implode(" AND ", $query_where_parts);
             }
-            $result_max = mysql_query($query_max);
-            if(mysql_num_rows($result_max) > 0) {
-                $row_max = mysql_fetch_assoc($result_max);
+
+            $result_max = $this->rLink->query($query_max);
+            if($this->rLink->affected($result_max)) {
+                $row_max = $this->rLink->results($result_max);
                 $store_stats['last_order_id'] = intval($this->last_order_id);
                 if(intval($row_max['last_order_id']) > intval($this->last_order_id)) {
                     $store_stats['last_order_id'] = intval($row_max['last_order_id']);
@@ -3504,31 +4496,31 @@ class XCartSA extends MainSA {
         }
 
         unset($query_where_parts);
-        /*
-        if(!empty($this->date_from)) {
-            $query_where_parts[] = " first_login >= '".strtotime($this->date_from." 00:00:00")."'";
-        }
-        if(!empty($this->date_to)) {
-            $query_where_parts[] = " first_login <= '".strtotime($this->date_to." 23:59:59")."'";
-        }
-        */
-
-        $query_where_parts[] = " first_login >= '".strtotime($today . " 00:00:00")."'";
-        $query_where_parts[] = " first_login <= '".strtotime($today . " 23:59:59")."'";
+        $query_where_parts[] = sprintf(" first_login >= '%d'", strtotime($date_from . " 00:00:00"));
+        $query_where_parts[] = sprintf(" first_login <= '%d'", strtotime($date_to . " 23:59:59"));
         $query = "SELECT COUNT(id) AS count_customers FROM ".$this->sDBPrefix."customers";
         if(!empty($query_where_parts)) {
             $query .= " WHERE " . implode(" AND ", $query_where_parts);
         }
 
-        $result = mysql_query($query);
-        if(mysql_num_rows($result) > 0) {
-            $row = mysql_fetch_assoc($result);
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            $row = $this->rLink->results($result);
             $store_stats = array_merge($store_stats, $row);
         }
 
-        $this->graph_to = $today;
-        $this->graph_from = date("Y-m-d", mktime(0, 0, 0, date("m"), date("d")-7, date("Y")));
-        $data_graphs = $this->get_data_graphs();
+
+        if(empty($this->graph_from)) {
+            $this->graph_from = date("Y-m-d", mktime(0, 0, 0, date("m"), date("d")-7, date("Y")));
+        }
+
+        if(empty($this->graph_to)) {
+            $this->graph_to = $this->stats_to;
+        }
+
+        if(!isset($this->data_for_widget) || empty($this->data_for_widget) || $this->data_for_widget != 1) {
+            $data_graphs = $this->get_data_graphs();
+        }
 
         $store_stats['count_orders'] = $this->bd_nice_number($store_stats['count_orders'], true);
         $store_stats['count_customers'] = $this->bd_nice_number($store_stats['count_customers'], true);
@@ -3545,12 +4537,12 @@ class XCartSA extends MainSA {
         $average = array('avg_sum_orders' => 0, 'avg_orders' => 0, 'avg_customers' => 0, 'avg_cust_order' => '0.00');
         $orders = array();
         $customers = array();
-        while ($date <= $endDate) {
+        while($date <= $endDate) {
             $d++;
-            //Orders
             $query = "SELECT COUNT(orderid) AS tot_orders, date AS date_add, SUM(total) AS value
                       FROM ".$this->sDBPrefix."orders
-                      WHERE date >= '".$date."' AND date < '".strtotime('+1 day', $date)."'";
+                      WHERE date >= '%d' AND date < '%d'";
+            $query = sprintf($query, $date, strtotime('+1 day', $date));
 
             if(!empty($this->statuses)) {
                 $statuses = explode("|", $this->statuses);
@@ -3562,55 +4554,60 @@ class XCartSA extends MainSA {
                         }
                     }
                     $parse_statuses = implode("','", $stat);
-                    $query .= " AND status IN ('".$parse_statuses."')";
+                    $query .= sprintf(" AND status IN ('%s')", $parse_statuses);
                 }
             }
             $query .= " GROUP BY DATE(date) ORDER BY date";
 
-            $result = mysql_query($query);
-
-            if(mysql_num_rows($result) > 0) {
-                while($row = mysql_fetch_assoc($result)) {
-                    $orders[] = array($row['date_add']*1000, $row['value']);
+            $total_order_per_day = 0;
+            $result = $this->rLink->query($query);
+            if($this->rLink->affected($result)) {
+                while($row = $this->rLink->results($result)) {
+                    $total_order_per_day += $row['value'];
 
                     $average['tot_orders'] += $row['tot_orders'];
                     $average['sum_orders'] += $row['value'];
                 }
-            } else {
-                $orders[] = array($date*1000, 0);
+//            } else {
+//                $orders[] = array($date*1000, 0);
             }
+            $orders[] = array($date*1000, $total_order_per_day);
 
-            //Customers
             $query = "SELECT COUNT(id) AS tot_customers, first_login AS date_add FROM ".$this->sDBPrefix."customers
 				  WHERE usertype <> 'P' AND
-				  first_login >= '".$date."' AND first_login < '".strtotime('+1 day', $date)."'
+				  first_login >= '%d' AND first_login < '%d'
 				  GROUP BY DATE(first_login) ORDER BY first_login";
+            $query = sprintf($query, $date, strtotime('+1 day', $date));
 
-            $result = mysql_query($query);
+            $total_customer_per_day = 0;
+            $result = $this->rLink->query($query);
+            if($this->rLink->affected($result)) {
+                while($row = $this->rLink->results($result)) {
+                    $total_customer_per_day += $row['tot_customers'];
 
-            if(mysql_num_rows($result) > 0) {
-                while($row = mysql_fetch_assoc($result)) {
-                    $customers[] = array($row['date_add']*1000, $row['tot_customers']);
                     $average['tot_customers'] += $row['tot_customers'];
                 }
-            } else {
-                $customers[] = array($date*1000, 0);
+//            } else {
+//                $customers[] = array($date*1000, 0);
             }
+            $customers[] = array($date*1000, $total_customer_per_day);
+
             $date = strtotime('+1 day', $date);
         }
 
         $default_attrs = $this->_get_default_attrs();
 
+        if($d <= 0) $d = 1;
         $average['avg_sum_orders'] = $this->_price_format($average['sum_orders']/$d);
-        $average['avg_orders'] = number_format($average['tot_orders']/$d, 1, '.', '');
-        $average['avg_customers'] = number_format($average['tot_customers']/$d, 1, '.', '');
+        $average['avg_orders'] = number_format($average['tot_orders']/$d, 1, '.', ' ');
+        $average['avg_customers'] = number_format($average['tot_customers']/$d, 1, '.', ' ');
 
         if($average['tot_customers'] > 0) {
             $average['avg_cust_order'] = $this->_price_format($average['sum_orders']/$average['tot_customers']);
         }
         $average['sum_orders'] = $this->_price_format($average['sum_orders']);
-        $average['tot_customers'] = number_format($average['tot_customers'], 1, '.', '');
-        $average['tot_orders'] = number_format($average['tot_orders'], 1, '.', '');
+        $average['tot_customers'] = number_format($average['tot_customers'], 1, '.', ' ');
+        $average['tot_orders'] = number_format($average['tot_orders'], 1, '.', ' ');
 
         return array('orders' => $orders, 'customers' => $customers, 'currency_sign' => $default_attrs['currency_symbol'], 'average' => $average, 'currency_style' => $default_attrs['currency_format']);
     }
@@ -3619,13 +4616,13 @@ class XCartSA extends MainSA {
         $orders = array();
         $default_attrs = $this->_get_default_attrs();
         if(!empty($this->search_order_id)) {
-            $query_where_parts[] = " o.orderid = '".$this->search_order_id."'";
+            $query_where_parts[] = sprintf(" o.orderid = '%d'", $this->search_order_id);
         }
         if(!empty($this->orders_from)) {
-            $query_where_parts[] = " date >= '".strtotime($this->orders_from." 00:00:00")."'";
+            $query_where_parts[] = sprintf(" date >= '%d'", strtotime($this->orders_from." 00:00:00"));
         }
         if(!empty($this->orders_to)) {
-            $query_where_parts[] = " date <= '".strtotime($this->orders_to." 23:59:59")."'";
+            $query_where_parts[] = sprintf(" date <= '%d'", strtotime($this->customers_from." 23:59:59"));
         }
         if(!empty($this->statuses)) {
             $statuses = explode("|", $this->statuses);
@@ -3637,7 +4634,7 @@ class XCartSA extends MainSA {
                     }
                 }
                 $this->statuses = implode("','", $stat);
-                $query_where_parts[] = " status IN ('".$this->statuses."')";
+                $query_where_parts[] = sprintf(" status IN ('%s')", $this->statuses);
             }
         }
 
@@ -3647,7 +4644,7 @@ class XCartSA extends MainSA {
                     o.total AS order_total,
 					CONCAT(o.firstname, ' ', o.lastname) AS customer,
 					o.status AS ord_status,
-					(SELECT SUM(amount) FROM ".$this->sDBPrefix."order_details WHERE orderid = o.orderid) AS qty_ordered
+					(SELECT SUM(amount) FROM ".$this->sDBPrefix."order_details WHERE orderid = o.orderid) AS count_prods
 				  FROM ".$this->sDBPrefix."orders AS o";
 
         $query_page = "SELECT SUM(o.total) AS orders_total, COUNT(o.orderid) AS count_ords, MAX(o.date) AS max_date, MIN(o.date) AS min_date
@@ -3657,22 +4654,43 @@ class XCartSA extends MainSA {
             $query .= " WHERE " . implode(" AND ", $query_where_parts);
             $query_page .= " WHERE " . implode(" AND ", $query_where_parts);
         }
-        $result_page = mysql_query($query_page);
-        $row_page = mysql_fetch_assoc($result_page);
-        $query .= " ORDER BY o.orderid DESC LIMIT ".($this->page - 1)*$this->show." , ".$this->show;
 
-        $result = mysql_query($query);
+        if(empty($this->sort_by)) {
+            $this->sort_by = "id";
+        }
 
-        while($row = mysql_fetch_assoc($result)) {
-            $row['total_paid'] = $this->_price_format($row['order_total']);
-            $row['ord_status'] = $this->_get_order_status($row['ord_status']);
+        $query .= " ORDER BY ";
+        switch ($this->sort_by) {
+            case 'id':
+                $query .= "o.orderid DESC";
+                break;
+            case 'date':
+                $query .= "o.date DESC";
+                break;
+            case 'name':
+                $query .= "customer ASC";
+                break;
+        }
 
-            $row['date_add'] = strftime($default_attrs['date_format'], $row['date_add']) . ' ' . strftime($default_attrs['time_format'], $row['date_add']);
-            $orders[] = $row;
+        $query .= sprintf(" LIMIT %d, %d", (($this->page - 1)*$this->show), $this->show);
+
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            while($row = $this->rLink->results($result)) {
+                $row['total_paid'] = $this->_price_format($row['order_total']);
+                $row['ord_status'] = $this->_get_order_status($row['ord_status']);
+
+                $row['date_add'] = strftime($default_attrs['date_format'], $row['date_add']) . ' ' . strftime($default_attrs['time_format'], $row['date_add']);
+                $orders[] = $row;
+            }
         }
 
         $max_date = '';
         $min_date = '';
+        $result = $this->rLink->query($query_page);
+        if($this->rLink->affected($result)) {
+            $row_page = $this->rLink->results($result);
+        }
         if($row_page['count_ords'] > 0) {
             $max_date = date("n/j/Y", $row_page['max_date']);
             $min_date = date("n/j/Y", $row_page['min_date']);
@@ -3704,9 +4722,11 @@ class XCartSA extends MainSA {
             'lbl_complete' => 'C');
         $query = "SELECT name, value FROM ".$this->sDBPrefix."languages WHERE name IN ('lbl_not_finished', 'lbl_processed', 'lbl_backordered', 'lbl_declined', 'lbl_failed', 'lbl_queued', 'lbl_complete') AND code = '".$default_attrs['default_admin_language']."'";
 
-        $result_status = mysql_query($query);
-        while($row = mysql_fetch_assoc($result_status)) {
-            $orders_status[] = array('st_id' => $statuses[$row['name']], 'st_name' => $row['value']);
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            while($row = $this->rLink->results($result)) {
+                $orders_status[] = array('st_id' => $statuses[$row['name']], 'st_name' => $row['value']);
+            }
         }
         return $orders_status;
     }
@@ -3757,11 +4777,12 @@ class XCartSA extends MainSA {
             LEFT JOIN ".$this->sDBPrefix."customers AS c ON c.id = o.userid
             LEFT JOIN ".$this->sDBPrefix."states AS b_s ON b_s.code = o.b_state
             LEFT JOIN ".$this->sDBPrefix."states AS s_s ON s_s.code = o.s_state
-            WHERE o.orderid = '".$this->order_id."'";
+            WHERE o.orderid = '%d'";
+        $query = sprintf($query, $this->order_id);
 
-        $result = mysql_query($query);
-        if(mysql_num_rows($result) > 0) {
-            $order_info = mysql_fetch_assoc($result);
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            $order_info = $this->rLink->results($result);
             $order_info['date_add'] = strftime($default_attrs['date_format'], $order_info['date']) . ' ' . strftime($default_attrs['time_format'], $order_info['date']);
             $order_info['subtotal'] = $this->_price_format($order_info['subtotal']);
             $order_info['discount'] = $this->_price_format($order_info['discount']);
@@ -3771,18 +4792,29 @@ class XCartSA extends MainSA {
             $order_info['total'] = $this->_price_format($order_info['total']);
             $order_info['status'] = $this->_get_order_status($order_info['status']);
         }
-        $query = "SELECT orderid AS id_order, productid AS product_id, product, amount, price, productcode AS sku FROM ".$this->sDBPrefix."order_details WHERE orderid = '".$this->order_id."'";
-        $query_page = "SELECT COUNT(productid) AS count_prods FROM ".$this->sDBPrefix."order_details WHERE orderid = '".$this->order_id."'";
-        $result_page = mysql_query($query_page);
-        $row_page = mysql_fetch_assoc($result_page);
-        $query .= " LIMIT ".($this->page - 1)*$this->show." , ".$this->show;
-        $result = mysql_query($query);
-        while($row = mysql_fetch_assoc($result)) {
-            $row['product_price'] = $this->_price_format($row['price']*$row['amount']);
-            $row['product_quantity'] = intval($row['amount']);
-            $row['product_name'] = utf8_encode($row['product']);
-            $order_products[] = $row;
+        $query = "SELECT orderid AS id_order, productid AS product_id, product, amount, price, productcode AS sku
+                  FROM ".$this->sDBPrefix."order_details
+                  WHERE orderid = '%d' LIMIT %d, %d";
+        $query = sprintf($query, $this->order_id, (($this->page - 1)*$this->show), $this->show);
+
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            while($row = $this->rLink->results($result)) {
+                $row['product_price'] = $this->_price_format($row['price']*$row['amount']);
+                $row['product_quantity'] = intval($row['amount']);
+                $row['product_name'] = utf8_encode($row['product']);
+                $order_products[] = $row;
+            }
         }
+
+        $query_page = "SELECT COUNT(productid) AS count_prods FROM ".$this->sDBPrefix."order_details WHERE orderid = '%d'";
+        $query_page = sprintf($query_page, $this->order_id);
+
+        $result = $this->rLink->query($query_page);
+        if($this->rLink->affected($result)) {
+            $row_page = $this->rLink->results($result);
+        }
+
         $order_full_info = array("order_info" => $order_info, "order_products" => $order_products, "o_products_count" => $row_page['count_prods']);
         return $order_full_info;
     }
@@ -3792,13 +4824,13 @@ class XCartSA extends MainSA {
         $default_attrs = $this->_get_default_attrs();
 
         if(!empty($this->customers_from)) {
-            $query_where_parts[] = " c.first_login >= '".strtotime($this->customers_from." 00:00:00")."'";
+            $query_where_parts[] = sprintf(" c.first_login >= '%d'", strtotime($this->customers_from." 00:00:00"));
         }
         if(!empty($this->customers_to)) {
-            $query_where_parts[] = " c.first_login <= '".strtotime($this->customers_to." 23:59:59")."'";
+            $query_where_parts[] = sprintf(" c.first_login <= '%d'", strtotime($this->customers_to." 23:59:59"));
         }
         if(!empty($this->search_val)) {
-            $query_where_parts[] = " (c.email LIKE '%".$this->search_val."%' OR c.firstname LIKE '%".$this->search_val."%' OR c.lastname LIKE '%".$this->search_val."%')";
+            $query_where_parts[] = sprintf(" (c.email LIKE '%%%s%%' OR c.firstname LIKE '%%%s%%' OR c.lastname LIKE '%%%s%%' OR CONCAT(c.firstname, ' ', c.lastname) LIKE '%%%s%%')", $this->search_val, $this->search_val, $this->search_val, $this->search_val);
         }
         if(!empty($this->cust_with_orders)) {
             $query_where_parts[] = " tot.total_orders > 0";
@@ -3808,6 +4840,7 @@ class XCartSA extends MainSA {
 					c.id AS id_customer,
 					c.firstname,
 					c.lastname,
+					CONCAT(c.firstname, ' ', c.lastname) AS full_name,
 					c.first_login,
 					c.email,
 					IFNULL(tot.total_orders, 0) AS total_orders
@@ -3821,24 +4854,47 @@ class XCartSA extends MainSA {
             $query .= " WHERE " . implode(" AND ", $query_where_parts);
             $query_page .= " WHERE " . implode(" AND ", $query_where_parts);
         }
-        $query .= " LIMIT ".($this->page - 1)*$this->show." , ".$this->show;
-        $result_page = mysql_query($query_page);
-        $row_page = mysql_fetch_assoc($result_page);
 
-        $result = mysql_query($query);
-        while($row = mysql_fetch_assoc($result)) {
-            $row['date_add'] = strftime($default_attrs['date_format'], $row['first_login']) . ' ' . strftime($default_attrs['time_format'], $row['first_login']);
-            $row['total_orders'] = intval($row['total_orders']);
-            $customers[] = $row;
+        if(empty($this->sort_by)) {
+            $this->sort_by = "id";
+        }
+
+        $query .= " ORDER BY ";
+        switch ($this->sort_by) {
+            case 'id':
+                $query .= "c.id DESC";
+                break;
+            case 'date':
+                $query .= "c.first_login DESC";
+                break;
+            case 'name':
+                $query .= "full_name ASC";
+                break;
+        }
+
+        $query .= sprintf(" LIMIT %d, %d", (($this->page - 1)*$this->show), $this->show);
+
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            while($row = $this->rLink->results($result)) {
+                $row['date_add'] = strftime($default_attrs['date_format'], $row['first_login']) . ' ' . strftime($default_attrs['time_format'], $row['first_login']);
+                $row['total_orders'] = intval($row['total_orders']);
+                $customers[] = $row;
+            }
         }
 
         $max_date = '';
         $min_date = '';
+        $result = $this->rLink->query($query_page);
+        if($this->rLink->affected($result)) {
+            $row_page = $this->rLink->results($result);
+        }
+
         if($row_page['count_custs'] > 0) {
             $max_date = date("n/j/Y", $row_page['max_date']);
             $min_date = date("n/j/Y", $row_page['min_date']);
         }
-        return array("customers_count" => $row_page['count_custs'],
+        return array("customers_count" => intval($row_page['count_custs']),
             "customers" => $customers,
             "max_date" => $max_date,
             "min_date" => $min_date);
@@ -3861,25 +4917,39 @@ class XCartSA extends MainSA {
 				  FROM ".$this->sDBPrefix."customers AS c
 				  	LEFT JOIN ".$this->sDBPrefix."address_book AS ab ON ab.userid = c.id AND default_s = 'Y'
 				  	LEFT JOIN ".$this->sDBPrefix."states AS s ON s.code = ab.state
-				  WHERE c.id = '".$this->user_id."'";
-        $result = mysql_query($query);
-        $user_info = mysql_fetch_assoc($result);
+				  WHERE c.id = '%d'";
+        $query = sprintf($query, $this->user_id);
+
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            $user_info = $this->rLink->results($result);
+        }
+
         $user_info['date_add'] = strftime($default_attrs['date_format'], $user_info['first_login']) . ' ' . strftime($default_attrs['time_format'], $user_info['first_login']);
         $user_info['address'] = $this->split_values($user_info, array('country','state','city','address'));
 
         $query = "SELECT orderid AS id_order, total, status, date, (SELECT SUM(amount) FROM ".$this->sDBPrefix."order_details WHERE orderid = o.orderid) AS pr_qty
-				  FROM ".$this->sDBPrefix."orders AS o WHERE o.userid = '".$this->user_id."'";
-        $query_page = "SELECT COUNT(orderid) AS count_ords, SUM(total) AS sum_ords FROM ".$this->sDBPrefix."orders WHERE userid = '".$this->user_id."'";
-        $result_page = mysql_query($query_page);
-        $row_page = mysql_fetch_assoc($result_page);
-        $query .= " LIMIT ".($this->page - 1)*$this->show." , ".$this->show;
-        $result = mysql_query($query);
-        while($row = mysql_fetch_assoc($result)) {
-            $row['total_paid'] = $this->_price_format($row['total']);
-            $row['ord_status'] = $this->_get_order_status($row['status']);
-            $row['date_add'] = strftime($default_attrs['date_format'], $row['date']) . ' ' . strftime($default_attrs['time_format'], $row['date']);
-            $customer_orders[] = $row;
+				  FROM ".$this->sDBPrefix."orders AS o WHERE o.userid = '%d' ORDER BY orderid DESC LIMIT %d, %d";
+        $query = sprintf($query, $this->user_id, ($this->page - 1)*$this->show, $this->show);
+
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            while($row = $this->rLink->results($result)) {
+                $row['total_paid'] = $this->_price_format($row['total']);
+                $row['ord_status'] = $this->_get_order_status($row['status']);
+                $row['date_add'] = strftime($default_attrs['date_format'], $row['date']) . ' ' . strftime($default_attrs['time_format'], $row['date']);
+                $customer_orders[] = $row;
+            }
         }
+
+        $query_page = "SELECT COUNT(orderid) AS count_ords, SUM(total) AS sum_ords FROM ".$this->sDBPrefix."orders WHERE userid = '%d'";
+        $query_page = sprintf($query_page, $this->user_id);
+
+        $result = $this->rLink->query($query_page);
+        if($this->rLink->affected($result)) {
+            $row_page = $this->rLink->results($result);
+        }
+
         $row_page['sum_ords'] = $this->_price_format($row_page['sum_ords']);
         $customer_info = array("user_info" => $user_info, "customer_orders" => $customer_orders, "c_orders_count" => intval($row_page['count_ords']), "sum_ords" => $row_page['sum_ords']);
         return $customer_info;
@@ -3895,23 +4965,30 @@ class XCartSA extends MainSA {
         foreach($this->params as $param) {
             switch ($param) {
                 case 'pr_id':
-                    $query_where_parts[] = " p.productid = '".$this->val."'";
+                    $query_where_parts[] = sprintf(" p.productid = '%d'", $this->val);
                     break;
                 case 'pr_sku':
-                    $query_where_parts[] = " p.productcode = '".$this->val."'";
+                    $query_where_parts[] = sprintf(" p.productcode = '%s'", $this->val);
                     break;
                 case 'pr_name':
-                    $query_where_parts[] = " prl.product LIKE '%".$this->val."%'";
+                    $query_where_parts[] = sprintf(" prl.product LIKE '%%%s%%'", $this->val);
                     break;
                 case 'pr_desc':
-                    $query_where_parts[] = " prl.fulldescr LIKE '%".$this->val."%'";
+                    $query_where_parts[] = sprintf(" prl.fulldescr LIKE '%%%s%%'", $this->val);
                     break;
                 case 'pr_short_desc':
-                    $query_where_parts[] = " prl.descr LIKE '%".$this->val."%'";
+                    $query_where_parts[] = sprintf(" prl.descr LIKE '%%%s%%'", $this->val);
                     break;
             }
         }
-        $query = "SELECT p.productid AS main_id, p.productcode AS sku, prl.product AS name, pr.price, p.list_price, p.avail AS quantity
+        $query = "SELECT
+                    p.productid AS main_id,
+                    p.productid AS product_id,
+                    p.productcode AS sku,
+                    prl.product AS name,
+                    pr.price,
+                    p.list_price,
+                    p.avail AS quantity
 				  FROM ".$this->sDBPrefix."products AS p
 				  LEFT JOIN ".$this->sDBPrefix."pricing AS pr ON pr.productid = p.productid AND pr.quantity = 1 AND variantid = 0
 				  LEFT JOIN ".$this->sDBPrefix."products_lng_".$def_lang." AS prl ON prl.productid = p.productid";
@@ -3922,17 +4999,38 @@ class XCartSA extends MainSA {
             $query .= " WHERE ( " . implode(" OR ", $query_where_parts) . " )";
             $query_page .= " WHERE ( " . implode(" OR ", $query_where_parts) . " )";
         }
-        $result_page = mysql_query($query_page);
-        $row_page = mysql_fetch_assoc($result_page);
-        $query .= " GROUP BY p.productid LIMIT ".($this->page - 1)*$this->show." , ".$this->show;
 
-        $result = mysql_query($query);
-        while($row = mysql_fetch_assoc($result)) {
-            $row['price'] = $this->_price_format($row['price']);
-            $row['list_price'] = $this->_price_format($row['list_price']);
-            $products[] = $row;
+        if(empty($this->sort_by)) {
+            $this->sort_by = "id";
         }
-        return array("products_count" => $row_page['count_prods'], "products" => $products);
+
+        $query .= " GROUP BY p.productid ORDER BY ";
+        switch ($this->sort_by) {
+            case 'id':
+                $query .= "p.productid DESC";
+                break;
+            case 'name':
+                $query .= "name ASC";
+                break;
+        }
+
+        $query .= sprintf(" LIMIT %d, %d", (($this->page - 1)*$this->show), $this->show);
+
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            while($row = $this->rLink->results($result)) {
+                $row['price'] = $this->_price_format($row['price']);
+                $row['list_price'] = $this->_price_format($row['list_price']);
+                $products[] = $row;
+            }
+        }
+
+        $result = $this->rLink->query($query_page);
+        if($this->rLink->affected($result)) {
+            $row_page = $this->rLink->results($result);
+        }
+
+        return array("products_count" => intval($row_page['count_prods']), "products" => $products);
     }
 
     public function search_products_ordered() {
@@ -3942,24 +5040,40 @@ class XCartSA extends MainSA {
         foreach($this->params as $param) {
             switch ($param) {
                 case 'pr_id':
-                    $query_where_parts[] = " od.productid = '".$this->val."'";
+                    $query_where_parts[] = sprintf(" od.productid = '%d'", $this->val);
                     break;
                 case 'pr_sku':
-                    $query_where_parts[] = " od.productcode = '".$this->val."'";
+                    $query_where_parts[] = sprintf(" od.productcode = '%s'", $this->val);
                     break;
                 case 'pr_name':
-                    $query_where_parts[] = " od.product LIKE '%".$this->val."%'";
+                    $query_where_parts[] = sprintf(" od.product LIKE '%%%s%%'", $this->val);
                     break;
             }
         }
         if(!empty($this->products_from)) {
-            $query_where_parts[] = " o.date >= '".strtotime($this->products_from." 00:00:00")."'";
+            $query_where_parts[] = sprintf(" o.date >= '%d'", strtotime($this->products_from." 00:00:00"));
         }
         if(!empty($this->products_to)) {
-            $query_where_parts[] = " o.date <= '".strtotime($this->products_to." 23:59:59")."'";
+            $query_where_parts[] = sprintf(" o.date <= '%d'", strtotime($this->products_to." 23:59:59"));
         }
+
+        if(!empty($this->statuses)) {
+            $statuses = explode("|", $this->statuses);
+            if(!empty($statuses)) {
+                $stat = array();
+                foreach($statuses as $status) {
+                    if($status != "") {
+                        $stat[] = $status;
+                    }
+                }
+                $parse_statuses = implode("','", $stat);
+                $query_where_parts[] = sprintf(" o.status IN ('%s')", $parse_statuses);
+            }
+        }
+
         $query = "SELECT
                     od.orderid AS main_id,
+                    od.productid AS product_id,
                     od.productcode AS sku,
                     od.product AS name,
                     od.price,
@@ -3975,24 +5089,42 @@ class XCartSA extends MainSA {
             $query_page .= " WHERE " . implode(" AND ", $query_where_parts);
         }
 
-        $result_page = mysql_query($query_page);
-        $row_page = mysql_fetch_assoc($result_page);
-        $query .= " ORDER BY od.orderid DESC LIMIT ".($this->page - 1)*$this->show." , ".$this->show;
-        $result = mysql_query($query);
+        if(empty($this->sort_by)) {
+            $this->sort_by = "id";
+        }
 
-        while($row = mysql_fetch_assoc($result)) {
-            $row['price'] = $this->_price_format($row['price']);
-            $row['status'] = $this->_get_order_status($row['status']);
-            $products[] = $row;
+        $query .= " ORDER BY ";
+        switch ($this->sort_by) {
+            case 'id':
+                $query .= "od.productid DESC";
+                break;
+            case 'name':
+                $query .= "name ASC";
+                break;
+        }
+
+        $query .= sprintf(" LIMIT %d, %d", (($this->page - 1)*$this->show), $this->show);
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            while($row = $this->rLink->results($result)) {
+                $row['price'] = $this->_price_format($row['price']);
+                $row['status'] = $this->_get_order_status($row['status']);
+                $products[] = $row;
+            }
         }
 
         $max_date = '';
         $min_date = '';
+        $result = $this->rLink->query($query_page);
+        if($this->rLink->affected($result)) {
+            $row_page = $this->rLink->results($result);
+        }
+
         if($row_page['count_prods'] > 0) {
             $max_date = date("n/j/Y", $row_page['max_date']);
             $min_date = date("n/j/Y", $row_page['min_date']);
         }
-        return array("products_count" => $row_page['count_prods'],
+        return array("products_count" => intval($row_page['count_prods']),
             "products" => $products,
             "max_date" => $max_date,
             "min_date" => $min_date);
@@ -4003,9 +5135,9 @@ class XCartSA extends MainSA {
         $def_lang = $default_attrs['default_admin_language'];
 
         $images_table = 'images_t';
-        $sqlResult = mysql_query("SHOW TABLES LIKE '%".$this->sDBPrefix.$images_table."%'");
-        $result = mysql_num_rows($sqlResult);
-        if($result <= 0) {
+        $query = "SHOW TABLES LIKE '%".$this->sDBPrefix.$images_table."%'";
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result) <= 0) {
             $images_table = 'images_T';
         }
 
@@ -4027,38 +5159,44 @@ class XCartSA extends MainSA {
 				    LEFT JOIN ".$this->sDBPrefix."pricing AS pr ON pr.productid = p.productid AND pr.quantity = 1 AND variantid = 0
 					LEFT JOIN ".$this->sDBPrefix.$images_table." AS i ON i.id = p.productid
 					LEFT JOIN ".$this->sDBPrefix."products_lng_".$def_lang." AS prl ON prl.productid = p.productid
-				WHERE p.productid = '".$this->product_id."' GROUP BY pr.productid";
+				WHERE p.productid = '%d' GROUP BY pr.productid";
+        $query = sprintf($query, $this->product_id);
 
-        $res = mysql_query($query);
-        $row = false;
-        if(mysql_num_rows($res) > 0) {
-            $row = mysql_fetch_assoc($res);
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            $row = $this->rLink->results($result);
             $row['price'] = $this->_price_format($row['price']);
             $row['list_price'] = $this->_price_format($row['list_price']);
             $row['total_ordered'] = intval($row['total_ordered']);
             if(file_exists($row['image_path'])) {
                 $row['id_image'] = $this->site_url . $row['image_path'];
             }
+            return $row;
         }
-        return $row;
+        return false;
     }
 
     public function get_products_descr() {
         $default_attrs = $this->_get_default_attrs();
-        $query = "SELECT IF(fulldescr = '', descr, fulldescr) AS descr FROM ".$this->sDBPrefix."products_lng_".$default_attrs['default_admin_language']." WHERE productid = '".$this->product_id."'";
-        $row = mysql_fetch_assoc(mysql_query($query));
-        return $row;
+        $query = "SELECT IF(fulldescr = '', descr, fulldescr) AS descr FROM ".$this->sDBPrefix."products_lng_".$default_attrs['default_admin_language']." WHERE productid = '%d'";
+        $query = sprintf($query, $this->product_id);
+
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            $row = $this->rLink->results($result);
+            return $row;
+        }
+        return false;
     }
 
     private function _price_format($price, $no_format = false) {
         $default_attrs = $this->_get_default_attrs();
 
         if(!$no_format) {
-            $price = number_format($price, 2, '.', '');
+            $price = number_format($price, 2, '.', ' ');
         }
 
         $curr_format = str_replace('x', $price, $default_attrs['currency_format']);
-
         $curr_format = str_replace('$', '<span>' . $default_attrs['currency_symbol'] . '</span>', $curr_format);
         return $curr_format;
     }
@@ -4066,9 +5204,11 @@ class XCartSA extends MainSA {
     private function _get_default_attrs() {
         $default_attrs = array();
         $query = "SELECT name, value FROM ".$this->sDBPrefix."config WHERE name IN ( 'date_format', 'time_format', 'company_name', 'currency_symbol', 'default_admin_language', 'currency_format' )";
-        $result = mysql_query($query);
-        while($row = mysql_fetch_assoc($result)) {
-            $default_attrs[$row['name']] = $row['value'];
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            while($row = $this->rLink->results($result)) {
+                $default_attrs[$row['name']] = $row['value'];
+            }
         }
         return $default_attrs;
     }
@@ -4106,9 +5246,9 @@ class XCartSA extends MainSA {
         $default_attrs = $this->_get_default_attrs();
 
         $query = "SELECT value FROM ".$this->sDBPrefix."languages WHERE name = '".$ord_status."' AND code = '".$default_attrs['default_admin_language']."'";
-        $result = mysql_query($query);
-        if(mysql_num_rows($result) == 1) {
-            $row = mysql_fetch_assoc($result);
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            $row = $this->rLink->results($result);
             return $row['value'];
         }
         return '';
@@ -4124,19 +5264,23 @@ class OpenCartSA extends MainSA {
     }
 
     public function get_store_stats() {
-        $store_stats = array('count_orders' => "0", 'total_sales' => "0", 'count_customers' => "0", "last_order_id" => "0", "new_orders" => "0");
+        $store_stats = array('count_orders' => "0", 'total_sales' => "0", 'count_customers' => "0", 'count_products' => "0", "last_order_id" => "0", "new_orders" => "0");
         $default_attrs = $this->_get_default_attrs();
-        /*
-        if(!empty($this->date_from)) {
-            $query_where_parts[] = " UNIX_TIMESTAMP(date_added) >= '".strtotime($this->date_from." 00:00:00")."'";
-        }
-        if(!empty($this->date_to)) {
-            $query_where_parts[] = " UNIX_TIMESTAMP(date_added) <= '".strtotime($this->date_to." 23:59:59")."'";
-        }
-        */
+
         $today = date("Y-m-d", time());
-        $query_where_parts[] = " UNIX_TIMESTAMP(date_added) >= '".strtotime($today . " 00:00:00")."'";
-        $query_where_parts[] = " UNIX_TIMESTAMP(date_added) <= '".strtotime($today . " 23:59:59")."'";
+        $date_from = $date_to = $today;
+
+        if(!empty($this->stats_from)) {
+            $date_from = $this->stats_from;
+        }
+
+        if(!empty($this->stats_to)) {
+            $date_to = $this->stats_to;
+        }
+
+        $query_where_parts[] = sprintf(" UNIX_TIMESTAMP(o.date_added) >= '%d'", strtotime($date_from . " 00:00:00"));
+        $query_where_parts[] = sprintf(" UNIX_TIMESTAMP(o.date_added) <= '%d'", strtotime($date_to . " 23:59:59"));
+
         if(!empty($this->statuses)) {
             $statuses = explode("|", $this->statuses);
             if(!empty($statuses)) {
@@ -4147,31 +5291,46 @@ class OpenCartSA extends MainSA {
                     }
                 }
                 $parse_statuses = implode("','", $stat);
-                $query_where_parts[] = " order_status_id IN ('".$parse_statuses."')";
+                $query_where_parts[] = sprintf(" o.order_status_id IN ('%s')", $parse_statuses);
             }
         }
 
-        $query = "SELECT COUNT(order_id) AS count_orders, SUM(total) AS total_sales FROM `".$this->sDBPrefix."order`";
+        $query = "SELECT COUNT(o.order_id) AS count_orders, SUM(o.total) AS total_sales FROM `".$this->sDBPrefix."order` AS o";
         if(!empty($query_where_parts)) {
             $query .= " WHERE " . implode(" AND ", $query_where_parts);
         }
 
-        $result = mysql_query($query);
-        if(mysql_num_rows($result) > 0) {
-            $store_stats = mysql_fetch_assoc($result);
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            $store_stats = $this->rLink->results($result);
             $store_stats['total_sales'] = $this->_price_format($this->bd_nice_number($store_stats['total_sales']), $default_attrs['config_currency'], false);
         }
 
+
+        $query_prods = "SELECT COUNT(op.product_id) AS count_products FROM `".$this->sDBPrefix."order` AS o
+                  LEFT JOIN ".$this->sDBPrefix."order_product AS op ON op.order_id = o.order_id";
+        if(!empty($query_where_parts)) {
+            $query_prods .= " WHERE " . implode(" AND ", $query_where_parts);
+        }
+        $result_prods = $this->rLink->query($query_prods);
+        if($this->rLink->affected($result_prods)) {
+            $row_prods = $this->rLink->results($result_prods);
+            $store_stats['count_products'] = $this->bd_nice_number($row_prods['count_products'], true);
+        }
+
+
         if($this->last_order_id != "") {
-            $query_max = "SELECT COUNT(order_id) AS count_orders, MAX(order_id) AS last_order_id
-                          FROM `".$this->sDBPrefix."order`
-                          WHERE order_id > ".$this->last_order_id;
+            $query_max = "SELECT COUNT(o.order_id) AS count_orders, MAX(o.order_id) AS last_order_id
+                          FROM `".$this->sDBPrefix."order` AS o
+                          WHERE o.order_id > '%d'";
+            $query_max = sprintf($query_max, $this->last_order_id);
+
             if(!empty($query_where_parts)) {
                 $query_max .= " AND " . implode(" AND ", $query_where_parts);
             }
-            $result_max = mysql_query($query_max);
-            if(mysql_num_rows($result_max) > 0) {
-                $row_max = mysql_fetch_assoc($result_max);
+            $result_max = $this->rLink->query($query_max);
+            if($this->rLink->affected($result_max)) {
+                $row_max = $this->rLink->results($result_max);
                 $store_stats['last_order_id'] = intval($this->last_order_id);
                 if(intval($row_max['last_order_id']) > intval($this->last_order_id)) {
                     $store_stats['last_order_id'] = intval($row_max['last_order_id']);
@@ -4181,30 +5340,31 @@ class OpenCartSA extends MainSA {
         }
 
         unset($query_where_parts);
-        /*
-        if(!empty($this->date_from)) {
-            $query_where_parts[] = " UNIX_TIMESTAMP(date_added) >= '".strtotime($this->date_from." 00:00:00")."'";
-        }
-        if(!empty($this->date_to)) {
-            $query_where_parts[] = " UNIX_TIMESTAMP(date_added) <= '".strtotime($this->date_to." 23:59:59")."'";
-        }
-        */
-        $query_where_parts[] = " UNIX_TIMESTAMP(date_added) >= '".strtotime($today . " 00:00:00")."'";
-        $query_where_parts[] = " UNIX_TIMESTAMP(date_added) <= '".strtotime($today . " 23:59:59")."'";
+        $query_where_parts[] = sprintf(" UNIX_TIMESTAMP(date_added) >= '%d'", strtotime($today . " 00:00:00"));
+        $query_where_parts[] = sprintf(" UNIX_TIMESTAMP(date_added) <= '%d'", strtotime($today . " 23:59:59"));
         $query = "SELECT COUNT(customer_id) AS count_customers FROM ".$this->sDBPrefix."customer";
         if(!empty($query_where_parts)) {
             $query .= " WHERE " . implode(" AND ", $query_where_parts);
         }
 
-        $result = mysql_query($query);
-        if(mysql_num_rows($result) > 0) {
-            $row = mysql_fetch_assoc($result);
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            $row = $this->rLink->results($result);
             $store_stats = array_merge($store_stats, $row);
         }
 
-        $this->graph_to = $today;
-        $this->graph_from = date("Y-m-d", mktime(0, 0, 0, date("m")  , date("d")-7, date("Y")));
-        $data_graphs = $this->get_data_graphs();
+
+        if(empty($this->graph_from)) {
+            $this->graph_from = date("Y-m-d", mktime(0, 0, 0, date("m"), date("d")-7, date("Y")));
+        }
+
+        if(empty($this->graph_to)) {
+            $this->graph_to = $this->stats_to;
+        }
+
+        if(!isset($this->data_for_widget) || empty($this->data_for_widget) || $this->data_for_widget != 1) {
+            $data_graphs = $this->get_data_graphs();
+        }
 
         $store_stats['count_orders'] = $this->bd_nice_number($store_stats['count_orders'], true);
         $store_stats['count_customers'] = $this->bd_nice_number($store_stats['count_customers'], true);
@@ -4223,10 +5383,10 @@ class OpenCartSA extends MainSA {
         $customers = array();
         while ($date <= $endDate) {
             $d++;
-            //Orders
             $query = "SELECT COUNT(order_id) AS tot_orders, UNIX_TIMESTAMP(date_added) AS date_add, SUM(total) AS value
                       FROM `".$this->sDBPrefix."order`
-                      WHERE UNIX_TIMESTAMP(date_added) >= '".$date."' AND UNIX_TIMESTAMP(date_added) < '".strtotime('+1 day', $date)."'";
+                      WHERE UNIX_TIMESTAMP(date_added) >= '%d' AND UNIX_TIMESTAMP(date_added) < '%d'";
+            $query = sprintf($query, $date, strtotime('+1 day', $date));
 
             if(!empty($this->statuses)) {
                 $statuses = explode("|", $this->statuses);
@@ -4238,52 +5398,59 @@ class OpenCartSA extends MainSA {
                         }
                     }
                     $parse_statuses = implode("','", $stat);
-                    $query .= " AND order_status_id IN ('".$parse_statuses."')";
+                    $query .= sprintf(" AND order_status_id IN ('%s')", $parse_statuses);
                 }
             }
             $query .= " GROUP BY DATE(date_added) ORDER BY date_added";
 
-            $result = mysql_query($query);
-            if(mysql_num_rows($result) > 0) {
-                while($row = mysql_fetch_assoc($result)) {
-                    $orders[] = array($row['date_add']*1000, $row['value']);
+            $total_order_per_day = 0;
+            $result = $this->rLink->query($query);
+            if($this->rLink->affected($result)) {
+                while($row = $this->rLink->results($result)) {
+                    $total_order_per_day += $row['value'];
 
                     $average['tot_orders'] += $row['tot_orders'];
                     $average['sum_orders'] += $row['value'];
                 }
-            } else {
-                $orders[] = array($date*1000, 0);
+//            } else {
+//                $orders[] = array($date*1000, 0);
             }
+            $orders[] = array($date*1000, $total_order_per_day);
 
-            //Customers
             $query = "SELECT COUNT(customer_id) AS tot_customers, UNIX_TIMESTAMP(date_added) AS date_add FROM ".$this->sDBPrefix."customer
-				  WHERE UNIX_TIMESTAMP(date_added) >= '".$date."' AND UNIX_TIMESTAMP(date_added) < '".strtotime('+1 day', $date)."'
+				  WHERE UNIX_TIMESTAMP(date_added) >= '%d' AND UNIX_TIMESTAMP(date_added) < '%d'
 				  GROUP BY DATE(date_added) ORDER BY date_added";
+            $query = sprintf($query, $date, strtotime('+1 day', $date));
 
-            $result = mysql_query($query);
-            if(mysql_num_rows($result) > 0) {
-                while($row = mysql_fetch_assoc($result)) {
-                    $customers[] = array($row['date_add']*1000, $row['tot_customers']);
+            $total_customer_per_day = 0;
+            $result = $this->rLink->query($query);
+            if($this->rLink->affected($result)) {
+                while($row = $this->rLink->results($result)) {
+                    $total_customer_per_day += $row['tot_customers'];
+
                     $average['tot_customers'] += $row['tot_customers'];
                 }
-            } else {
-                $customers[] = array($date*1000, 0);
+//            } else {
+//                $customers[] = array($date*1000, 0);
             }
+            $customers[] = array($date*1000, $total_customer_per_day);
+
             $date = strtotime('+1 day', $date);
         }
 
         $default_attrs = $this->_get_default_attrs();
 
+        if($d <= 0) $d = 1;
         $average['avg_sum_orders'] = $this->_price_format($average['sum_orders']/$d, $default_attrs['config_currency']);
-        $average['avg_orders'] = number_format($average['tot_orders']/$d, 1, '.', '');
-        $average['avg_customers'] = number_format($average['tot_customers']/$d, 1, '.', '');
+        $average['avg_orders'] = number_format($average['tot_orders']/$d, 1, '.', ' ');
+        $average['avg_customers'] = number_format($average['tot_customers']/$d, 1, '.', ' ');
 
         if($average['tot_customers'] > 0) {
             $average['avg_cust_order'] = $this->_price_format($average['sum_orders']/$average['tot_customers'], $default_attrs['config_currency']);
         }
         $average['sum_orders'] = $this->_price_format($average['sum_orders'], $default_attrs['config_currency']);
-        $average['tot_customers'] = number_format($average['tot_customers'], 1, '.', '');
-        $average['tot_orders'] = number_format($average['tot_orders'], 1, '.', '');
+        $average['tot_customers'] = number_format($average['tot_customers'], 1, '.', ' ');
+        $average['tot_orders'] = number_format($average['tot_orders'], 1, '.', ' ');
 
         return array('orders' => $orders, 'customers' => $customers, 'currency_sign' => $default_attrs['currency_symbol'], 'average' => $average, 'currency_style' => $default_attrs['currency_format']);
     }
@@ -4292,13 +5459,13 @@ class OpenCartSA extends MainSA {
         $orders = array();
         $default_attrs = $this->_get_default_attrs();
         if(!empty($this->search_order_id)) {
-            $query_where_parts[] = " o.order_id = '".$this->search_order_id."'";
+            $query_where_parts[] = sprintf(" o.order_id = '%d'", $this->search_order_id);
         }
         if(!empty($this->orders_from)) {
-            $query_where_parts[] = " UNIX_TIMESTAMP(o.date_added) >= '".strtotime($this->orders_from." 00:00:00")."'";
+            $query_where_parts[] = sprintf(" UNIX_TIMESTAMP(o.date_added) >= '%d'", strtotime($this->orders_from." 00:00:00"));
         }
         if(!empty($this->orders_to)) {
-            $query_where_parts[] = " UNIX_TIMESTAMP(o.date_added) <= '".strtotime($this->orders_to." 23:59:59")."'";
+            $query_where_parts[] = sprintf(" UNIX_TIMESTAMP(o.date_added) <= '%d'", strtotime($this->orders_to." 23:59:59"));
         }
         if(!empty($this->statuses)) {
             $statuses = explode("|", $this->statuses);
@@ -4310,7 +5477,7 @@ class OpenCartSA extends MainSA {
                     }
                 }
                 $this->statuses = implode("','", $stat);
-                $query_where_parts[] = " o.order_status_id IN ('".$this->statuses."')";
+                $query_where_parts[] = sprintf(" o.order_status_id IN ('%s')", $this->statuses);
             }
         }
         $query = "SELECT
@@ -4321,7 +5488,7 @@ class OpenCartSA extends MainSA {
 					CONCAT(o.firstname, ' ', o.lastname) AS customer,
 					o.order_status_id,
 					os.name AS ord_status,
-					(SELECT SUM(quantity) FROM ".$this->sDBPrefix."order_product WHERE order_id = o.order_id) AS qty_ordered
+					(SELECT SUM(quantity) FROM ".$this->sDBPrefix."order_product WHERE order_id = o.order_id) AS count_prods
 				  FROM `".$this->sDBPrefix."order` AS o
 				  LEFT JOIN ".$this->sDBPrefix."order_status AS os ON os.order_status_id = o.order_status_id AND os.language_id = '".$default_attrs['language_id']."'";
 
@@ -4333,21 +5500,43 @@ class OpenCartSA extends MainSA {
             $query_page .= " WHERE " . implode(" AND ", $query_where_parts);
         }
 
-        $result_page = mysql_query($query_page);
-        $row_page = mysql_fetch_assoc($result_page);
-        $query .= " ORDER BY o.order_id DESC LIMIT ".($this->page - 1)*$this->show." , ".$this->show;
+        if(empty($this->sort_by)) {
+            $this->sort_by = "id";
+        }
 
-        $result = mysql_query($query);
-        while($row = mysql_fetch_assoc($result)) {
-            if($row['order_status_id'] == 0) {
-                $row['ord_status'] = $default_attrs['text_missing'];
+        $query .= " ORDER BY ";
+        switch ($this->sort_by) {
+            case 'id':
+                $query .= "o.order_id DESC";
+                break;
+            case 'date':
+                $query .= "o.date_added DESC";
+                break;
+            case 'name':
+                $query .= "customer ASC";
+                break;
+        }
+
+        $query .= sprintf(" LIMIT %d, %d", (($this->page - 1)*$this->show), $this->show);
+
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            while($row = $this->rLink->results($result)) {
+                if($row['order_status_id'] == 0) {
+                    $row['ord_status'] = $default_attrs['text_missing'];
+                }
+                $row['total_paid'] = $this->_price_format($row['order_total'], $row['currency_code']);
+                $orders[] = $row;
             }
-            $row['total_paid'] = $this->_price_format($row['order_total'], $row['currency_code']);
-            $orders[] = $row;
         }
 
         $max_date = '';
         $min_date = '';
+        $result = $this->rLink->query($query_page);
+        if($this->rLink->affected($result)) {
+            $row_page = $this->rLink->results($result);
+        }
+
         if($row_page['count_ords'] > 0) {
             $max_date = date("n/j/Y", strtotime($row_page['max_date']));
             $min_date = date("n/j/Y", strtotime($row_page['min_date']));
@@ -4370,13 +5559,15 @@ class OpenCartSA extends MainSA {
     public function get_orders_statuses() {
         $default_attrs = $this->_get_default_attrs();
         $orders_status = array();
+        $orders_status[] = array('st_id' => 0, 'st_name' => $default_attrs['text_missing']);
+
         $query = "SELECT os.order_status_id, os.name FROM ".$this->sDBPrefix."order_status AS os
              WHERE os.language_id = '".$default_attrs['language_id']."'";
-
-        $result_status = mysql_query($query);
-        $orders_status[] = array('st_id' => 0, 'st_name' => $default_attrs['text_missing']);
-        while($row = mysql_fetch_assoc($result_status)) {
-            $orders_status[] = array('st_id' => $row['order_status_id'], 'st_name' => $row['name']);
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            while($row = $this->rLink->results($result)) {
+                $orders_status[] = array('st_id' => $row['order_status_id'], 'st_name' => $row['name']);
+            }
         }
         return $orders_status;
     }
@@ -4418,11 +5609,12 @@ class OpenCartSA extends MainSA {
             o.shipping_zone as s_zone
             FROM `".$this->sDBPrefix."order` AS o
             LEFT JOIN ".$this->sDBPrefix."order_status AS os ON os.order_status_id = o.order_status_id AND os.language_id = '".$default_attrs['language_id']."'
-            WHERE o.order_id = '".$this->order_id."'";
+            WHERE o.order_id = '%d'";
+        $query = sprintf($query, $this->order_id);
 
-        $result = mysql_query($query);
-        if(mysql_num_rows($result) > 0) {
-            $order_info = mysql_fetch_assoc($result);
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            $order_info = $this->rLink->results($result);
             $order_info['total'] = $this->_price_format($order_info['total'], $order_info['currency_code']);
             if($order_info['order_status_id'] == 0) {
                 $order_info['status'] = $default_attrs['text_missing'];
@@ -4430,26 +5622,38 @@ class OpenCartSA extends MainSA {
         }
 
         $order_total = array();
-        $query_total = "SELECT title, text FROM ".$this->sDBPrefix."order_total WHERE order_id = '".$this->order_id."' AND code <> 'total' ORDER BY sort_order";
-        $result_total = mysql_query($query_total);
-        while($row_total = mysql_fetch_assoc($result_total)) {
-            $order_total[] = array('title' => $row_total['title'], 'value' => $row_total['text']);
+        $query_total = "SELECT title, text FROM ".$this->sDBPrefix."order_total WHERE order_id = '%d' AND code <> 'total' ORDER BY sort_order";
+        $query_total = sprintf($query_total, $this->order_id);
+
+        $result = $this->rLink->query($query_total);
+        if($this->rLink->affected($result)) {
+            while($row_total = $this->rLink->results($result)) {
+                $order_total[] = array('title' => $row_total['title'], 'value' => $row_total['text']);
+            }
         }
 
-        $query_page = "SELECT COUNT(order_id) AS count_prods FROM ".$this->sDBPrefix."order_product WHERE order_id = '".$this->order_id."'";
-        $result_page = mysql_query($query_page);
-        $row_page = mysql_fetch_assoc($result_page);
+        $query = "SELECT order_id AS id_order, product_id, name, quantity, price, model AS sku
+                    FROM ".$this->sDBPrefix."order_product WHERE order_id = '%d' LIMIT %d, %d";
+        $query = sprintf($query, $this->order_id, ($this->page - 1)*$this->show, $this->show);
 
-        //orders products
-        $query = "SELECT order_id AS id_order, product_id, name, quantity, price, model AS sku FROM ".$this->sDBPrefix."order_product WHERE order_id = '".$this->order_id."'";
-        $query .= " LIMIT ".($this->page - 1)*$this->show." , ".$this->show;
-        $result = mysql_query($query);
-        while($row = mysql_fetch_assoc($result)) {
-            $row['product_price'] = $this->_price_format($row['price'], $order_info['currency_code']);
-            $row['product_quantity'] = intval($row['quantity']);
-            $row['product_name'] = $row['name'];
-            $order_products[] = $row;
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            while($row = $this->rLink->results($result)) {
+                $row['product_price'] = $this->_price_format($row['price'], $order_info['currency_code']);
+                $row['product_quantity'] = intval($row['quantity']);
+                $row['product_name'] = $row['name'];
+                $order_products[] = $row;
+            }
         }
+
+        $query_page = "SELECT COUNT(order_id) AS count_prods FROM ".$this->sDBPrefix."order_product WHERE order_id = '%d'";
+        $query_page = sprintf($query_page, $this->order_id);
+
+        $result = $this->rLink->query($query_page);
+        if($this->rLink->affected($result)) {
+            $row_page = $this->rLink->results($result);
+        }
+
         $order_full_info = array("order_info" => $order_info, "order_products" => $order_products, "o_products_count" => $row_page['count_prods'], "order_total" => $order_total);
         return $order_full_info;
     }
@@ -4457,13 +5661,13 @@ class OpenCartSA extends MainSA {
     public function get_customers() {
         $customers = array();
         if(!empty($this->customers_from)) {
-            $query_where_parts[] = " UNIX_TIMESTAMP(c.date_added) >= '".strtotime($this->customers_from." 00:00:00")."'";
+            $query_where_parts[] = sprintf(" UNIX_TIMESTAMP(c.date_added) >= '%d'", strtotime($this->customers_from." 00:00:00"));
         }
         if(!empty($this->customers_to)) {
-            $query_where_parts[] = " UNIX_TIMESTAMP(c.date_added) <= '".strtotime($this->customers_to." 23:59:59")."'";
+            $query_where_parts[] = sprintf(" UNIX_TIMESTAMP(c.date_added) <= '%d'", strtotime($this->customers_to." 23:59:59"));
         }
         if(!empty($this->search_val)) {
-            $query_where_parts[] = " (c.email LIKE '%".$this->search_val."%' OR c.firstname LIKE '%".$this->search_val."%' OR c.lastname LIKE '%".$this->search_val."%')";
+            $query_where_parts[] = sprintf(" (c.email LIKE '%%%s%%' OR c.firstname LIKE '%%%s%%' OR c.lastname LIKE '%%%s%%' OR CONCAT(c.firstname, ' ', c.lastname) LIKE '%%%s%%')", $this->search_val, $this->search_val, $this->search_val, $this->search_val);
         }
         if(!empty($this->cust_with_orders)) {
             $query_where_parts[] = " tot.total_orders > 0";
@@ -4473,6 +5677,7 @@ class OpenCartSA extends MainSA {
 					c.customer_id AS id_customer,
 					c.firstname,
 					c.lastname,
+					CONCAT(c.firstname, ' ', c.lastname) AS full_name,
 					c.date_added AS date_add,
 					c.email,
 					IFNULL(tot.total_orders, 0) AS total_orders
@@ -4486,23 +5691,46 @@ class OpenCartSA extends MainSA {
             $query .= " WHERE " . implode(" AND ", $query_where_parts);
             $query_page .= " WHERE " . implode(" AND ", $query_where_parts);
         }
-        $query .= " LIMIT ".($this->page - 1)*$this->show." , ".$this->show;
-        $result_page = mysql_query($query_page);
-        $row_page = mysql_fetch_assoc($result_page);
 
-        $result = mysql_query($query);
-        while($row = mysql_fetch_assoc($result)) {
-            $row['total_orders'] = intval($row['total_orders']);
-            $customers[] = $row;
+        if(empty($this->sort_by)) {
+            $this->sort_by = "id";
+        }
+
+        $query .= " ORDER BY ";
+        switch ($this->sort_by) {
+            case 'id':
+                $query .= "c.customer_id DESC";
+                break;
+            case 'date':
+                $query .= "c.date_added DESC";
+                break;
+            case 'name':
+                $query .= "full_name ASC";
+                break;
+        }
+
+        $query .= sprintf(" LIMIT %d, %d", (($this->page - 1)*$this->show), $this->show);
+
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            while($row = $this->rLink->results($result)) {
+                $row['total_orders'] = intval($row['total_orders']);
+                $customers[] = $row;
+            }
         }
 
         $max_date = '';
         $min_date = '';
+        $result = $this->rLink->query($query_page);
+        if($this->rLink->affected($result)) {
+            $row_page = $this->rLink->results($result);
+        }
+
         if($row_page['count_custs'] > 0) {
             $max_date = date("n/j/Y", strtotime($row_page['max_date']));
             $min_date = date("n/j/Y", strtotime($row_page['min_date']));
         }
-        return array("customers_count" => $row_page['count_custs'],
+        return array("customers_count" => intval($row_page['count_custs']),
             "customers" => $customers,
             "max_date" => $max_date,
             "min_date" => $min_date);
@@ -4530,28 +5758,41 @@ class OpenCartSA extends MainSA {
 				  	LEFT JOIN ".$this->sDBPrefix."address AS a ON a.address_id = c.address_id
 				  	LEFT JOIN ".$this->sDBPrefix."country AS cn ON cn.country_id = a.country_id
 				  	LEFT JOIN ".$this->sDBPrefix."zone AS z ON z.zone_id = a.zone_id
-				  WHERE c.customer_id = '".$this->user_id."'";
+				  WHERE c.customer_id = '%d'";
+        $query = sprintf($query, $this->user_id);
 
-        $result = mysql_query($query);
-        $user_info = mysql_fetch_assoc($result);
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            $user_info = $this->rLink->results($result);
+        }
+
         $user_info['address'] = $this->split_values($user_info, array('address_1','address_2','city','zone','country'));
 
         $query = "SELECT o.order_id AS id_order, o.total, o.order_status_id, os.name AS ord_status, o.date_added as date_add, (SELECT SUM(quantity) FROM ".$this->sDBPrefix."order_product WHERE order_id = o.order_id) AS pr_qty
-				  FROM `".$this->sDBPrefix."order` AS o
-				  LEFT JOIN ".$this->sDBPrefix."order_status AS os ON os.order_status_id = o.order_status_id AND os.language_id = '".$default_attrs['language_id']."'";
-        $query_page = "SELECT COUNT(order_id) AS count_ords, SUM(total) AS sum_ords FROM `".$this->sDBPrefix."order` WHERE customer_id = '".$this->user_id."'";
-        $result_page = mysql_query($query_page);
-        $row_page = mysql_fetch_assoc($result_page);
-        $query .= " WHERE o.customer_id = '".$this->user_id."' LIMIT ".($this->page - 1)*$this->show." , ".$this->show;
+				    FROM `".$this->sDBPrefix."order` AS o
+				    LEFT JOIN ".$this->sDBPrefix."order_status AS os ON os.order_status_id = o.order_status_id AND os.language_id = '".$default_attrs['language_id']."'
+				    WHERE o.customer_id = '%d' ORDER BY o.order_id DESC LIMIT %d, %d";
+        $query = sprintf($query, $this->user_id, ($this->page - 1)*$this->show, $this->show);
 
-        $result = mysql_query($query);
-        while($row = mysql_fetch_assoc($result)) {
-            $row['total_paid'] = $this->_price_format($row['total'], $default_attrs['config_currency']);
-            if($row['order_status_id'] == 0) {
-                $row['ord_status'] = $default_attrs['text_missing'];
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            while($row = $this->rLink->results($result)) {
+                $row['total_paid'] = $this->_price_format($row['total'], $default_attrs['config_currency']);
+                if($row['order_status_id'] == 0) {
+                    $row['ord_status'] = $default_attrs['text_missing'];
+                }
+                $customer_orders[] = $row;
             }
-            $customer_orders[] = $row;
         }
+
+        $query_page = "SELECT COUNT(order_id) AS count_ords, SUM(total) AS sum_ords FROM `".$this->sDBPrefix."order` WHERE customer_id = '%d'";
+        $query_page = sprintf($query_page, $this->user_id);
+
+        $result = $this->rLink->query($query_page);
+        if($this->rLink->affected($result)) {
+            $row_page = $this->rLink->results($result);
+        }
+
         $row_page['sum_ords'] = $this->_price_format($row_page['sum_ords'], $default_attrs['config_currency']);
         $customer_info = array("user_info" => $user_info, "customer_orders" => $customer_orders, "c_orders_count" => intval($row_page['count_ords']), "sum_ords" => $row_page['sum_ords']);
         return $customer_info;
@@ -4566,21 +5807,21 @@ class OpenCartSA extends MainSA {
         foreach($this->params as $param) {
             switch ($param) {
                 case 'pr_id':
-                    $query_where_parts[] = " p.product_id = '".$this->val."'";
+                    $query_where_parts[] = sprintf(" p.product_id = '%d'", $this->val);
                     break;
                 case 'pr_sku':
-                    $query_where_parts[] = " p.model = '".$this->val."'";
+                    $query_where_parts[] = sprintf(" p.model = '%s'", $this->val);
                     break;
                 case 'pr_name':
-                    $query_where_parts[] = " pd.name LIKE '%".$this->val."%'";
+                    $query_where_parts[] = sprintf(" pd.name LIKE '%%%s%%'", $this->val);
                     break;
                 case 'pr_desc':
                 case 'pr_short_desc':
-                    $query_where_parts[] = " pd.description LIKE '%".$this->val."%'";
+                    $query_where_parts[] = sprintf(" pd.description LIKE '%%%s%%'", $this->val);
                     break;
             }
         }
-        $query = "SELECT p.product_id AS main_id, p.model AS sku, pd.name, p.price, ps.price as special_price, p.quantity
+        $query = "SELECT p.product_id AS main_id, p.product_id AS product_id, p.model AS sku, pd.name, p.price, ps.price as special_price, p.quantity
 				  FROM ".$this->sDBPrefix."product AS p
 				  LEFT JOIN ".$this->sDBPrefix."product_description AS pd ON pd.product_id = p.product_id AND pd.language_id = '".$default_attrs['language_id']."'
 				  LEFT OUTER JOIN ".$this->sDBPrefix."product_special AS ps ON ps.product_id = p.product_id AND ps.priority = 1";
@@ -4591,19 +5832,39 @@ class OpenCartSA extends MainSA {
             $query .= " WHERE ( " . implode(" OR ", $query_where_parts) . " )";
             $query_page .= " WHERE ( " . implode(" OR ", $query_where_parts) . " )";
         }
-        $result_page = mysql_query($query_page);
-        $row_page = mysql_fetch_assoc($result_page);
-        $query .= " GROUP BY p.product_id LIMIT ".($this->page - 1)*$this->show." , ".$this->show;
 
-        $result = mysql_query($query);
-        while($row = mysql_fetch_assoc($result)) {
-            $row['price'] = $this->_price_format($row['price'], $default_attrs['config_currency']);
-            if($row['special_price']) {
-                $row['special_price'] = $this->_price_format($row['special_price'], $default_attrs['config_currency']);
-            }
-            $products[] = $row;
+        if(empty($this->sort_by)) {
+            $this->sort_by = "id";
         }
-        return array("products_count" => $row_page['count_prods'], "products" => $products);
+
+        $query .= " GROUP BY p.product_id ORDER BY ";
+        switch ($this->sort_by) {
+            case 'id':
+                $query .= "p.product_id DESC";
+                break;
+            case 'name':
+                $query .= "pd.name ASC";
+                break;
+        }
+
+        $query .= " LIMIT ".($this->page - 1)*$this->show." , ".$this->show;
+
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            while($row = $this->rLink->results($result)) {
+                $row['price'] = $this->_price_format($row['price'], $default_attrs['config_currency']);
+                if($row['special_price']) {
+                    $row['special_price'] = $this->_price_format($row['special_price'], $default_attrs['config_currency']);
+                }
+                $products[] = $row;
+            }
+        }
+
+        $result = $this->rLink->query($query_page);
+        if($this->rLink->affected($result)) {
+            $row_page = $this->rLink->results($result);
+        }
+        return array("products_count" => intval($row_page['count_prods']), "products" => $products);
     }
 
     public function search_products_ordered() {
@@ -4614,24 +5875,40 @@ class OpenCartSA extends MainSA {
         foreach($this->params as $param) {
             switch ($param) {
                 case 'pr_id':
-                    $query_where_parts[] = " op.product_id = '".$this->val."'";
+                    $query_where_parts[] = sprintf(" op.product_id = '%d'", $this->val);
                     break;
                 case 'pr_sku':
-                    $query_where_parts[] = " op.model = '".$this->val."'";
+                    $query_where_parts[] = sprintf(" op.model = '%s'", $this->val);
                     break;
                 case 'pr_name':
-                    $query_where_parts[] = " op.name LIKE '%".$this->val."%'";
+                    $query_where_parts[] = sprintf(" op.name LIKE '%%%s%%'", $this->val);
                     break;
             }
         }
         if(!empty($this->products_from)) {
-            $query_where_parts[] = " UNIX_TIMESTAMP(o.date_added) >= '".strtotime($this->products_from." 00:00:00")."'";
+            $query_where_parts[] = sprintf(" UNIX_TIMESTAMP(o.date_added) >= '%d'", strtotime($this->products_from." 00:00:00"));
         }
         if(!empty($this->products_to)) {
-            $query_where_parts[] = " UNIX_TIMESTAMP(o.date_added) <= '".strtotime($this->products_to." 23:59:59")."'";
+            $query_where_parts[] = sprintf(" UNIX_TIMESTAMP(o.date_added) <= '%d'", strtotime($this->products_to." 23:59:59"));
         }
+
+        if(!empty($this->statuses)) {
+            $statuses = explode("|", $this->statuses);
+            if(!empty($statuses)) {
+                $stat = array();
+                foreach($statuses as $status) {
+                    if($status != "") {
+                        $stat[] = $status;
+                    }
+                }
+                $parse_statuses = implode("','", $stat);
+                $query_where_parts[] = sprintf(" o.order_status_id IN ('%s')", $parse_statuses);
+            }
+        }
+
         $query = "SELECT
                     op.order_id AS main_id,
+                    op.product_id,
                     op.model AS sku,
                     op.name,
                     op.price,
@@ -4649,26 +5926,45 @@ class OpenCartSA extends MainSA {
             $query_page .= " WHERE " . implode(" AND ", $query_where_parts);
         }
 
-        $result_page = mysql_query($query_page);
-        $row_page = mysql_fetch_assoc($result_page);
-        $query .= " ORDER BY op.order_id DESC LIMIT ".($this->page - 1)*$this->show." , ".$this->show;
-        $result = mysql_query($query);
+        if(empty($this->sort_by)) {
+            $this->sort_by = "id";
+        }
 
-        while($row = mysql_fetch_assoc($result)) {
-            $row['price'] = $this->_price_format($row['price'], $default_attrs['config_currency']);
-            if($row['order_status_id'] == 0) {
-                $row['status'] = $default_attrs['text_missing'];
+        $query .= " ORDER BY ";
+        switch ($this->sort_by) {
+            case 'id':
+                $query .= "op.product_id DESC";
+                break;
+            case 'name':
+                $query .= "op.name ASC";
+                break;
+        }
+
+        $query .= sprintf(" LIMIT %d, %d", (($this->page - 1)*$this->show), $this->show);
+
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            while($row = $this->rLink->results($result)) {
+                $row['price'] = $this->_price_format($row['price'], $default_attrs['config_currency']);
+                if($row['order_status_id'] == 0) {
+                    $row['status'] = $default_attrs['text_missing'];
+                }
+                $products[] = $row;
             }
-            $products[] = $row;
         }
 
         $max_date = '';
         $min_date = '';
+        $result = $this->rLink->query($query_page);
+        if($this->rLink->affected($result)) {
+            $row_page = $this->rLink->results($result);
+        }
+
         if($row_page['count_prods'] > 0) {
             $max_date = date("n/j/Y", strtotime($row_page['max_date']));
             $min_date = date("n/j/Y", strtotime($row_page['min_date']));
         }
-        return array("products_count" => $row_page['count_prods'],
+        return array("products_count" => intval($row_page['count_prods']),
             "products" => $products,
             "max_date" => $max_date,
             "min_date" => $min_date);
@@ -4678,6 +5974,7 @@ class OpenCartSA extends MainSA {
         $default_attrs = $this->_get_default_attrs();
         $query = "SELECT
 					p.product_id AS id_product,
+					p.product_id AS product_id,
 					pd.name,
 					p.model AS sku,
 					p.price,
@@ -4691,13 +5988,12 @@ class OpenCartSA extends MainSA {
 				    LEFT JOIN ".$this->sDBPrefix."product_description AS pd ON pd.product_id = p.product_id AND pd.language_id = '".$default_attrs['language_id']."'
 				    LEFT OUTER JOIN ".$this->sDBPrefix."product_special AS ps ON ps.product_id = p.product_id AND ps.priority = 1
 					LEFT JOIN ".$this->sDBPrefix."stock_status AS ss ON ss.stock_status_id = p.stock_status_id AND ss.language_id = '".$default_attrs['language_id']."'
-				WHERE p.product_id = '".$this->product_id."' GROUP BY p.product_id";
+				WHERE p.product_id = '%d' GROUP BY p.product_id";
+        $query = sprintf($query, $this->product_id);
 
-        $res = mysql_query($query);
-        $row = false;
-        if(mysql_num_rows($res) > 0) {
-            $row = mysql_fetch_assoc($res);
-
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            $row = $this->rLink->results($result);
             $row['price'] = $this->_price_format($row['price'], $default_attrs['config_currency']);
             if($row['special_price']) {
                 $row['special_price'] = $this->_price_format($row['special_price'], $default_attrs['config_currency']);
@@ -4710,15 +6006,22 @@ class OpenCartSA extends MainSA {
             } elseif(file_exists('image/' . $row['product_img']) && is_file('image/' . $row['product_img'])) {
                 $row['id_image'] = $this->site_url . 'image/' . $row['product_img'];
             }
+            return $row;
         }
-        return $row;
+        return false;
     }
 
     public function get_products_descr() {
         $default_attrs = $this->_get_default_attrs();
-        $query = "SELECT description AS descr FROM ".$this->sDBPrefix."product_description WHERE product_id = '".$this->product_id."' AND language_id = '".$default_attrs['language_id']."'";
-        $row = mysql_fetch_assoc(mysql_query($query));
-        return $row;
+        $query = "SELECT description AS descr FROM ".$this->sDBPrefix."product_description WHERE product_id = '%d' AND language_id = '".$default_attrs['language_id']."'";
+        $query = sprintf($query, $this->product_id);
+
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            $row = $this->rLink->results($result);
+            return $row;
+        }
+        return false;
     }
 
     private function _price_format($price, $currency, $number_format = true) {
@@ -4728,7 +6031,7 @@ class OpenCartSA extends MainSA {
 
         $curr = $this->_currencies[$currency];
         if($number_format) {
-            $price = number_format($price, intval($curr['decimal_place']), '.', '');
+            $price = number_format($price, intval($curr['decimal_place']), '.', ' ');
         }
 
         $price = ($curr['symbol_left'] != '' ? '<span>' . $curr['symbol_left'] . '</span>' : '') . $price . ($curr['symbol_right'] != '' ? '<span>' . $curr['symbol_right'] . '</span>' : '');
@@ -4739,13 +6042,18 @@ class OpenCartSA extends MainSA {
         $default_attrs = array();
         $query = "SELECT `key`, `value` FROM `".$this->sDBPrefix."setting` WHERE `key` IN ( 'config_name', 'config_admin_language', 'config_currency' ) AND store_id = 0";
 
-        $result = mysql_query($query);
-        while($row = mysql_fetch_assoc($result)) {
-            $default_attrs[$row['key']] = $row['value'];
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            while($row = $this->rLink->results($result)) {
+                $default_attrs[$row['key']] = $row['value'];
+            }
         }
 
-        $q_lang = "SELECT `language_id`, `directory` FROM `".$this->sDBPrefix."language` WHERE `code` = '".$default_attrs['config_admin_language']."'";
-        $row_lang = mysql_fetch_assoc(mysql_query($q_lang));
+        $query_lang = "SELECT `language_id`, `directory` FROM `".$this->sDBPrefix."language` WHERE `code` = '".$default_attrs['config_admin_language']."'";
+        $result_lang = $this->rLink->query($query_lang);
+        if($this->rLink->affected($result_lang)) {
+            $row_lang = $this->rLink->results($result_lang);
+        }
 
         $default_attrs['language_id'] = $row_lang['language_id'];
 
@@ -4764,11 +6072,639 @@ class OpenCartSA extends MainSA {
         $currencies = array();
         $query = "SELECT `currency_id`, `code`, `symbol_left`, `symbol_right`, `decimal_place` FROM `".$this->sDBPrefix."currency`";
 
-        $result = mysql_query($query);
-        while($row = mysql_fetch_assoc($result)) {
-            $currencies[$row['code']] = $row;
+        $result = $this->rLink->query($query);
+        if($this->rLink->affected($result)) {
+            while($row = $this->rLink->results($result)) {
+                $currencies[$row['code']] = $row;
+            }
         }
         return $currencies;
+    }
+}
+
+
+/*
+*** Additional functionality
+*/
+
+/**
+ * Handle MySQL/MySQLi/PDO database functionality
+ *
+ *
+ * LICENSE: This source file is subject to version 3.01 of the GPL license
+ * that is available through the world-wide-web at the following URI:
+ * http://www.gnu.org/licenses/gpl.html.  If you did not receive a copy of
+ * the GPL License and are unable to obtain it through the web, please
+ *
+ * @category   database
+ * @discussion Provide single interface for PDO/MySQLi/MySQL functionality by
+ *             determining best available access method and degrade quietly
+ * @author     jason.gerfen@gmail.com
+ * @copyright  2008-2011 Jason Gerfen
+ * @license    http://www.gnu.org/licenses/gpl.html  GPL License 3
+ * @version    0.3
+ */
+
+/**
+ *! @class dbConn
+ *  @abstract Proxy for all available MySQL class methods
+ *  @discussion Utilizes PDO/mysqli/mysql class extenders by degrading
+ *              gracefully to any available method bsed on system configuration
+ */
+class dbConn {
+    /**
+     *! @var instance object - class singleton object
+     */
+    protected static $instance;
+
+    /**
+     *! @var flag string - used to determine class method
+     */
+    private $flag='0x001';
+
+    /**
+     *! @var dbconn object - MySQL handle object
+     */
+    public $dbconn;
+
+    /**
+     *! @function __construct
+     *  @abstract Provides MySQL object based on system configuration for accessing
+     *            PDO, MySQLi or MySQL access methods
+     *  @param configuration array - Server address, username, password, database
+     */
+    private function __construct($configuration) {
+        $this->flag = $this->decide($this->flag);
+        switch($this->flag) {
+            case '0x001':
+                $this->dbconn = new pdoMySQL($configuration);
+                return $this->dbconn;
+            case '0x002':
+                $this->dbconn = new dbMySQLi($configuration);
+                return $this->dbconn;
+            case '0x003':
+                $this->dbconn = new dbMySQL($configuration);
+                return $this->dbconn;
+            default:
+                trigger_error('The MySQL extensions are not loaded.', E_USER_ERROR);
+                unset($instance);
+                exit;
+        }
+    }
+
+    /**
+     *! @function decide
+     *  @abstract Determines best method for MySQL functionality
+     *  @return flag string - Used to call appropriate class extension
+     */
+    private function decide() {
+        global $database_extension; // 'auto' or 'pdo' or 'mysqli' or 'mysql'
+
+        if($database_extension == 'pdo') {
+            $this->flag = '0x001';
+
+        } elseif($database_extension == 'mysqli') {
+            $this->flag = '0x002';
+
+        } elseif($database_extension == 'mysql') {
+            $this->flag = '0x003';
+
+        } else {
+            if(@class_exists('PDO')) {
+                $pdo_drivers = @PDO::getAvailableDrivers();
+                if(!empty($pdo_drivers)) {
+                    $this->flag = '0x001';
+                } elseif (@class_exists('mysqli')) {
+                    $this->flag = '0x002';
+                } else {
+                    $this->flag = '0x003';
+                }
+            } elseif (@class_exists('mysqli')) {
+                $this->flag = '0x002';
+            } else {
+                $this->flag = '0x003';
+            }
+        }
+        return $this->flag;
+    }
+
+    /**
+     *! @function instance
+     *  @abstract Creates non-deserializing, non-cloneable instance object
+     *  @param configuration array - server, username, password, database
+     *  @return Singleton - Singleton object
+     */
+    public static function instance($configuration) {
+        if (!isset(self::$instance)) {
+            $c = __CLASS__;
+            self::$instance = new self($configuration);
+        }
+        return self::$instance;
+    }
+
+    /**
+     *! @function query
+     *  @abstract Proxy like class interface for PDO, MySQLi or MySQL class
+     *            extensions
+     *  @param query string - SQL query string
+     *  @return object - Last query handle
+     */
+    public function query($query) {
+        return $this->dbconn->query($query);
+    }
+
+    /**
+     *! @function sanitize
+     *  @abstract Proxy like class interface for string sanitation
+     *  @param string string - Dynamic variable(s) used in SQL statement
+     *  @return string - Sanitized version of $string
+     */
+    public function sanitize($string) {
+        return $this->dbconn->sanitize($string);
+    }
+
+    /**
+     *! @function results
+     *  @abstract Proxy like class interface for associative array results
+     *  @param link object - Object handle of query
+     *  @return array - Associative array of results
+     */
+    public function results($link) {
+        return $this->dbconn->results($link);
+    }
+
+    /**
+     *! @function affected
+     *  @abstract Proxy like class interface for checking number of rows affected
+     *  @param link object - Object handle of query
+     *  @return int - Number of rows affected
+     */
+    public function affected($link) {
+        return $this->dbconn->affected($link);
+    }
+
+    /**
+     *! @function error
+     *  @abstract Proxy like class interface for error messages
+     *  @param link object - Object handle of query
+     *  @return string - Error message returned
+     */
+    public function error($link) {
+        return $this->dbconn->error($link);
+    }
+
+    /**
+     *! @function __clone
+     *  @abstract Prevent cloning of singleton object
+     */
+    public function __clone() {
+        trigger_error('Cloning prohibited', E_USER_ERROR);
+    }
+
+    /**
+     *! @function __wakeup
+     *  @abstract Prevent deserialization of singleton object
+     */
+    public function __wakeup() {
+        trigger_error('Deserialization of singleton prohibited ...', E_USER_ERROR);
+    }
+}
+
+/**
+ *! @class pdoMySQL
+ *  @abstract Extends class dbConn for PDO MySQL functionality
+ *  @discussion Utilizes PDO for MySQL database access, queries, results etc
+ */
+class pdoMySQL extends dbConn {
+
+    /**
+     *! @var dbconn object - class singleton object
+     */
+    public $dbconn;
+
+    /**
+     *! @var configuration array - server, username, password, database
+     */
+    private $configuration;
+
+    /**
+     *! @function __construct
+     *  @abstract Creates new PDO link based on configured credentials
+     *  @param configuration array - server, username, password, database
+     *  @return object - PDO link resource
+     */
+    public function __construct($configuration) {
+        $hostname = explode(":", $configuration['hostname']);
+        $configuration['hostname'] = $hostname[0];
+        $configuration['port'] = $hostname[1];
+
+        $this->configuration = $configuration;
+        $this->dbconn = new PDO($this->createdsn($configuration),
+            $configuration['username'],
+            $configuration['password']);
+
+        // DEBUG
+        $this->dbconn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        return $this->dbconn;
+    }
+
+    /**
+     *! @function createdsn
+     *  @abstract Format configuration settings into valid DSN for PDO connection
+     *  @param settings array - server, username, passsword, database
+     *  @return string - Valid PDO DSN connection string
+     */
+    private function createdsn($settings) {
+        if(strval($settings['port']) != "") {
+            return 'mysql:host='.$settings['hostname'].';port='.$settings['port'].';dbname='.$settings['database'];
+        }
+        return 'mysql:host='.$settings['hostname'].';dbname='.$settings['database'];
+    }
+
+    /**
+     *! @function query
+     *  @abstract Handles PDO queries
+     *  @param query string - SQL statement
+     *  @return object - Returns SQL object
+     */
+    public function query($query) {
+        return $this->dbconn->query($query);
+    }
+
+    /**
+     *! @function sanitize
+     *  @abstract Sanitizes dynamic variables in SQL statement
+     *  @param string string - String or Integer variables
+     *  @return string - Returns sanitized variable
+     */
+    public function sanitize($string) {
+        return $string;
+    }
+
+    /**
+     *! @function results
+     *  @abstract Returns PDO associative array from last SQL statement
+     *  @param link object - Object handle of last query
+     *  @return array - Associative array
+     */
+    public function results($link) {
+        return $link->fetch(PDO::FETCH_ASSOC);
+//        return $link->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     *! @function affected
+     *  @abstract Handle affected amount of rows on last SQL statement
+     *  @param link object - Object handle of query
+     *  @return int - Number of affected rows
+     */
+    public function affected($link) {
+        return $link->rowCount();
+    }
+
+    /**
+     *! @function error
+     *  @abstract Return error message from last SQL statement
+     *  @param link object - Object handle of query
+     *  @return string - Error message returned
+     */
+    public function error($link=null) {
+        return $link->errorInfo();
+    }
+
+    /**
+     *! @function index
+     *  @abstract Executed upon destruction of class instance to perform
+     *            repair, optimize and flush commands on each table in database
+     *  @param link object - Object handle of connection
+     *  @param database string - Database name
+     */
+    public function index($link, $database) {
+        $obj = $link->query('SHOW TABLES');
+        $results = $this->results($obj);
+        foreach($results as $key => $value) {
+            if (isset($value['Tables_in_'.$database])) {
+                $this->query('REPAIR TABLE '.$value['Tables_in_'.$database]);
+                $this->query('OPTIMIZE TABLE '.$value['Tables_in_'.$database]);
+                $this->query('FLUSH TABLE '.$value['Tables_in_'.$database]);
+            }
+        }
+    }
+
+    /**
+     *! @function __clone
+     *  @abstract Prevent cloning of singleton object
+     */
+    public function __clone() {
+        trigger_error('Cloning prohibited', E_USER_ERROR);
+    }
+
+    /**
+     *! @function __wakeup
+     *  @abstract Prevent deserialization of singleton object
+     */
+    public function __wakeup() {
+        trigger_error('Deserialization of singleton prohibited ...', E_USER_ERROR);
+    }
+
+    /**
+     *! @function __destruct
+     *  @abstract Release database handle and perform index functionality
+     */
+    public function __destruct() {
+        //$this->index($this->dbconn, $this->configuration['database']);
+        $this->dbconn = null;
+    }
+}
+
+/**
+ *! @class dbMySQLi
+ *  @abstract Extends class dbConn for MySQLi functionality
+ *  @discussion Utilizes MySQLi for database access, queries, results etc
+ */
+class dbMySQLi extends dbConn {
+
+    /**
+     *! @var dbconn object - class singleton object
+     */
+    public $dbconn;
+
+    /**
+     *! @var configuration array - server, username, password, database
+     */
+    private $configuration;
+
+    /**
+     *! @function __construct
+     *  @abstract Creates new MySQLi link based on configured credentials
+     *  @param configuration array - server, username, password, database
+     *  @return object - MySQLi link resource
+     */
+    public function __construct($configuration) {
+        $hostname = explode(":", $configuration['hostname']);
+        $configuration['hostname'] = $hostname[0];
+        $configuration['port'] = $hostname[1];
+
+        $this->configuration = $configuration;
+        $this->dbconn = new mysqli($configuration['hostname'],
+            $configuration['username'],
+            $configuration['password'],
+            $configuration['database'],
+            $configuration['port']);
+        return $this->dbconn;
+    }
+
+    /**
+     *! @function query
+     *  @abstract Handles MySQLi queries
+     *  @param query string - SQL statement
+     *  @return object - Returns SQL object
+     */
+    public function query($query) {
+        return $this->dbconn->query($query);
+    }
+
+    /**
+     *! @function sanitize
+     *  @abstract Sanitizes dynamic variables in SQL statement
+     *  @param string string - String or Integer variables
+     *  @return string - Returns sanitized variable
+     */
+    public function sanitize($string) {
+        return $this->dbconn->real_escape_string($string);
+    }
+
+    /**
+     *! @function results
+     *  @abstract Returns associative array from last SQL statement
+     *  @param link object - Object handle of last query
+     *  @return array - Associative array
+     */
+    public function results($link) {
+        return $link->fetch_assoc();
+
+//        $z = array();
+//        while ($y = $link->fetch_array(MYSQLI_ASSOC)) {
+//            $z[] = $y;
+//        }
+//        return $z;
+    }
+
+    /**
+     *! @function affected
+     *  @abstract Handle affected amount of rows on last SQL statement
+     *  @param link object - Object handle of query
+     *  @return int - Number of affected rows
+     */
+    public function affected($link=null) {
+        return $this->dbconn->affected_rows;
+    }
+
+    /**
+     *! @function error
+     *  @abstract Return error message from last SQL statement
+     *  @param link object - Object handle of query
+     *  @return string - Error message returned
+     */
+    public function error($link=null) {
+        return $this->dbconn->error;
+    }
+
+    /**
+     *! @function index
+     *  @abstract Executed upon destruction of class instance to perform
+     *            repair, optimize and flush commands on each table in database
+     *  @param link object - Object handle of connection
+     *  @param database string - Database name
+     */
+    public function index($link, $database) {
+        $obj = $link->query('SHOW TABLES');
+        $results = $this->results($obj);
+        foreach($results as $key => $value) {
+            if (isset($value['Tables_in_'.$database])) {
+                $this->query('REPAIR TABLE '.$value['Tables_in_'.$database]);
+                $this->query('OPTIMIZE TABLE '.$value['Tables_in_'.$database]);
+                $this->query('FLUSH TABLE '.$value['Tables_in_'.$database]);
+            }
+        }
+    }
+
+    /**
+     *! @function __clone
+     *  @abstract Prevent cloning of singleton object
+     */
+    public function __clone() {
+        trigger_error('Cloning prohibited', E_USER_ERROR);
+    }
+
+    /**
+     *! @function __wakeup
+     *  @abstract Prevent deserialization of singleton object
+     */
+    public function __wakeup() {
+        trigger_error('Deserialization of singleton prohibited ...', E_USER_ERROR);
+    }
+
+    /**
+     *! @function __destruct
+     *  @abstract Release database handle and perform index functionality
+     */
+    public function __destruct()
+    {
+        //$this->index($this->dbconn, $this->configuration['database']);
+        $this->dbconn->close();
+    }
+}
+
+/**
+ *! @class dbMySQL
+ *  @abstract Extends class dbConn for standard MySQL functionality
+ *  @discussion Utilizes MySQL for database access, queries, results etc
+ */
+class dbMySQL extends dbConn
+{
+
+    /**
+     *! @var dbconn object - class singleton object
+     */
+    public $dbconn;
+
+    /**
+     *! @var configuration array - server, username, password, database
+     */
+    private $configuration;
+
+    /**
+     *! @function __construct
+     *  @abstract Creates new MySQL link based on configured credentials
+     *  @param configuration array - server, username, password, database
+     *  @return object - MySQL link resource
+     */
+    public function __construct($configuration)
+    {
+        $this->configuration = $configuration;
+        $this->dbconn = mysql_pconnect($configuration['hostname'],
+            $configuration['username'],
+            $configuration['password']);
+        return mysql_select_db($configuration['database'], $this->dbconn);
+    }
+
+    /**
+     *! @function query
+     *  @abstract Handles MySQLi queries
+     *  @param query string - SQL statement
+     *  @return object - Returns SQL object
+     */
+    public function query($query)
+    {
+        return mysql_query($query);
+    }
+
+    /**
+     *! @function sanitize
+     *  @abstract Sanitizes dynamic variables in SQL statement
+     *  @param string string - String or Integer variables
+     *  @return string - Returns sanitized variable
+     */
+    public function sanitize($string)
+    {
+        return mysql_real_escape_string($string);
+    }
+
+    /**
+     *! @function results
+     *  @abstract Returns associative array from last SQL statement
+     *  @param link object - Object handle of last query
+     *  @return array - Associative array
+     */
+    public function results($link)
+    {
+        return mysql_fetch_assoc($link);
+
+//        $z = array();
+//        while ($y = mysql_fetch_assoc($link)) {
+//            $z[] = $y;
+//        }
+//        return $z;
+    }
+
+    /**
+     *! @function affected
+     *  @abstract Handle affected amount of rows on last SQL statement
+     *  @param link object - Object handle of query
+     *  @return int - Number of affected rows
+     */
+    public function affected($link=null)
+    {
+        return mysql_affected_rows();
+    }
+
+    /**
+     *! @function error
+     *  @abstract Return error message from last SQL statement
+     *  @param link object - Object handle of query
+     *  @return string - Error message returned
+     */
+    public function error($link=null)
+    {
+        return mysql_error();
+    }
+
+    /**
+     *! @function close
+     *  @abstract Closes the database connection
+     *  @param link object - Object handle of connection
+     *  @return boolean - Results of close
+     */
+    public function close()
+    {
+        return mysql_close();
+    }
+
+    /**
+     *! @function index
+     *  @abstract Executed upon destruction of class instance to perform
+     *            repair, optimize and flush commands on each table in database
+     *  @param link object - Object handle of connection
+     *  @param database string - Database name
+     */
+    public function index($link, $database)
+    {
+        $obj = $this->query('SHOW TABLES');
+        $results = $this->results($obj);
+        foreach($results as $key => $value) {
+            if (isset($value['Tables_in_'.$database])) {
+                $this->query('REPAIR TABLE '.$value['Tables_in_'.$database]);
+                $this->query('OPTIMIZE TABLE '.$value['Tables_in_'.$database]);
+                $this->query('FLUSH TABLE '.$value['Tables_in_'.$database]);
+            }
+        }
+    }
+
+    /**
+     *! @function __clone
+     *  @abstract Prevent cloning of singleton object
+     */
+    public function __clone() {
+        trigger_error('Cloning prohibited', E_USER_ERROR);
+    }
+
+    /**
+     *! @function __wakeup
+     *  @abstract Prevent deserialization of singleton object
+     */
+    public function __wakeup() {
+        trigger_error('Deserialization of singleton prohibited ...', E_USER_ERROR);
+    }
+
+    /**
+     *! @function __destruct
+     *  @abstract Release database handle and perform index functionality
+     */
+    public function __destruct()
+    {
+        //$this->index($this->dbconn, $this->configuration['database']);
+        $this->close();
     }
 }
 ?>
